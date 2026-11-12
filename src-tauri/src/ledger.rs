@@ -1,6 +1,7 @@
 use rusqlite::{params, OptionalExtension, Transaction};
 use serde::{Deserialize, Serialize};
 
+use crate::ledger_customers::apply_customer_event;
 use crate::models::{BillItem, BillReceipt, LedgerEvent};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -93,9 +94,9 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
                 serde_json::from_str(&ev.payload_json).map_err(|e| format!("BILL_ISSUED: {e}"))?;
             let items_json = serde_json::to_string(&b.items).map_err(|e| e.to_string())?;
             tx.execute(
-                "INSERT OR IGNORE INTO bills (bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, voided)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0)",
-                params![b.bill_no, b.node_id, b.hlc, items_json, b.discount_minor, b.total_minor, b.payment_mode],
+                "INSERT OR IGNORE INTO bills (bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, customer_id, voided)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 0)",
+                params![b.bill_no, b.node_id, b.hlc, items_json, b.discount_minor, b.total_minor, b.payment_mode, b.customer_id],
             )
             .map_err(|e| format!("Project BILL_ISSUED: {e}"))?;
             if tx.changes() > 0 {
@@ -106,20 +107,29 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
                     )
                     .map_err(|e| format!("Deduct stock for bill: {e}"))?;
                 }
+                if b.payment_mode == "DUE" {
+                    if let Some(ref cid) = b.customer_id {
+                        tx.execute(
+                            "UPDATE customers SET balance_due_minor = balance_due_minor + ?1, updated_hlc = ?2 WHERE customer_id = ?3",
+                            params![b.total_minor, ev.hlc, cid],
+                        )
+                        .map_err(|e| format!("Increment customer due: {e}"))?;
+                    }
+                }
             }
         }
         "BILL_VOIDED" => {
             let v: BillVoidPayload =
                 serde_json::from_str(&ev.payload_json).map_err(|e| format!("BILL_VOIDED: {e}"))?;
-            let existing: Option<(String, i64)> = tx
+            let existing: Option<(String, i64, String, i64, Option<String>)> = tx
                 .query_row(
-                    "SELECT items_json, voided FROM bills WHERE bill_no = ?1",
+                    "SELECT items_json, voided, payment_mode, total_minor, customer_id FROM bills WHERE bill_no = ?1",
                     params![v.bill_no],
-                    |r| Ok((r.get(0)?, r.get(1)?)),
+                    |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
                 )
                 .optional()
                 .map_err(|e| format!("Lookup void bill: {e}"))?;
-            if let Some((items_json, 0)) = existing {
+            if let Some((items_json, 0, pay_mode, total_minor, customer_id)) = existing {
                 tx.execute(
                     "UPDATE bills SET voided = 1 WHERE bill_no = ?1",
                     params![v.bill_no],
@@ -134,7 +144,19 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
                     )
                     .map_err(|e| format!("Restore stock on void: {e}"))?;
                 }
+                if pay_mode == "DUE" {
+                    if let Some(cid) = customer_id {
+                        tx.execute(
+                            "UPDATE customers SET balance_due_minor = balance_due_minor - ?1, updated_hlc = ?2 WHERE customer_id = ?3",
+                            params![total_minor, ev.hlc, cid],
+                        )
+                        .map_err(|e| format!("Reverse customer due on void: {e}"))?;
+                    }
+                }
             }
+        }
+        "CUSTOMER_UPSERT" | "CUSTOMER_PAYMENT" => {
+            apply_customer_event(tx, ev)?;
         }
         "SHOP_SETTINGS_UPDATED" => {
             let s: ShopSettingsPayload = serde_json::from_str(&ev.payload_json)

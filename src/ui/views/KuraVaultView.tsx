@@ -8,7 +8,7 @@ import {
   products,
   productSheetOpen,
 } from "../../state/kuraStore";
-import { scannerMode } from "../../state/uiSignals";
+import { csvSheetOpen, scannerMode } from "../../state/uiSignals";
 
 const inventoryStats = computed(() => {
   let retailMinor = 0;
@@ -38,29 +38,40 @@ export function KuraVaultView() {
             {list.length} SKUs · {stats.lowCount} low-stock alert(s)
           </p>
         </div>
-        {owner && (
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                scannerMode.value = "BARCODE_PREFILL";
-              }}
-              class="rounded-[12px] bg-[#007AFF]/10 px-3 py-2 text-[13px] font-semibold text-[#007AFF] active:scale-95 transition"
-            >
-              Scan New
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                editingProduct.value = null;
-                productSheetOpen.value = true;
-              }}
-              class="rounded-[12px] bg-[#007AFF] px-3.5 py-2 text-[13px] font-semibold text-white shadow-xs active:scale-95 transition"
-            >
-              + New Product
-            </button>
-          </div>
-        )}
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              csvSheetOpen.value = true;
+            }}
+            class="rounded-[12px] border border-black/[0.08] bg-white px-3 py-2 text-[12px] font-semibold text-[#1D1D1F] active:scale-95 transition"
+          >
+            CSV / Stickers PDF
+          </button>
+          {owner && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  scannerMode.value = "BARCODE_PREFILL";
+                }}
+                class="rounded-[12px] bg-[#007AFF]/10 px-3 py-2 text-[12px] font-semibold text-[#007AFF] active:scale-95 transition"
+              >
+                Scan New
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  editingProduct.value = null;
+                  productSheetOpen.value = true;
+                }}
+                class="rounded-[12px] bg-[#007AFF] px-3.5 py-2 text-[12px] font-semibold text-white shadow-xs active:scale-95 transition"
+              >
+                + New Product
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {owner ? (

@@ -26,7 +26,16 @@ export interface BillReceipt {
   discount_minor: number;
   total_minor: number;
   payment_mode: string;
+  customer_id?: string | null;
   voided: boolean;
+}
+
+export interface CustomerAccount {
+  customer_id: string;
+  name: string;
+  phone: string;
+  balance_due_minor: number;
+  updated_hlc: string;
 }
 
 export interface SyncChainStatus {
@@ -93,6 +102,7 @@ export interface RelayEnvelope {
 export interface BootstrapState {
   products: Product[];
   recent_bills: BillReceipt[];
+  customers: CustomerAccount[];
   sync_status: SyncChainStatus;
 }
 
@@ -116,6 +126,7 @@ export interface IssueBillInput {
   items: IssueBillItemInput[];
   discount_minor: number;
   payment_mode: string;
+  customer_id?: string | null;
 }
 
 export interface PdfExportResult {

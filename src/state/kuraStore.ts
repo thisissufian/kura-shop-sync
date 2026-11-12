@@ -1,16 +1,18 @@
 import { computed, signal } from "@preact/signals";
 import { playCheckoutChime, playScanBeep, playWarningTone } from "../ui/utils/posAudio";
-import type { BillReceipt, BootstrapState, KuraTab, PdfExportResult, PrinterSettings, Product, SyncChainStatus, UpsertProductInput } from "../types/kura";
+import type { BillReceipt, BootstrapState, CustomerAccount, KuraTab, PdfExportResult, PrinterSettings, Product, SyncChainStatus, UpsertProductInput } from "../types/kura";
 import { callBackend, formatMoney, isTauriRuntime, loadPrinterSettings, parseMoneyInput, PRINTER_STORAGE_KEY } from "./ipcBridge";
 
 export { formatMoney, isTauriRuntime, parseMoneyInput };
 
 export const products = signal<Product[]>([]);
 export const recentBills = signal<BillReceipt[]>([]);
+export const customers = signal<CustomerAccount[]>([]);
+export const selectedCustomerId = signal<string>("");
 export const syncStatus = signal<SyncChainStatus | null>(null);
 export const cart = signal<Record<string, number>>({});
 export const discountMinor = signal<number>(0);
-export const paymentMode = signal<"CASH" | "CARD" | "UPI">("CASH");
+export const paymentMode = signal<"CASH" | "WALLET" | "DUE">("CASH");
 export const activeTab = signal<KuraTab>("counter");
 export const activeReceipt = signal<BillReceipt | null>(null);
 export const editingProduct = signal<Product | null>(null);
@@ -83,6 +85,7 @@ export async function refreshBootstrap(): Promise<void> {
     const data = await callBackend<BootstrapState>("get_bootstrap_state");
     products.value = data.products;
     recentBills.value = data.recent_bills;
+    customers.value = data.customers ?? [];
     syncStatus.value = data.sync_status;
   } catch (err) {
     showToast(String(err), "err");
@@ -116,9 +119,18 @@ export async function adjustProductStock(sku: string, delta: number, reason: str
 export async function chargeAndIssueBill(): Promise<BillReceipt | null> {
   const items = cartLines.value.map((l) => ({ sku: l.product.sku, qty: l.qty }));
   if (items.length === 0) return null;
+  if (paymentMode.value === "DUE" && !selectedCustomerId.value) {
+    showToast("Select or add a customer for Customer Due", "err");
+    return null;
+  }
   try {
     const receipt = await callBackend<BillReceipt>("issue_bill", {
-      input: { items, discount_minor: discountMinor.value, payment_mode: paymentMode.value },
+      input: {
+        items,
+        discount_minor: discountMinor.value,
+        payment_mode: paymentMode.value,
+        customer_id: paymentMode.value === "DUE" ? selectedCustomerId.value : null,
+      },
     });
     clearCart();
     await refreshBootstrap();

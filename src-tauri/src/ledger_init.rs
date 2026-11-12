@@ -56,10 +56,20 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            discount_minor INTEGER NOT NULL,
            total_minor INTEGER NOT NULL,
            payment_mode TEXT NOT NULL,
+           customer_id TEXT,
            voided INTEGER NOT NULL DEFAULT 0
+         );
+         CREATE TABLE IF NOT EXISTS customers (
+           customer_id TEXT PRIMARY KEY,
+           name TEXT NOT NULL,
+           phone TEXT NOT NULL,
+           balance_due_minor INTEGER NOT NULL DEFAULT 0,
+           updated_hlc TEXT NOT NULL
          );",
     )
     .map_err(|e| format!("Schema init: {e}"))?;
+
+    let _ = conn.execute("ALTER TABLE bills ADD COLUMN customer_id TEXT", []);
 
     let _ = conn.execute(
         "ALTER TABLE chain_config ADD COLUMN shop_subtitle TEXT NOT NULL DEFAULT ''",

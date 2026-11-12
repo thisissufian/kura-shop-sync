@@ -1,3 +1,4 @@
+pub mod barcode_pdf;
 pub mod escpos;
 pub mod pdf_gen;
 

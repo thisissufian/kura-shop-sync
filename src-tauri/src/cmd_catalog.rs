@@ -4,6 +4,7 @@ use tauri::State;
 use crate::commands::{build_sync_status, AppState};
 use crate::hlc::{new_event_id, next_hlc};
 use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
+use crate::ledger_customers::list_customers;
 use crate::ledger_queries::{get_chain_config, list_products, list_recent_bills};
 use crate::models::{BootstrapState, LedgerEvent, Product, UpsertProductInput};
 
@@ -15,6 +16,7 @@ pub fn get_bootstrap_state(state: State<'_, AppState>) -> Result<BootstrapState,
     Ok(BootstrapState {
         products: list_products(&conn, redact)?,
         recent_bills: list_recent_bills(&conn, 50)?,
+        customers: list_customers(&conn)?,
         sync_status: build_sync_status(&conn, &state.lan)?,
     })
 }

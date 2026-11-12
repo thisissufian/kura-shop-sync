@@ -1,6 +1,8 @@
 mod cmd_billing;
 mod cmd_catalog;
+mod cmd_catalog_csv;
 mod cmd_config_vault;
+mod cmd_customers;
 mod cmd_sync_print;
 mod commands;
 mod crypto_chain;
@@ -9,6 +11,7 @@ mod lan_peer;
 mod lan_sync;
 mod ledger;
 mod ledger_analytics;
+mod ledger_customers;
 mod ledger_init;
 mod ledger_queries;
 mod mnemonic;
@@ -69,6 +72,12 @@ pub fn run() {
             cmd_config_vault::get_owner_analytics,
             cmd_config_vault::export_encrypted_vault,
             cmd_config_vault::import_encrypted_vault,
+            cmd_customers::get_customers,
+            cmd_customers::upsert_customer,
+            cmd_customers::record_customer_payment,
+            cmd_catalog_csv::export_barcode_labels_pdf,
+            cmd_catalog_csv::export_catalog_csv,
+            cmd_catalog_csv::import_catalog_csv,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Kura");

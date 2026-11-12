@@ -32,7 +32,18 @@ pub struct BillReceipt {
     pub total_minor: i64,
     pub payment_mode: String,
     #[serde(default)]
+    pub customer_id: Option<String>,
+    #[serde(default)]
     pub voided: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustomerAccount {
+    pub customer_id: String,
+    pub name: String,
+    pub phone: String,
+    pub balance_due_minor: i64,
+    pub updated_hlc: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,6 +78,7 @@ pub struct SyncChainStatus {
 pub struct BootstrapState {
     pub products: Vec<Product>,
     pub recent_bills: Vec<BillReceipt>,
+    pub customers: Vec<CustomerAccount>,
     pub sync_status: SyncChainStatus,
 }
 
@@ -93,6 +105,8 @@ pub struct IssueBillInput {
     pub items: Vec<IssueBillItemInput>,
     pub discount_minor: i64,
     pub payment_mode: String,
+    #[serde(default)]
+    pub customer_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

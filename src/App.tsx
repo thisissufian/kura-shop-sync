@@ -2,6 +2,8 @@ import { useEffect } from "preact/hooks";
 import {
   activeTab,
   cartCount,
+  currencySymbol,
+  formatMoney,
   isOwner,
   isTauriRuntime,
   loading,
@@ -9,15 +11,19 @@ import {
   syncStatus,
   toastMessage,
 } from "./state/kuraStore";
-import { shopSettingsSheetOpen, remoteRelayConnected } from "./state/uiSignals";
+import { totalDueMinor } from "./state/customerActions";
 import { initRelaySettings } from "./state/remoteRelay";
+import { khataSheetOpen, remoteRelayConnected, shopSettingsSheetOpen } from "./state/uiSignals";
 import type { KuraTab } from "./types/kura";
 import { SegmentedControl } from "./ui/primitives/SegmentedControl";
+import { CsvCatalogSheet } from "./ui/sheets/CsvCatalogSheet";
+import { CustomerKhataSheet } from "./ui/sheets/CustomerKhataSheet";
 import { ProductFormSheet } from "./ui/sheets/ProductFormSheet";
 import { ReceiptSheet } from "./ui/sheets/ReceiptSheet";
 import { ScannerSheet } from "./ui/sheets/ScannerSheet";
 import { ShopSettingsSheet } from "./ui/sheets/ShopSettingsSheet";
 import { audioMuted, toggleAudioMute } from "./ui/utils/posAudio";
+import { attachPosHotkeys } from "./ui/utils/posHotkeys";
 import { BillsHistoryView } from "./ui/views/BillsHistoryView";
 import { CounterView } from "./ui/views/CounterView";
 import { KuraVaultView } from "./ui/views/KuraVaultView";
@@ -27,6 +33,7 @@ export function App() {
   useEffect(() => {
     void refreshBootstrap();
     initRelaySettings();
+    return attachPosHotkeys();
   }, []);
 
   const status = syncStatus.value;
@@ -76,7 +83,17 @@ export function App() {
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  khataSheetOpen.value = true;
+                }}
+                title="Customer Due / Khata Ledger"
+                class="rounded-full bg-[#FF9500]/14 px-2.5 py-1 text-[11px] font-semibold text-[#B25E00] tabular-nums hover:bg-[#FF9500]/22"
+              >
+                Due {formatMoney(totalDueMinor.value, currencySymbol.value)}
+              </button>
               {isOwner.value && (
                 <button
                   type="button"
@@ -97,6 +114,12 @@ export function App() {
               >
                 {audioMuted.value ? "Muted" : "Sound"}
               </button>
+              <span
+                title="Shortcuts: / or Ctrl+K Search, F2 Cam Scan, F4 Charge"
+                class="hidden sm:inline-block rounded-full bg-black/[0.04] px-2 py-1 text-[10px] font-medium text-[#86868B] tabular-nums"
+              >
+                / · F2 · F4
+              </span>
               <div class="text-right text-[11px] text-[#86868B] tabular-nums">
                 <div>{status?.peer_count ?? 0} LAN peers</div>
                 <div>{status?.pending_events ?? 0} pending</div>
@@ -146,6 +169,8 @@ export function App() {
       <ProductFormSheet />
       <ScannerSheet />
       <ShopSettingsSheet />
+      <CustomerKhataSheet />
+      <CsvCatalogSheet />
     </div>
   );
 }

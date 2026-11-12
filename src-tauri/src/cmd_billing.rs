@@ -4,6 +4,7 @@ use tauri::State;
 use crate::commands::AppState;
 use crate::hlc::{new_event_id, next_hlc, next_invoice_number};
 use crate::ledger::{apply_ledger_event, BillVoidPayload};
+use crate::ledger_customers::get_customer_by_id;
 use crate::ledger_queries::{get_bill_by_no, get_chain_config, list_recent_bills};
 use crate::models::{BillItem, BillReceipt, IssueBillInput, LedgerEvent};
 
@@ -44,6 +45,19 @@ pub fn issue_bill(
 
     let discount_minor = input.discount_minor.max(0).min(subtotal_minor);
     let total_minor = subtotal_minor.saturating_sub(discount_minor);
+    let mode = if input.payment_mode.trim().is_empty() {
+        "CASH".to_string()
+    } else {
+        input.payment_mode.trim().to_uppercase()
+    };
+    let customer_id = input.customer_id.filter(|s| !s.trim().is_empty());
+    if mode == "DUE" {
+        let cid = customer_id
+            .as_deref()
+            .ok_or_else(|| "Select or create a customer for Customer Due (Khata)".to_string())?;
+        get_customer_by_id(&conn, cid)?;
+    }
+
     let bill_no = next_invoice_number(&conn, &cfg.node_id)?;
     let hlc = next_hlc(&conn, &cfg.node_id)?;
     let receipt = BillReceipt {
@@ -53,11 +67,8 @@ pub fn issue_bill(
         items: bill_items,
         discount_minor,
         total_minor,
-        payment_mode: if input.payment_mode.trim().is_empty() {
-            "CASH".to_string()
-        } else {
-            input.payment_mode.trim().to_uppercase()
-        },
+        payment_mode: mode,
+        customer_id,
         voided: false,
     };
 

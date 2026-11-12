@@ -1,43 +1,17 @@
 import type {
   BillReceipt,
   BootstrapState,
+  CustomerAccount,
   IssueBillInput,
   PdfExportResult,
   Product,
-  SyncChainStatus,
   UpsertProductInput,
 } from "../types/kura";
-
-const nowHlc = (n = 1) => `${new Date().toISOString()}-${String(n).padStart(4, "0")}-K1`;
-
-const mockProducts: Product[] = [
-  { sku: "SKU-101", name: "Artisan Cold Brew 250ml", barcode: "890101001010", category: "Beverages", sell_price_minor: 350, cost_price_minor: 180, stock_qty: 24, low_stock_threshold: 6, updated_hlc: nowHlc(1) },
-  { sku: "SKU-102", name: "Organic Whole Milk 1L", barcode: "890101001027", category: "Dairy", sell_price_minor: 295, cost_price_minor: 210, stock_qty: 18, low_stock_threshold: 5, updated_hlc: nowHlc(2) },
-  { sku: "SKU-103", name: "Sourdough Country Loaf", barcode: "890101001034", category: "Bakery", sell_price_minor: 550, cost_price_minor: 290, stock_qty: 9, low_stock_threshold: 4, updated_hlc: nowHlc(3) },
-  { sku: "SKU-104", name: "Sea Salt Kettle Chips", barcode: "890101001041", category: "Snacks", sell_price_minor: 225, cost_price_minor: 120, stock_qty: 4, low_stock_threshold: 5, updated_hlc: nowHlc(4) },
-  { sku: "SKU-105", name: "Matcha Green Tea Tin", barcode: "890101001058", category: "Pantry", sell_price_minor: 1490, cost_price_minor: 890, stock_qty: 12, low_stock_threshold: 3, updated_hlc: nowHlc(5) },
-];
-
-const mockBills: BillReceipt[] = [];
-const mockSync: SyncChainStatus = {
-  is_linked: false,
-  node_id: "K1",
-  role: "OWNER",
-  shop_name: "Kura General Store",
-  shop_subtitle: "Local Retail · Offline POS",
-  currency_symbol: "$",
-  receipt_footer: "Thank you for shopping!",
-  peer_count: 0,
-  pending_events: 0,
-  lan_ip: "127.0.0.1:42850",
-  pairing_uri_owner: "kura://join?seed=AAECAwQFBgcICQoLDA0ODw&role=OWNER&node=K2&shop=Kura%20General%20Store&lan=127.0.0.1%3A42850",
-  pairing_uri_cashier: "kura://join?seed=AAECAwQFBgcICQoLDA0ODw&role=CASHIER&node=K3&shop=Kura%20General%20Store&lan=127.0.0.1%3A42850",
-  recovery_phrase: "kald mint bark fast lamp gold silk rest park wind bold sand",
-};
+import { mockBills, mockCustomers, mockProducts, mockSync, nowHlc } from "./previewFixtures";
 
 export async function previewInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (cmd === "get_bootstrap_state") {
-    const state: BootstrapState = { products: [...mockProducts], recent_bills: [...mockBills], sync_status: { ...mockSync } };
+    const state: BootstrapState = { products: [...mockProducts], recent_bills: [...mockBills], customers: [...mockCustomers], sync_status: { ...mockSync } };
     return state as T;
   }
   if (cmd === "upsert_product") {
@@ -68,6 +42,7 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     });
     const sub = items.reduce((a, b) => a + b.line_total_minor, 0);
     const disc = Math.max(0, Math.min(input.discount_minor, sub));
+    const mode = (input.payment_mode || "CASH").toUpperCase();
     const bill: BillReceipt = {
       bill_no: `${mockSync.node_id}-261112-${String(mockBills.length + 1).padStart(4, "0")}`,
       node_id: mockSync.node_id,
@@ -75,9 +50,14 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
       items,
       discount_minor: disc,
       total_minor: sub - disc,
-      payment_mode: input.payment_mode || "CASH",
+      payment_mode: mode,
+      customer_id: input.customer_id ?? null,
       voided: false,
     };
+    if (mode === "DUE" && input.customer_id) {
+      const cust = mockCustomers.find((c) => c.customer_id === input.customer_id);
+      if (cust) cust.balance_due_minor += bill.total_minor;
+    }
     mockBills.unshift(bill);
     return bill as T;
   }
@@ -90,7 +70,28 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
       const p = mockProducts.find((x) => x.sku === it.sku);
       if (p) p.stock_qty += it.qty;
     }
+    if (bill.payment_mode === "DUE" && bill.customer_id) {
+      const cust = mockCustomers.find((c) => c.customer_id === bill.customer_id);
+      if (cust) cust.balance_due_minor -= bill.total_minor;
+    }
     return { ...bill } as T;
+  }
+  if (cmd === "get_customers") return [...mockCustomers] as T;
+  if (cmd === "upsert_customer") {
+    const name = String(args?.name ?? "").trim();
+    const phone = String(args?.phone ?? "").trim();
+    const cid = String(args?.customerId || `K1-C${mockCustomers.length + 100}`);
+    const existing = mockCustomers.find((c) => c.customer_id === cid);
+    if (existing) { existing.name = name; existing.phone = phone; return { ...existing } as T; }
+    const next: CustomerAccount = { customer_id: cid, name, phone, balance_due_minor: 0, updated_hlc: nowHlc(30) };
+    mockCustomers.unshift(next);
+    return { ...next } as T;
+  }
+  if (cmd === "record_customer_payment") {
+    const cust = mockCustomers.find((c) => c.customer_id === args?.customerId);
+    if (!cust) throw new Error("Customer not found");
+    cust.balance_due_minor -= Number(args?.amountMinor ?? 0);
+    return { ...cust } as T;
   }
   if (cmd === "get_recent_bills") return [...mockBills] as T;
   if (cmd === "get_sync_status") return { ...mockSync } as T;
@@ -159,6 +160,18 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
       terminal_breakdown: Array.from(perNode.entries()).map(([node_id, v]) => ({ node_id, ...v })),
     } as T;
   }
+  if (cmd === "export_barcode_labels_pdf") {
+    return {
+      file_path: "KuraReceipts/kura-labels-261112.pdf",
+      data_url: "data:text/plain;base64,S3VyYSBMYWJlbHMgUERG",
+      size_bytes: 4096,
+    } as T;
+  }
+  if (cmd === "export_catalog_csv") {
+    const header = "sku,name,barcode,category,sell_price,cost_price,stock_qty,low_stock_threshold\n";
+    return (header + mockProducts.map((p) => `${p.sku},${p.name},${p.barcode ?? ""},${p.category},${(p.sell_price_minor / 100).toFixed(2)},${(p.cost_price_minor / 100).toFixed(2)},${p.stock_qty},${p.low_stock_threshold}`).join("\n")) as T;
+  }
+  if (cmd === "import_catalog_csv") return 0 as T;
   if (cmd === "export_encrypted_vault") {
     return {
       file_path: "KuraReceipts/kura-vault-261112.kura",

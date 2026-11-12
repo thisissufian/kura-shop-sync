@@ -26,7 +26,7 @@ declare global {
   }
 }
 
-const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "qr_code"];
+const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "qr_code"];
 
 export function ScannerSheet() {
   const mode = scannerMode.value;

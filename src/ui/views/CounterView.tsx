@@ -59,6 +59,7 @@ export function CounterView() {
       <div class="space-y-3">
         <form onSubmit={handleScanEnter} class="flex gap-2">
           <input
+            id="kura-counter-search"
             type="search"
             value={query}
             onInput={(e) => setQuery((e.target as HTMLInputElement).value)}

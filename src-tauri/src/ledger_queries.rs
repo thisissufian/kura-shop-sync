@@ -61,7 +61,7 @@ pub fn list_products(conn: &Connection, redact_cost: bool) -> Result<Vec<Product
 pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceipt>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, voided
+            "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, customer_id, voided
              FROM bills
              ORDER BY hlc DESC
              LIMIT ?1",
@@ -70,7 +70,7 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
     let rows = stmt
         .query_map(params![limit], |r| {
             let items_json: String = r.get(3)?;
-            let voided_int: i64 = r.get(7)?;
+            let voided_int: i64 = r.get(8)?;
             let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
             Ok(BillReceipt {
                 bill_no: r.get(0)?,
@@ -80,6 +80,7 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
                 discount_minor: r.get(4)?,
                 total_minor: r.get(5)?,
                 payment_mode: r.get(6)?,
+                customer_id: r.get(7)?,
                 voided: voided_int != 0,
             })
         })
@@ -94,12 +95,12 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
 
 pub fn get_bill_by_no(conn: &Connection, bill_no: &str) -> Result<BillReceipt, String> {
     conn.query_row(
-        "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, voided
+        "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, customer_id, voided
          FROM bills WHERE bill_no = ?1",
         params![bill_no],
         |r| {
             let items_json: String = r.get(3)?;
-            let voided_int: i64 = r.get(7)?;
+            let voided_int: i64 = r.get(8)?;
             let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
             Ok(BillReceipt {
                 bill_no: r.get(0)?,
@@ -109,6 +110,7 @@ pub fn get_bill_by_no(conn: &Connection, bill_no: &str) -> Result<BillReceipt, S
                 discount_minor: r.get(4)?,
                 total_minor: r.get(5)?,
                 payment_mode: r.get(6)?,
+                customer_id: r.get(7)?,
                 voided: voided_int != 0,
             })
         },
