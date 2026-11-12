@@ -8,6 +8,7 @@ import {
   products,
   productSheetOpen,
 } from "../../state/kuraStore";
+import { scannerMode } from "../../state/uiSignals";
 
 const inventoryStats = computed(() => {
   let retailMinor = 0;
@@ -38,16 +39,27 @@ export function KuraVaultView() {
           </p>
         </div>
         {owner && (
-          <button
-            type="button"
-            onClick={() => {
-              editingProduct.value = null;
-              productSheetOpen.value = true;
-            }}
-            class="rounded-[12px] bg-[#007AFF] px-3.5 py-2 text-[13px] font-semibold text-white shadow-xs active:scale-95 transition"
-          >
-            + New Product
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                scannerMode.value = "BARCODE_PREFILL";
+              }}
+              class="rounded-[12px] bg-[#007AFF]/10 px-3 py-2 text-[13px] font-semibold text-[#007AFF] active:scale-95 transition"
+            >
+              Scan New
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                editingProduct.value = null;
+                productSheetOpen.value = true;
+              }}
+              class="rounded-[12px] bg-[#007AFF] px-3.5 py-2 text-[13px] font-semibold text-white shadow-xs active:scale-95 transition"
+            >
+              + New Product
+            </button>
+          </div>
         )}
       </div>
 

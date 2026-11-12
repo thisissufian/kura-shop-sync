@@ -60,6 +60,11 @@ export function ReceiptSheet() {
             <div class="text-[15px] font-bold tracking-tight text-[#1D1D1F]">
               {syncStatus.value?.shop_name ?? "Kura Store"}
             </div>
+            {syncStatus.value?.shop_subtitle && (
+              <div class="mt-0.5 text-[11px] text-[#86868B]">
+                {syncStatus.value.shop_subtitle}
+              </div>
+            )}
             {bill.voided && (
               <div class="mt-1 inline-block rounded-full bg-[#FF3B30]/12 px-2.5 py-0.5 text-[11px] font-bold text-[#FF3B30]">
                 VOIDED RECEIPT
@@ -98,6 +103,9 @@ export function ReceiptSheet() {
             <div class="flex justify-between text-[15px] font-bold text-[#1D1D1F]">
               <span>TOTAL</span>
               <span class="tabular-nums">{formatMoney(bill.total_minor, sym)}</span>
+            </div>
+            <div class="pt-2 text-center text-[11px] text-[#86868B]">
+              {syncStatus.value?.receipt_footer ?? "Thank you for shopping!"}
             </div>
           </div>
         </div>

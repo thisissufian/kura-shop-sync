@@ -19,7 +19,9 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            id INTEGER PRIMARY KEY CHECK (id = 1),
            node_id TEXT NOT NULL,
            shop_name TEXT NOT NULL,
+           shop_subtitle TEXT NOT NULL DEFAULT '',
            currency_symbol TEXT NOT NULL,
+           receipt_footer TEXT NOT NULL DEFAULT 'Thank you for shopping!',
            role TEXT NOT NULL,
            seed_b64 TEXT NOT NULL,
            last_hlc TEXT NOT NULL,
@@ -59,14 +61,23 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     )
     .map_err(|e| format!("Schema init: {e}"))?;
 
+    let _ = conn.execute(
+        "ALTER TABLE chain_config ADD COLUMN shop_subtitle TEXT NOT NULL DEFAULT ''",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE chain_config ADD COLUMN receipt_footer TEXT NOT NULL DEFAULT 'Thank you for shopping!'",
+        [],
+    );
+
     let cfg_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM chain_config", [], |r| r.get(0))
         .unwrap_or(0);
     if cfg_count == 0 {
         let seed_b64 = encode_seed_b64(&generate_seed());
         conn.execute(
-            "INSERT INTO chain_config (id, node_id, shop_name, currency_symbol, role, seed_b64, last_hlc, is_linked)
-             VALUES (1, 'K1', 'Kura General Store', '$', 'OWNER', ?1, '', 0)",
+            "INSERT INTO chain_config (id, node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked)
+             VALUES (1, 'K1', 'Kura General Store', 'Local Retail · Offline POS', '$', 'Thank you for shopping!', 'OWNER', ?1, '', 0)",
             params![seed_b64],
         )
         .map_err(|e| format!("Seed chain_config: {e}"))?;

@@ -4,6 +4,7 @@ import {
   formatMoney,
   recentBills,
 } from "../../state/kuraStore";
+import { OwnerAnalyticsCard } from "../components/OwnerAnalyticsCard";
 
 export function BillsHistoryView() {
   const bills = recentBills.value;
@@ -11,6 +12,8 @@ export function BillsHistoryView() {
 
   return (
     <div class="space-y-3 pb-8">
+      <OwnerAnalyticsCard />
+
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-[18px] font-bold tracking-tight text-[#1D1D1F]">Bills Ledger</h2>

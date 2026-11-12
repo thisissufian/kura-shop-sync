@@ -26,6 +26,14 @@ pub struct BillVoidPayload {
     pub bill_no: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ShopSettingsPayload {
+    pub shop_name: String,
+    pub shop_subtitle: String,
+    pub currency_symbol: String,
+    pub receipt_footer: String,
+}
+
 /// Idempotently appends an event and applies its projection inside the same SQLite TX.
 pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, String> {
     tx.execute(
@@ -127,6 +135,17 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
                     .map_err(|e| format!("Restore stock on void: {e}"))?;
                 }
             }
+        }
+        "SHOP_SETTINGS_UPDATED" => {
+            let s: ShopSettingsPayload = serde_json::from_str(&ev.payload_json)
+                .map_err(|e| format!("SHOP_SETTINGS_UPDATED: {e}"))?;
+            tx.execute(
+                "UPDATE chain_config
+                 SET shop_name = ?1, shop_subtitle = ?2, currency_symbol = ?3, receipt_footer = ?4
+                 WHERE id = 1",
+                params![s.shop_name, s.shop_subtitle, s.currency_symbol, s.receipt_footer],
+            )
+            .map_err(|e| format!("Project SHOP_SETTINGS_UPDATED: {e}"))?;
         }
         _ => {}
     }

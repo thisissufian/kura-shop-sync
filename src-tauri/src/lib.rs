@@ -1,5 +1,6 @@
 mod cmd_billing;
 mod cmd_catalog;
+mod cmd_config_vault;
 mod cmd_sync_print;
 mod commands;
 mod crypto_chain;
@@ -7,6 +8,7 @@ mod hlc;
 mod lan_peer;
 mod lan_sync;
 mod ledger;
+mod ledger_analytics;
 mod ledger_init;
 mod ledger_queries;
 mod mnemonic;
@@ -60,6 +62,13 @@ pub fn run() {
             cmd_sync_print::trigger_peer_sync,
             cmd_sync_print::print_bill_thermal,
             cmd_sync_print::export_bill_pdf,
+            cmd_sync_print::prepare_relay_envelope,
+            cmd_sync_print::ingest_relay_envelope,
+            cmd_config_vault::get_shop_settings,
+            cmd_config_vault::update_shop_settings,
+            cmd_config_vault::get_owner_analytics,
+            cmd_config_vault::export_encrypted_vault,
+            cmd_config_vault::import_encrypted_vault,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Kura");

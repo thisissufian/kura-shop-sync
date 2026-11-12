@@ -59,14 +59,13 @@ pub fn derive_chain_id_hash(seed: &[u8; 16]) -> String {
     digest[..8].iter().map(|b| format!("{b:02x}")).collect()
 }
 
-pub fn encrypt_events(seed: &[u8; 16], events: &[LedgerEvent]) -> Result<Vec<u8>, String> {
+pub fn encrypt_bytes(seed: &[u8; 16], plaintext: &[u8]) -> Result<Vec<u8>, String> {
     let key = derive_sync_key(seed);
     let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| format!("Cipher init: {e}"))?;
     let mut nonce_bytes = [0u8; 12];
     rand::rngs::OsRng.fill_bytes(&mut nonce_bytes);
-    let plaintext = serde_json::to_vec(events).map_err(|e| format!("Serialize events: {e}"))?;
     let ciphertext = cipher
-        .encrypt(Nonce::from_slice(&nonce_bytes), plaintext.as_ref())
+        .encrypt(Nonce::from_slice(&nonce_bytes), plaintext)
         .map_err(|_| "AES-256-GCM encryption failed".to_string())?;
     let mut out = Vec::with_capacity(12 + ciphertext.len());
     out.extend_from_slice(&nonce_bytes);
@@ -74,16 +73,25 @@ pub fn encrypt_events(seed: &[u8; 16], events: &[LedgerEvent]) -> Result<Vec<u8>
     Ok(out)
 }
 
-pub fn decrypt_events(seed: &[u8; 16], packet: &[u8]) -> Result<Vec<LedgerEvent>, String> {
+pub fn decrypt_bytes(seed: &[u8; 16], packet: &[u8]) -> Result<Vec<u8>, String> {
     if packet.len() < 13 {
-        return Err("Encrypted sync packet too short".to_string());
+        return Err("Encrypted packet too short".to_string());
     }
     let key = derive_sync_key(seed);
     let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| format!("Cipher init: {e}"))?;
     let (nonce_bytes, ct) = packet.split_at(12);
-    let plaintext = cipher
+    cipher
         .decrypt(Nonce::from_slice(nonce_bytes), ct)
-        .map_err(|_| "Decryption failed (wrong sync chain key)".to_string())?;
+        .map_err(|_| "Decryption failed (wrong sync chain key)".to_string())
+}
+
+pub fn encrypt_events(seed: &[u8; 16], events: &[LedgerEvent]) -> Result<Vec<u8>, String> {
+    let plaintext = serde_json::to_vec(events).map_err(|e| format!("Serialize events: {e}"))?;
+    encrypt_bytes(seed, &plaintext)
+}
+
+pub fn decrypt_events(seed: &[u8; 16], packet: &[u8]) -> Result<Vec<LedgerEvent>, String> {
+    let plaintext = decrypt_bytes(seed, packet)?;
     serde_json::from_slice(&plaintext).map_err(|e| format!("Invalid decrypted payload: {e}"))
 }
 

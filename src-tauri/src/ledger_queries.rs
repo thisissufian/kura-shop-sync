@@ -4,18 +4,20 @@ use crate::models::{BillItem, BillReceipt, ChainConfig, LedgerEvent, Product};
 
 pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
     conn.query_row(
-        "SELECT node_id, shop_name, currency_symbol, role, seed_b64, last_hlc, is_linked
+        "SELECT node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked
          FROM chain_config WHERE id = 1",
         [],
         |r| {
-            let linked_int: i64 = r.get(6)?;
+            let linked_int: i64 = r.get(8)?;
             Ok(ChainConfig {
                 node_id: r.get(0)?,
                 shop_name: r.get(1)?,
-                currency_symbol: r.get(2)?,
-                role: r.get(3)?,
-                seed_b64: r.get(4)?,
-                last_hlc: r.get(5)?,
+                shop_subtitle: r.get(2)?,
+                currency_symbol: r.get(3)?,
+                receipt_footer: r.get(4)?,
+                role: r.get(5)?,
+                seed_b64: r.get(6)?,
+                last_hlc: r.get(7)?,
                 is_linked: linked_int != 0,
             })
         },
@@ -124,17 +126,29 @@ pub fn count_pending_events(conn: &Connection) -> Result<i64, String> {
 }
 
 pub fn events_after_hlc(conn: &Connection, since_hlc: &str) -> Result<Vec<LedgerEvent>, String> {
+    events_after_hlc_limit(conn, since_hlc, 500)
+}
+
+pub fn all_ledger_events(conn: &Connection) -> Result<Vec<LedgerEvent>, String> {
+    events_after_hlc_limit(conn, "", 1_000_000)
+}
+
+fn events_after_hlc_limit(
+    conn: &Connection,
+    since_hlc: &str,
+    limit: i64,
+) -> Result<Vec<LedgerEvent>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay
              FROM ledger_events
              WHERE hlc > ?1
              ORDER BY hlc ASC
-             LIMIT 500",
+             LIMIT ?2",
         )
         .map_err(|e| format!("Prepare events_after_hlc: {e}"))?;
     let rows = stmt
-        .query_map(params![since_hlc], |r| {
+        .query_map(params![since_hlc, limit], |r| {
             Ok(LedgerEvent {
                 event_id: r.get(0)?,
                 hlc: r.get(1)?,

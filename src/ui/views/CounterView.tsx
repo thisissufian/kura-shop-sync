@@ -7,6 +7,7 @@ import {
   setCartQty,
   showToast,
 } from "../../state/kuraStore";
+import { scannerMode } from "../../state/uiSignals";
 import { CheckoutPanel } from "../components/CheckoutPanel";
 
 export function CounterView() {
@@ -65,11 +66,14 @@ export function CounterView() {
             class="flex-1 rounded-[12px] border border-black/[0.07] bg-white px-3.5 py-2.5 text-[14px] text-[#1D1D1F] placeholder-[#AEAEB2] shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus:border-[#007AFF] focus:outline-none"
           />
           <button
-            type="submit"
-            title="Match barcode or SKU"
+            type="button"
+            onClick={() => {
+              scannerMode.value = "BARCODE_CART";
+            }}
+            title="Open camera barcode scanner"
             class="rounded-[12px] bg-[#007AFF]/10 px-3.5 py-2.5 text-[13px] font-semibold text-[#007AFF] active:scale-95 transition"
           >
-            Scan
+            Cam Scan
           </button>
         </form>
 

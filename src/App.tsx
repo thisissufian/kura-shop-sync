@@ -2,16 +2,22 @@ import { useEffect } from "preact/hooks";
 import {
   activeTab,
   cartCount,
+  isOwner,
   isTauriRuntime,
   loading,
   refreshBootstrap,
   syncStatus,
   toastMessage,
 } from "./state/kuraStore";
+import { shopSettingsSheetOpen, remoteRelayConnected } from "./state/uiSignals";
+import { initRelaySettings } from "./state/remoteRelay";
 import type { KuraTab } from "./types/kura";
 import { SegmentedControl } from "./ui/primitives/SegmentedControl";
 import { ProductFormSheet } from "./ui/sheets/ProductFormSheet";
 import { ReceiptSheet } from "./ui/sheets/ReceiptSheet";
+import { ScannerSheet } from "./ui/sheets/ScannerSheet";
+import { ShopSettingsSheet } from "./ui/sheets/ShopSettingsSheet";
+import { audioMuted, toggleAudioMute } from "./ui/utils/posAudio";
 import { BillsHistoryView } from "./ui/views/BillsHistoryView";
 import { CounterView } from "./ui/views/CounterView";
 import { KuraVaultView } from "./ui/views/KuraVaultView";
@@ -20,6 +26,7 @@ import { SyncAndPrintView } from "./ui/views/SyncAndPrintView";
 export function App() {
   useEffect(() => {
     void refreshBootstrap();
+    initRelaySettings();
   }, []);
 
   const status = syncStatus.value;
@@ -55,6 +62,11 @@ export function App() {
                   <span>
                     {status?.node_id ?? "K1"} · {status?.role ?? "OWNER"}
                   </span>
+                  {remoteRelayConnected.value && (
+                    <span class="rounded-full bg-[#34C759]/14 px-1.5 py-0.2 text-[10px] font-semibold text-[#1E8E3E]">
+                      Remote Live
+                    </span>
+                  )}
                   {!isTauriRuntime && (
                     <span class="rounded bg-black/[0.06] px-1.5 py-0.2 text-[10px]">
                       Preview
@@ -64,9 +76,31 @@ export function App() {
               </div>
             </div>
 
-            <div class="text-right text-[11px] text-[#86868B] tabular-nums">
-              <div>{(status?.peer_count ?? 0)} LAN peers</div>
-              <div>{status?.pending_events ?? 0} pending</div>
+            <div class="flex items-center gap-2">
+              {isOwner.value && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    shopSettingsSheetOpen.value = true;
+                  }}
+                  title="Shop Profile & Currency"
+                  class="rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1D1D1F] hover:bg-black/[0.09]"
+                >
+                  Shop
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={toggleAudioMute}
+                title={audioMuted.value ? "Unmute POS audio" : "Mute POS audio"}
+                class="rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#86868B] hover:text-[#1D1D1F]"
+              >
+                {audioMuted.value ? "Muted" : "Sound"}
+              </button>
+              <div class="text-right text-[11px] text-[#86868B] tabular-nums">
+                <div>{status?.peer_count ?? 0} LAN peers</div>
+                <div>{status?.pending_events ?? 0} pending</div>
+              </div>
             </div>
           </div>
 
@@ -110,6 +144,8 @@ export function App() {
 
       <ReceiptSheet />
       <ProductFormSheet />
+      <ScannerSheet />
+      <ShopSettingsSheet />
     </div>
   );
 }

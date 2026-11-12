@@ -25,3 +25,11 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes kuraScanSweep {
+  0%, 100% { top: 12%; }
+  50% { top: 84%; }
+}
+.kura-scan-line {
+  animation: kuraScanSweep 2.1s ease-in-out infinite;
+}

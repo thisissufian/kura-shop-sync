@@ -20,7 +20,9 @@ fn truncate_pad(s: &str, width: usize) -> String {
 
 pub fn format_receipt_bytes(
     shop_name: &str,
+    shop_subtitle: &str,
     currency_symbol: &str,
+    receipt_footer: &str,
     bill: &BillReceipt,
     width_mm: u16,
 ) -> Vec<u8> {
@@ -37,6 +39,9 @@ pub fn format_receipt_bytes(
     buf.push(b'\n');
     buf.extend_from_slice(&[0x1D, 0x21, 0x00]); // Normal size
     buf.extend_from_slice(&[0x1B, 0x45, 0]); // Bold off
+    if !shop_subtitle.trim().is_empty() {
+        buf.extend_from_slice(format!("{}\n", shop_subtitle.trim()).as_bytes());
+    }
 
     if bill.voided {
         buf.extend_from_slice(b"*** VOIDED RECEIPT ***\n");
@@ -83,7 +88,12 @@ pub fn format_receipt_bytes(
 
     buf.extend_from_slice(format!("{sep}\n").as_bytes());
     buf.extend_from_slice(&[0x1B, 0x61, 1]); // Center
-    buf.extend_from_slice(b"Thank you for shopping!\n");
+    let footer = if receipt_footer.trim().is_empty() {
+        "Thank you for shopping!"
+    } else {
+        receipt_footer.trim()
+    };
+    buf.extend_from_slice(format!("{footer}\n").as_bytes());
     buf.extend_from_slice(b"Kura Offline POS\n");
     buf.extend_from_slice(&[0x1B, 0x64, 0x04]); // Feed 4 lines
     buf.extend_from_slice(&[0x1D, 0x56, 0x42, 0x00]); // Cut paper

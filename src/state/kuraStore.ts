@@ -1,22 +1,7 @@
 import { computed, signal } from "@preact/signals";
-import type {
-  BillReceipt,
-  BootstrapState,
-  KuraTab,
-  PdfExportResult,
-  PrinterSettings,
-  Product,
-  SyncChainStatus,
-  UpsertProductInput,
-} from "../types/kura";
-import {
-  callBackend,
-  formatMoney,
-  isTauriRuntime,
-  loadPrinterSettings,
-  parseMoneyInput,
-  PRINTER_STORAGE_KEY,
-} from "./ipcBridge";
+import { playCheckoutChime, playScanBeep, playWarningTone } from "../ui/utils/posAudio";
+import type { BillReceipt, BootstrapState, KuraTab, PdfExportResult, PrinterSettings, Product, SyncChainStatus, UpsertProductInput } from "../types/kura";
+import { callBackend, formatMoney, isTauriRuntime, loadPrinterSettings, parseMoneyInput, PRINTER_STORAGE_KEY } from "./ipcBridge";
 
 export { formatMoney, isTauriRuntime, parseMoneyInput };
 
@@ -37,6 +22,7 @@ export const printerSettings = signal<PrinterSettings>(loadPrinterSettings());
 let toastTimer: number | undefined;
 
 export function showToast(text: string, tone: "ok" | "err" = "ok"): void {
+  if (tone === "err") playWarningTone();
   toastMessage.value = { text, tone };
   if (toastTimer) window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
@@ -79,10 +65,12 @@ export function updatePrinterSettings(next: PrinterSettings): void {
 }
 
 export function setCartQty(sku: string, qty: number): void {
+  const prev = cart.value[sku] ?? 0;
   const next = { ...cart.value };
   if (qty <= 0) delete next[sku];
   else next[sku] = qty;
   cart.value = next;
+  if (qty > prev) playScanBeep();
 }
 
 export function clearCart(): void {
@@ -130,16 +118,14 @@ export async function chargeAndIssueBill(): Promise<BillReceipt | null> {
   if (items.length === 0) return null;
   try {
     const receipt = await callBackend<BillReceipt>("issue_bill", {
-      input: {
-        items,
-        discount_minor: discountMinor.value,
-        payment_mode: paymentMode.value,
-      },
+      input: { items, discount_minor: discountMinor.value, payment_mode: paymentMode.value },
     });
     clearCart();
     await refreshBootstrap();
     activeReceipt.value = receipt;
+    playCheckoutChime();
     showToast(`Issued ${receipt.bill_no}`);
+    void import("./remoteRelay").then((m) => m.publishRelayDelta());
     return receipt;
   } catch (err) {
     showToast(String(err), "err");

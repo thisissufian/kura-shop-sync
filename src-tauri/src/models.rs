@@ -52,7 +52,9 @@ pub struct SyncChainStatus {
     pub node_id: String,
     pub role: String,
     pub shop_name: String,
+    pub shop_subtitle: String,
     pub currency_symbol: String,
+    pub receipt_footer: String,
     pub peer_count: usize,
     pub pending_events: i64,
     pub lan_ip: String,
@@ -100,11 +102,64 @@ pub struct PdfExportResult {
     pub size_bytes: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VaultExportResult {
+    pub file_path: String,
+    pub payload_b64: String,
+    pub events_count: usize,
+    pub size_bytes: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RelayEnvelope {
+    pub chain_id_hash: String,
+    pub latest_hlc: String,
+    pub cipher_b64: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShopSettings {
+    pub shop_name: String,
+    pub shop_subtitle: String,
+    pub currency_symbol: String,
+    pub receipt_footer: String,
+    pub node_id: String,
+    pub role: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShopSettingsInput {
+    pub shop_name: String,
+    pub shop_subtitle: String,
+    pub currency_symbol: String,
+    pub receipt_footer: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TerminalSalesSummary {
+    pub node_id: String,
+    pub bills_count: i64,
+    pub revenue_minor: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OwnerAnalytics {
+    pub gross_revenue_minor: i64,
+    pub estimated_cogs_minor: i64,
+    pub net_profit_minor: i64,
+    pub margin_bps: i64,
+    pub total_bills_count: i64,
+    pub voided_bills_count: i64,
+    pub terminal_breakdown: Vec<TerminalSalesSummary>,
+}
+
 #[derive(Debug, Clone)]
 pub struct ChainConfig {
     pub node_id: String,
     pub shop_name: String,
+    pub shop_subtitle: String,
     pub currency_symbol: String,
+    pub receipt_footer: String,
     pub role: String,
     pub seed_b64: String,
     pub last_hlc: String,

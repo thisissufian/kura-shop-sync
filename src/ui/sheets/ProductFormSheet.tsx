@@ -5,6 +5,7 @@ import {
   productSheetOpen,
   saveProduct,
 } from "../../state/kuraStore";
+import { scannedBarcodePrefill, scannerMode } from "../../state/uiSignals";
 import { SpringSheet } from "../primitives/SpringSheet";
 
 const minorToInput = (m: number) => (m / 100).toFixed(2);
@@ -37,7 +38,8 @@ export function ProductFormSheet() {
     } else {
       setSku(`SKU-${Math.floor(100 + Math.random() * 899)}`);
       setName("");
-      setBarcode("");
+      setBarcode(scannedBarcodePrefill.value ?? "");
+      scannedBarcodePrefill.value = null;
       setCategory("General");
       setSellStr("");
       setCostStr("");
@@ -109,15 +111,29 @@ export function ProductFormSheet() {
             />
           </label>
 
-          <label class="block">
+          <div class="block">
             <span class="text-[11px] font-medium text-[#86868B]">Barcode (Optional)</span>
-            <input
-              placeholder="Scan or type EAN / UPC"
-              value={barcode}
-              onInput={(e) => setBarcode((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[14px] tabular-nums"
-            />
-          </label>
+            <div class="mt-1 flex gap-2">
+              <input
+                placeholder="Scan or type EAN / UPC"
+                value={barcode}
+                onInput={(e) => setBarcode((e.target as HTMLInputElement).value)}
+                class="flex-1 rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[14px] tabular-nums"
+              />
+              {!existing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    productSheetOpen.value = false;
+                    scannerMode.value = "BARCODE_PREFILL";
+                  }}
+                  class="rounded-[10px] bg-[#007AFF]/10 px-3 py-2 text-[12px] font-semibold text-[#007AFF] active:scale-95"
+                >
+                  Cam
+                </button>
+              )}
+            </div>
+          </div>
 
           <div class="grid grid-cols-2 gap-2.5">
             <label class="block">

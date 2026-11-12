@@ -24,7 +24,9 @@ const mockSync: SyncChainStatus = {
   node_id: "K1",
   role: "OWNER",
   shop_name: "Kura General Store",
+  shop_subtitle: "Local Retail · Offline POS",
   currency_symbol: "$",
+  receipt_footer: "Thank you for shopping!",
   peer_count: 0,
   pending_events: 0,
   lan_ip: "127.0.0.1:42850",
@@ -109,6 +111,67 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
   }
   if (cmd === "trigger_peer_sync") return `Preview LAN check: ${mockSync.peer_count} peer(s)` as T;
   if (cmd === "print_bill_thermal") return `Preview ESC/POS queued for ${args?.ip}:${args?.port}` as T;
+  if (cmd === "get_shop_settings") {
+    return {
+      shop_name: mockSync.shop_name,
+      shop_subtitle: mockSync.shop_subtitle,
+      currency_symbol: mockSync.currency_symbol,
+      receipt_footer: mockSync.receipt_footer,
+      node_id: mockSync.node_id,
+      role: mockSync.role,
+    } as T;
+  }
+  if (cmd === "update_shop_settings") {
+    if (mockSync.role !== "OWNER") throw new Error("Only OWNER devices can update shop profile");
+    const input = args?.input as { shop_name: string; shop_subtitle: string; currency_symbol: string; receipt_footer: string };
+    mockSync.shop_name = input.shop_name;
+    mockSync.shop_subtitle = input.shop_subtitle;
+    mockSync.currency_symbol = input.currency_symbol;
+    mockSync.receipt_footer = input.receipt_footer;
+    return { ...mockSync } as T;
+  }
+  if (cmd === "get_owner_analytics") {
+    if (mockSync.role !== "OWNER") throw new Error("Profit analytics are locked to OWNER devices");
+    let gross = 0;
+    let cogs = 0;
+    let voided = 0;
+    const perNode = new Map<string, { bills_count: number; revenue_minor: number }>();
+    for (const b of mockBills) {
+      if (b.voided) { voided++; continue; }
+      gross += b.total_minor;
+      const cur = perNode.get(b.node_id) ?? { bills_count: 0, revenue_minor: 0 };
+      cur.bills_count += 1;
+      cur.revenue_minor += b.total_minor;
+      perNode.set(b.node_id, cur);
+      for (const it of b.items) {
+        const p = mockProducts.find((x) => x.sku === it.sku);
+        cogs += (p?.cost_price_minor ?? 0) * it.qty;
+      }
+    }
+    const net = gross - cogs;
+    return {
+      gross_revenue_minor: gross,
+      estimated_cogs_minor: cogs,
+      net_profit_minor: net,
+      margin_bps: gross > 0 ? Math.trunc((net * 10000) / gross) : 0,
+      total_bills_count: mockBills.length - voided,
+      voided_bills_count: voided,
+      terminal_breakdown: Array.from(perNode.entries()).map(([node_id, v]) => ({ node_id, ...v })),
+    } as T;
+  }
+  if (cmd === "export_encrypted_vault") {
+    return {
+      file_path: "KuraReceipts/kura-vault-261112.kura",
+      payload_b64: "S3VyYVZhdWx0UHJldmlldw==",
+      events_count: mockProducts.length + mockBills.length,
+      size_bytes: 512,
+    } as T;
+  }
+  if (cmd === "import_encrypted_vault") return 0 as T;
+  if (cmd === "prepare_relay_envelope") {
+    return { chain_id_hash: "preview01", latest_hlc: nowHlc(99), cipher_b64: "" } as T;
+  }
+  if (cmd === "ingest_relay_envelope") return 0 as T;
   if (cmd === "export_bill_pdf") {
     const res: PdfExportResult = {
       file_path: `KuraReceipts/${args?.billNo}.pdf`,

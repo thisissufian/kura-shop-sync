@@ -34,13 +34,60 @@ export interface SyncChainStatus {
   node_id: string;
   role: "OWNER" | "CASHIER" | string;
   shop_name: string;
+  shop_subtitle: string;
   currency_symbol: string;
+  receipt_footer: string;
   peer_count: number;
   pending_events: number;
   lan_ip: string;
   pairing_uri_owner: string;
   pairing_uri_cashier: string;
   recovery_phrase: string;
+}
+
+export interface ShopSettings {
+  shop_name: string;
+  shop_subtitle: string;
+  currency_symbol: string;
+  receipt_footer: string;
+  node_id: string;
+  role: string;
+}
+
+export interface ShopSettingsInput {
+  shop_name: string;
+  shop_subtitle: string;
+  currency_symbol: string;
+  receipt_footer: string;
+}
+
+export interface TerminalSalesSummary {
+  node_id: string;
+  bills_count: number;
+  revenue_minor: number;
+}
+
+export interface OwnerAnalytics {
+  gross_revenue_minor: number;
+  estimated_cogs_minor: number;
+  net_profit_minor: number;
+  margin_bps: number;
+  total_bills_count: number;
+  voided_bills_count: number;
+  terminal_breakdown: TerminalSalesSummary[];
+}
+
+export interface VaultExportResult {
+  file_path: string;
+  payload_b64: string;
+  events_count: number;
+  size_bytes: number;
+}
+
+export interface RelayEnvelope {
+  chain_id_hash: string;
+  latest_hlc: string;
+  cipher_b64: string;
 }
 
 export interface BootstrapState {
