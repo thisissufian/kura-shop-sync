@@ -171,7 +171,7 @@ export function CounterView() {
         </div>
       </div>
 
-      <div class="fixed inset-x-0 bottom-0 z-30 p-3 bg-white/80 backdrop-blur-xl border-t border-black/[0.06] lg:static lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:p-0 lg:sticky lg:top-24">
+      <div class="fixed inset-x-0 bottom-0 z-30 px-3 pt-3 kura-safe-bottom bg-white/80 backdrop-blur-xl border-t border-black/[0.06] lg:static lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:p-0 lg:sticky lg:top-24">
         <CheckoutPanel />
       </div>
     </div>

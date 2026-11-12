@@ -8,11 +8,11 @@
 
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2.2-24C8D8?style=flat-square&logo=tauri&logoColor=white)](https://v2.tauri.app/)
 [![Rust 2021](https://img.shields.io/badge/Rust-2021-DEA584?style=flat-square&logo=rust&logoColor=black)](https://www.rust-lang.org/)
-[![Preact + Signals](https://img.shields.io/badge/Preact%20%2B%20Signals-46.54%20KB%20gzip-673AB8?style=flat-square&logo=preact&logoColor=white)](https://preactjs.com/)
+[![Preact + Signals](https://img.shields.io/badge/Preact%20%2B%20Signals-47.98%20KB%20gzip-673AB8?style=flat-square&logo=preact&logoColor=white)](https://preactjs.com/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![SQLite WAL](https://img.shields.io/badge/SQLite-WAL%20Mode-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/wal.html)
-[![Encryption](https://img.shields.io/badge/Sync-AES--256--GCM-34C759?style=flat-square)](#5-cryptographic-sync-chain--key-hierarchy)
-[![Bundle Size](https://img.shields.io/badge/dist%2F%20Total%20Gzip-46.54%20KB-007AFF?style=flat-square)](#11-developer-setup-testing--build-instructions)
+[![Encryption](https://img.shields.io/badge/Sync-AES--256--GCM-34C759?style=flat-square)](#5-mathematical--data-integrity-guarantees)
+[![Bundle Size](https://img.shields.io/badge/dist%2F%20Total%20Gzip-47.98%20KB-007AFF?style=flat-square)](#11-developer-setup-testing--build-instructions)
 
 </div>
 
@@ -25,7 +25,7 @@ In traditional Japanese architecture, a **Kura (蔵)** is an earthen-walled merc
 **Kura** applies that exact philosophy to modern neighborhood commerce across Android phones and Windows counters:
 - Your inventory counts, bills, profit margins, and customer due ledgers live inside a fast, ACID-compliant **SQLite WAL** vault on your own devices.
 - All business logic, CRDT merging, cryptography, LAN networking, ESC/POS encoding, and vector PDF rendering execute in native **Rust**.
-- The user interface is an Apple Cupertino HIG **Preact + Signals + Tailwind CSS v4** layer delivering the entire production frontend in **`46.54 KB` gzipped** (`0.44 KB` HTML + `6.56 KB` CSS + `39.54 KB` JS), strictly enforcing a **220-line per-file ceiling** across every `.rs`, `.ts`, and `.tsx` source file.
+- The user interface is an Apple Cupertino HIG **Preact + Signals + Tailwind CSS v4** layer (supporting both **Cupertino Light** and **True OLED Dark Mode** plus mobile safe-area insets) delivering the entire production frontend in **`47.98 KB` gzipped** (`0.43 KB` HTML + `6.97 KB` CSS + `40.58 KB` JS), strictly enforcing a **220-line per-file ceiling** across every `.rs`, `.ts`, and `.tsx` source file.
 
 ---
 
@@ -40,7 +40,7 @@ In traditional Japanese architecture, a **Kura (蔵)** is an earthen-walled merc
 | **Cashier Permission Safety** | Often exposes wholesale cost & profits | **Cryptographic `OWNER` vs `CASHIER` roles** redact COGS & lock voids |
 | **Money Arithmetic** | Floating-point (`0.1 + 0.2`) rounding bugs | **Strict `i64` minor units** across Rust, SQLite & TypeScript |
 | **Thermal & PDF Printing** | Heavy PDF rasterizers / proprietary SDKs | **Pure-Rust TCP `9100` ESC/POS + Zero-Dependency PDF 1.4** |
-| **Frontend Footprint** | 1.5 MB – 12 MB Electron/React bloat | **`46.54 KB` gzipped** (`dist/` total) |
+| **Frontend Footprint** | 1.5 MB – 12 MB Electron/React bloat | **`47.98 KB` gzipped** (`dist/` total) |
 
 ---
 
@@ -76,7 +76,7 @@ In traditional Japanese architecture, a **Kura (蔵)** is an earthen-walled merc
 
 ```mermaid
 flowchart TB
-    subgraph FE["Frontend View Layer (46.54 KB gzipped · Strict <=220-line modules)"]
+    subgraph FE["Frontend View Layer (47.98 KB gzipped · Strict <=220-line modules)"]
         UI["Preact Components & SpringSheets"]
         SIG["@preact/signals Reactive Store (kuraStore.ts)"]
         HOT["POS Hotkeys & <35ms HID Gun Listener (posHotkeys.ts)"]
@@ -303,19 +303,23 @@ Kura - Shop Stock & Bill Sync/
 ├── .agents/
 │   ├── rules/kura-architecture.md          # Global architectural & HIG invariants
 │   └── skills/                             # Domain skills (Rust core, CRDT ledger, Sync Chain, ESC/POS, Audio, HIG UI)
+├── .github/workflows/release-build.yml     # Automated Linux tests + Windows .exe/.msi + Android .apk/.aab CI
 ├── docs/
 │   ├── PLAY_STORE_LISTING.md               # ASO store copy, screenshot prompts & Android release build steps
 │   └── PRIVACY_POLICY.md                   # Google Play Console offline-first privacy disclosure
 ├── public/
-│   └── kura-icon.svg                       # Apple squircle Kura (蔵) storehouse brand SVG
+│   └── kura-icon.svg                       # Apple squircle Kura (蔵) storehouse brand SVG (1024x1024)
+├── scripts/
+│   └── configure-android.mjs               # Post-init AndroidManifest.xml patcher (LAN multicast, cleartext, camera, BT)
 ├── src/
-│   ├── main.tsx & App.tsx                  # Entry point, header pills (Due, Till, Sound, Hotkeys) & SpringSheet mounts
-│   ├── index.css                           # Tailwind CSS v4 styles & scanner line animation
+│   ├── main.tsx & App.tsx                  # Entry point, header pills (Due, Till, Sound, Theme, Hotkeys) & SpringSheet mounts
+│   ├── index.css                           # Tailwind CSS v4 + OLED Dark variables + mobile safe-area inset utilities
 │   ├── types/kura.ts                       # Shared TypeScript interfaces mirroring Rust models
 │   ├── state/
 │   │   ├── ipcBridge.ts                    # Auto-detects Tauri IPC vs browser preview fallback + integer money format/parse
 │   │   ├── kuraStore.ts                    # Core reactive Signals state (cart, products, bills, checkout, thermal/PDF)
 │   │   ├── parkedCarts.ts                  # Hold/Park Cart queue (max 5 in localStorage) & bill-number scan lookup
+│   │   ├── themeStore.ts                   # Cupertino Light / True OLED Dark / Auto theme persistence
 │   │   ├── customerActions.ts              # Khata customer signals & payment actions
 │   │   ├── expenseActions.ts               # Cash drawer summary & petty expense actions
 │   │   ├── catalogCsvActions.ts            # CSV import/export & A4 barcode label PDF actions
@@ -324,7 +328,7 @@ Kura - Shop Stock & Bill Sync/
 │   │   ├── uiSignals.ts                    # Sheet visibility & scanner mode signals
 │   │   └── previewBridge.ts & previewFixtures.ts  # Browser preview simulator when running without Tauri runtime
 │   └── ui/
-│       ├── primitives/ (SegmentedControl.tsx, SpringSheet.tsx)
+│       ├── primitives/ (KuraBrandMark.tsx, SegmentedControl.tsx, SpringSheet.tsx)
 │       ├── components/ (CheckoutPanel.tsx, DueCustomerPicker.tsx, ParkedCartsBar.tsx, OwnerAnalyticsCard.tsx, PrinterHubCard.tsx, QrPairingCard.tsx, VaultBackupCard.tsx)
 │       ├── sheets/     (CashDrawerSheet.tsx, CsvCatalogSheet.tsx, CustomerKhataSheet.tsx, ProductFormSheet.tsx, ReceiptSheet.tsx, ScannerSheet.tsx, ShopSettingsSheet.tsx)
 │       ├── utils/      (posAudio.ts, posHotkeys.ts, whatsappReceipt.ts)
@@ -416,8 +420,14 @@ npm run tauri build
 
 # 5. Build Android APK / Play Store AAB (see docs/PLAY_STORE_LISTING.md)
 npx tauri android init
+npm run android:prep
 npx tauri android build --aab --apk
 ```
+
+### Cloud Builds: Download Ready-to-Install `.apk` & `.exe` from GitHub Actions
+`.github/workflows/release-build.yml` compiles both desktop and mobile installers in the cloud so you never need heavy Android NDK toolchains locally:
+- **Every push to `main`** runs the 220-line audit, Vite bundle check, Rust `cargo test`, and uploads the Windows POS installer artifact (`kura-windows-pos-installer` containing `.exe` & `.msi`).
+- **Manual trigger or release tag (`v*`)**: Open the **Actions -> Kura Release & Cross-Platform Cloud Builder -> Run workflow** button on GitHub (or push a tag like `git tag v0.1.0 && git push origin v0.1.0`) to also build and download the Android universal `.apk` and Play Store `.aab` (`kura-android-playstore-bundle`).
 
 > **Note for Windows workspace paths containing `&`**: `package.json` invokes `node ./node_modules/...` directly for `dev`, `build`, `preview`, and `tauri` scripts so Windows `cmd.exe` `.cmd` shims work seamlessly inside folders containing special characters.
 

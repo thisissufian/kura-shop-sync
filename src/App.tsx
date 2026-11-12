@@ -13,8 +13,10 @@ import {
 } from "./state/kuraStore";
 import { totalDueMinor } from "./state/customerActions";
 import { initRelaySettings } from "./state/remoteRelay";
+import { cycleThemeMode, initThemeListener, themeMode } from "./state/themeStore";
 import { drawerSheetOpen, khataSheetOpen, remoteRelayConnected, shopSettingsSheetOpen } from "./state/uiSignals";
 import type { KuraTab } from "./types/kura";
+import { KuraBrandMark } from "./ui/primitives/KuraBrandMark";
 import { SegmentedControl } from "./ui/primitives/SegmentedControl";
 import { CashDrawerSheet } from "./ui/sheets/CashDrawerSheet";
 import { CsvCatalogSheet } from "./ui/sheets/CsvCatalogSheet";
@@ -34,7 +36,12 @@ export function App() {
   useEffect(() => {
     void refreshBootstrap();
     initRelaySettings();
-    return attachPosHotkeys();
+    const stopTheme = initThemeListener();
+    const stopKeys = attachPosHotkeys();
+    return () => {
+      stopTheme();
+      stopKeys();
+    };
   }, []);
 
   const status = syncStatus.value;
@@ -50,13 +57,11 @@ export function App() {
 
   return (
     <div class="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
-      <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-black/[0.06]">
-        <div class="mx-auto max-w-5xl px-4 py-2.5 space-y-2.5">
+      <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-black/[0.06] kura-safe-top">
+        <div class="mx-auto max-w-5xl px-4 pb-2.5 space-y-2.5">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 min-w-0">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#007AFF] text-[15px] font-bold text-white shadow-xs">
-                蔵
-              </div>
+              <KuraBrandMark />
               <div class="min-w-0">
                 <h1 class="truncate text-[16px] font-bold tracking-tight text-[#1D1D1F]">
                   {status?.shop_name ?? "Kura"}
@@ -124,6 +129,14 @@ export function App() {
                 class="rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#86868B] hover:text-[#1D1D1F]"
               >
                 {audioMuted.value ? "Muted" : "Sound"}
+              </button>
+              <button
+                type="button"
+                onClick={cycleThemeMode}
+                title={`Theme: ${themeMode.value} (tap to cycle)`}
+                class="rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1D1D1F] hover:bg-black/[0.09]"
+              >
+                {themeMode.value === "DARK" ? "OLED" : themeMode.value === "LIGHT" ? "Light" : "Auto"}
               </button>
               <span
                 title="Shortcuts: / or Ctrl+K Search, F2 Scan, F4 Charge, F6 Hold"

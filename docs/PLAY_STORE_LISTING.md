@@ -59,12 +59,18 @@ Unlike bloated cloud POS apps that lock your shop behind monthly fees, slow dash
 # 1. Initialize Tauri Android Gradle project (one-time)
 npx tauri android init
 
-# 2. Verify frontend bundle stays under 50 KB gzipped
+# 2. Inject LAN multicast, printer cleartext HTTP & camera/BT permissions
+npm run android:prep
+
+# 3. Verify frontend bundle stays under 50 KB gzipped
 npm run build
 
-# 3. Build signed Android App Bundle (.aab) and release APK
+# 4. Build signed Android App Bundle (.aab) and release APK
 npx tauri android build --aab --apk
 ```
+
+### Cloud Builds via GitHub Actions
+Push a version tag (e.g. `git tag v0.1.0 && git push origin v0.1.0`) or click **Actions -> Kura Release & Cross-Platform Cloud Builder -> Run workflow** on GitHub to build `.apk` and `.aab` files in the cloud and download the **`kura-android-playstore-bundle`** artifact directly.
 
 ### Signing Configuration (`keystore.properties`)
 Create a release upload keystore once using `keytool`:

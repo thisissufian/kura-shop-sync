@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { syncStatus } from "../../state/kuraStore";
+import { setThemeMode, themeMode, type ThemeMode } from "../../state/themeStore";
 import { shopSettingsSheetOpen } from "../../state/uiSignals";
 import { saveShopSettings } from "../../state/vaultConfigActions";
 import { SpringSheet } from "../primitives/SpringSheet";
@@ -110,6 +111,32 @@ export function ShopSettingsSheet() {
               class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[13px]"
             />
           </label>
+
+          <div>
+            <span class="text-[11px] font-medium text-[#86868B]">Display Appearance</span>
+            <div class="mt-1.5 flex gap-1.5">
+              {(
+                [
+                  { id: "LIGHT", label: "Light" },
+                  { id: "DARK", label: "OLED Dark" },
+                  { id: "SYSTEM", label: "Auto" },
+                ] as { id: ThemeMode; label: string }[]
+              ).map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setThemeMode(m.id)}
+                  class={`flex-1 rounded-full py-1.5 text-[12px] font-semibold transition ${
+                    themeMode.value === m.id
+                      ? "bg-[#1D1D1F] text-white"
+                      : "bg-[#F5F5F7] text-[#1D1D1F] border border-black/[0.06]"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <button

@@ -61,7 +61,7 @@ export function SpringSheet({
             </button>
           </div>
         </div>
-        <div class="overflow-y-auto p-4 sm:p-5">{children}</div>
+        <div class="overflow-y-auto px-4 pt-4 sm:px-5 sm:pt-5 kura-safe-bottom">{children}</div>
       </div>
     </div>
   );
