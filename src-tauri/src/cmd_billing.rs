@@ -122,3 +122,12 @@ pub fn get_recent_bills(state: State<'_, AppState>) -> Result<Vec<BillReceipt>, 
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
     list_recent_bills(&conn, 50)
 }
+
+#[tauri::command]
+pub fn find_bill_by_no(
+    bill_no: String,
+    state: State<'_, AppState>,
+) -> Result<Option<BillReceipt>, String> {
+    let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
+    Ok(get_bill_by_no(&conn, bill_no.trim()).ok())
+}

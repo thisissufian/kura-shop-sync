@@ -3,6 +3,7 @@ mod cmd_catalog;
 mod cmd_catalog_csv;
 mod cmd_config_vault;
 mod cmd_customers;
+mod cmd_expenses;
 mod cmd_sync_print;
 mod commands;
 mod crypto_chain;
@@ -12,11 +13,14 @@ mod lan_sync;
 mod ledger;
 mod ledger_analytics;
 mod ledger_customers;
+mod ledger_expenses;
 mod ledger_init;
 mod ledger_queries;
 mod mnemonic;
 mod models;
 mod printer;
+#[cfg(test)]
+mod tests;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
@@ -60,6 +64,7 @@ pub fn run() {
             cmd_billing::issue_bill,
             cmd_billing::void_bill,
             cmd_billing::get_recent_bills,
+            cmd_billing::find_bill_by_no,
             cmd_sync_print::get_sync_status,
             cmd_sync_print::join_sync_chain,
             cmd_sync_print::trigger_peer_sync,
@@ -78,6 +83,8 @@ pub fn run() {
             cmd_catalog_csv::export_barcode_labels_pdf,
             cmd_catalog_csv::export_catalog_csv,
             cmd_catalog_csv::import_catalog_csv,
+            cmd_expenses::log_shop_expense,
+            cmd_expenses::get_cash_drawer_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Kura");

@@ -65,6 +65,14 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            phone TEXT NOT NULL,
            balance_due_minor INTEGER NOT NULL DEFAULT 0,
            updated_hlc TEXT NOT NULL
+         );
+         CREATE TABLE IF NOT EXISTS expenses (
+           expense_id TEXT PRIMARY KEY,
+           category TEXT NOT NULL,
+           amount_minor INTEGER NOT NULL,
+           note TEXT NOT NULL,
+           node_id TEXT NOT NULL,
+           hlc TEXT NOT NULL
          );",
     )
     .map_err(|e| format!("Schema init: {e}"))?;

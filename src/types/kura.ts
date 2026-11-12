@@ -141,4 +141,23 @@ export interface PrinterSettings {
   widthMm: 58 | 80;
 }
 
+export interface ShopExpense {
+  expense_id: string;
+  category: string;
+  amount_minor: number;
+  note: string;
+  node_id: string;
+  hlc: string;
+}
+
+export interface CashDrawerSummary {
+  cash_sales_minor: number;
+  wallet_sales_minor: number;
+  due_issued_minor: number;
+  khata_cash_collected_minor: number;
+  total_expenses_minor: number;
+  expected_drawer_cash_minor: number;
+  recent_expenses: ShopExpense[];
+}
+
 export type KuraTab = "counter" | "vault" | "bills" | "sync";

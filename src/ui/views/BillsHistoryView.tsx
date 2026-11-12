@@ -4,6 +4,7 @@ import {
   formatMoney,
   recentBills,
 } from "../../state/kuraStore";
+import { drawerSheetOpen } from "../../state/uiSignals";
 import { OwnerAnalyticsCard } from "../components/OwnerAnalyticsCard";
 
 export function BillsHistoryView() {
@@ -14,13 +15,22 @@ export function BillsHistoryView() {
     <div class="space-y-3 pb-8">
       <OwnerAnalyticsCard />
 
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-2">
         <div>
           <h2 class="text-[18px] font-bold tracking-tight text-[#1D1D1F]">Bills Ledger</h2>
           <p class="text-[12px] text-[#86868B] tabular-nums">
             {bills.length} recent receipt(s) · Click any bill to reprint, export PDF, or void
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            drawerSheetOpen.value = true;
+          }}
+          class="shrink-0 rounded-full bg-[#1D1D1F] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-xs hover:brightness-110 active:scale-95 transition"
+        >
+          Till / Cash
+        </button>
       </div>
 
       {bills.length === 0 ? (

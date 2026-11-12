@@ -7,7 +7,7 @@ import type {
   Product,
   UpsertProductInput,
 } from "../types/kura";
-import { mockBills, mockCustomers, mockProducts, mockSync, nowHlc } from "./previewFixtures";
+import { calcMockDrawer, mockBills, mockCustomers, mockExpenses, mockKhataCollected, mockProducts, mockSync, nowHlc } from "./previewFixtures";
 
 export async function previewInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (cmd === "get_bootstrap_state") {
@@ -90,10 +90,29 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
   if (cmd === "record_customer_payment") {
     const cust = mockCustomers.find((c) => c.customer_id === args?.customerId);
     if (!cust) throw new Error("Customer not found");
-    cust.balance_due_minor -= Number(args?.amountMinor ?? 0);
+    const amt = Number(args?.amountMinor ?? 0);
+    cust.balance_due_minor -= amt;
+    mockKhataCollected.minor += amt;
     return { ...cust } as T;
   }
   if (cmd === "get_recent_bills") return [...mockBills] as T;
+  if (cmd === "find_bill_by_no") {
+    const target = String(args?.billNo ?? "").toUpperCase();
+    return (mockBills.find((b) => b.bill_no.toUpperCase() === target) ?? null) as T;
+  }
+  if (cmd === "get_cash_drawer_summary") return calcMockDrawer() as T;
+  if (cmd === "log_shop_expense") {
+    const exp = {
+      expense_id: `EXP-${mockExpenses.length + 1}`,
+      category: String(args?.category ?? "Supplies"),
+      amount_minor: Number(args?.amountMinor ?? 0),
+      note: String(args?.note ?? ""),
+      node_id: mockSync.node_id,
+      hlc: nowHlc(80 + mockExpenses.length),
+    };
+    mockExpenses.unshift(exp);
+    return exp as T;
+  }
   if (cmd === "get_sync_status") return { ...mockSync } as T;
   if (cmd === "join_sync_chain") {
     const raw = String(args?.input ?? "");

@@ -8,6 +8,7 @@ import {
   setCartQty,
   showToast,
 } from "../../state/kuraStore";
+import { tryOpenBillByScan } from "../../state/parkedCarts";
 import { scannedBarcodePrefill, scannerMode } from "../../state/uiSignals";
 import { SpringSheet } from "../primitives/SpringSheet";
 import { playCheckoutChime, playScanBeep, playWarningTone } from "../utils/posAudio";
@@ -69,6 +70,8 @@ export function ScannerSheet() {
       productSheetOpen.value = true;
       return;
     }
+
+    if (await tryOpenBillByScan(code)) return;
 
     const q = code.toLowerCase();
     const match = products.value.find(

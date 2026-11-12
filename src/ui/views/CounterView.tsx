@@ -7,8 +7,10 @@ import {
   setCartQty,
   showToast,
 } from "../../state/kuraStore";
+import { tryOpenBillByScan } from "../../state/parkedCarts";
 import { scannerMode } from "../../state/uiSignals";
 import { CheckoutPanel } from "../components/CheckoutPanel";
+import { ParkedCartsBar } from "../components/ParkedCartsBar";
 
 export function CounterView() {
   const [query, setQuery] = useState("");
@@ -36,10 +38,14 @@ export function CounterView() {
     });
   }, [list, query, category]);
 
-  const handleScanEnter = (e: Event) => {
+  const handleScanEnter = async (e: Event) => {
     e.preventDefault();
     const q = query.trim().toLowerCase();
     if (!q) return;
+    if (await tryOpenBillByScan(query)) {
+      setQuery("");
+      return;
+    }
     const exact = list.find(
       (p) => p.sku.toLowerCase() === q || (p.barcode ?? "").toLowerCase() === q
     );
@@ -57,6 +63,7 @@ export function CounterView() {
   return (
     <div class="lg:grid lg:grid-cols-[1fr_340px] lg:gap-5 lg:items-start pb-40 lg:pb-6">
       <div class="space-y-3">
+        <ParkedCartsBar />
         <form onSubmit={handleScanEnter} class="flex gap-2">
           <input
             id="kura-counter-search"

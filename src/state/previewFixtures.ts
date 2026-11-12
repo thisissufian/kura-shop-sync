@@ -1,6 +1,31 @@
-import type { BillReceipt, CustomerAccount, Product, SyncChainStatus } from "../types/kura";
+import type { BillReceipt, CashDrawerSummary, CustomerAccount, Product, ShopExpense, SyncChainStatus } from "../types/kura";
 
 export const nowHlc = (n = 1) => `${new Date().toISOString()}-${String(n).padStart(4, "0")}-K1`;
+
+export const mockExpenses: ShopExpense[] = [];
+export const mockKhataCollected = { minor: 0 };
+
+export function calcMockDrawer(): CashDrawerSummary {
+  let cash = 0;
+  let wallet = 0;
+  let due = 0;
+  for (const b of mockBills) {
+    if (b.voided) continue;
+    if (b.payment_mode === "CASH") cash += b.total_minor;
+    else if (b.payment_mode === "WALLET") wallet += b.total_minor;
+    else if (b.payment_mode === "DUE") due += b.total_minor;
+  }
+  const exp = mockExpenses.reduce((a, e) => a + e.amount_minor, 0);
+  return {
+    cash_sales_minor: cash,
+    wallet_sales_minor: wallet,
+    due_issued_minor: due,
+    khata_cash_collected_minor: mockKhataCollected.minor,
+    total_expenses_minor: exp,
+    expected_drawer_cash_minor: cash + mockKhataCollected.minor - exp,
+    recent_expenses: [...mockExpenses],
+  };
+}
 
 export const mockCustomers: CustomerAccount[] = [
   { customer_id: "K1-C001", name: "Rahim Traders", phone: "01711-000111", balance_due_minor: 1450, updated_hlc: nowHlc(1) },

@@ -13,9 +13,10 @@ import {
 } from "./state/kuraStore";
 import { totalDueMinor } from "./state/customerActions";
 import { initRelaySettings } from "./state/remoteRelay";
-import { khataSheetOpen, remoteRelayConnected, shopSettingsSheetOpen } from "./state/uiSignals";
+import { drawerSheetOpen, khataSheetOpen, remoteRelayConnected, shopSettingsSheetOpen } from "./state/uiSignals";
 import type { KuraTab } from "./types/kura";
 import { SegmentedControl } from "./ui/primitives/SegmentedControl";
+import { CashDrawerSheet } from "./ui/sheets/CashDrawerSheet";
 import { CsvCatalogSheet } from "./ui/sheets/CsvCatalogSheet";
 import { CustomerKhataSheet } from "./ui/sheets/CustomerKhataSheet";
 import { ProductFormSheet } from "./ui/sheets/ProductFormSheet";
@@ -94,6 +95,16 @@ export function App() {
               >
                 Due {formatMoney(totalDueMinor.value, currencySymbol.value)}
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  drawerSheetOpen.value = true;
+                }}
+                title="Cash Drawer & Petty Expenses"
+                class="rounded-full bg-[#34C759]/14 px-2.5 py-1 text-[11px] font-semibold text-[#1E8E3E] hover:bg-[#34C759]/22"
+              >
+                Till
+              </button>
               {isOwner.value && (
                 <button
                   type="button"
@@ -115,10 +126,10 @@ export function App() {
                 {audioMuted.value ? "Muted" : "Sound"}
               </button>
               <span
-                title="Shortcuts: / or Ctrl+K Search, F2 Cam Scan, F4 Charge"
+                title="Shortcuts: / or Ctrl+K Search, F2 Scan, F4 Charge, F6 Hold"
                 class="hidden sm:inline-block rounded-full bg-black/[0.04] px-2 py-1 text-[10px] font-medium text-[#86868B] tabular-nums"
               >
-                / · F2 · F4
+                / · F2 · F4 · F6
               </span>
               <div class="text-right text-[11px] text-[#86868B] tabular-nums">
                 <div>{status?.peer_count ?? 0} LAN peers</div>
@@ -170,6 +181,7 @@ export function App() {
       <ScannerSheet />
       <ShopSettingsSheet />
       <CustomerKhataSheet />
+      <CashDrawerSheet />
       <CsvCatalogSheet />
     </div>
   );

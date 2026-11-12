@@ -38,7 +38,7 @@ fn c39_pattern(ch: char) -> u16 {
     C39.iter().find(|(c, _)| *c == up).map(|(_, p)| *p).unwrap_or(0b010000101)
 }
 
-fn draw_code39(stream: &mut String, code: &str, x0: f32, y0: f32, max_w: f32, h: f32) {
+pub(crate) fn draw_code39(stream: &mut String, code: &str, x0: f32, y0: f32, max_w: f32, h: f32) {
     let clean: String = code
         .chars()
         .map(|c| c.to_ascii_uppercase())

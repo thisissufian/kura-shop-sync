@@ -12,6 +12,7 @@ import {
 } from "../../state/kuraStore";
 import type { PdfExportResult } from "../../types/kura";
 import { SpringSheet } from "../primitives/SpringSheet";
+import { copyReceiptText, shareReceiptWhatsApp } from "../utils/whatsappReceipt";
 
 export function ReceiptSheet() {
   const bill = activeReceipt.value;
@@ -126,6 +127,22 @@ export function ReceiptSheet() {
             class="rounded-[12px] bg-white border border-black/[0.08] px-3.5 py-3 text-[14px] font-semibold text-[#1D1D1F] hover:bg-black/[0.02] active:scale-[0.98] disabled:opacity-50 transition"
           >
             Export PDF
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => shareReceiptWhatsApp(bill, syncStatus.value, sym)}
+            class="rounded-[12px] bg-[#25D366]/14 border border-[#25D366]/30 px-3.5 py-2.5 text-[13px] font-semibold text-[#128C7E] hover:bg-[#25D366]/20 active:scale-[0.98] transition"
+          >
+            WhatsApp Share
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void copyReceiptText(bill, syncStatus.value, sym)}
+            class="rounded-[12px] bg-black/[0.05] px-3.5 py-2.5 text-[13px] font-semibold text-[#1D1D1F] hover:bg-black/[0.08] active:scale-[0.98] transition"
+          >
+            Copy Text Bill
           </button>
         </div>
 

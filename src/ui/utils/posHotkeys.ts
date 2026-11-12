@@ -10,8 +10,10 @@ import {
   setCartQty,
   showToast,
 } from "../../state/kuraStore";
+import { BILL_NO_RE, holdCurrentCart, tryOpenBillByScan } from "../../state/parkedCarts";
 import {
   csvSheetOpen,
+  drawerSheetOpen,
   khataSheetOpen,
   scannerMode,
   shopSettingsSheetOpen,
@@ -46,6 +48,10 @@ function closeAnySheet(): boolean {
     khataSheetOpen.value = false;
     return true;
   }
+  if (drawerSheetOpen.value) {
+    drawerSheetOpen.value = false;
+    return true;
+  }
   if (csvSheetOpen.value) {
     csvSheetOpen.value = false;
     return true;
@@ -78,6 +84,12 @@ export function attachPosHotkeys(): () => void {
       return;
     }
 
+    if (e.key === "F6") {
+      e.preventDefault();
+      holdCurrentCart();
+      return;
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
       e.preventDefault();
       activeTab.value = "counter";
@@ -101,8 +113,13 @@ export function attachPosHotkeys(): () => void {
     if (e.key === "Enter") {
       if (buf.length >= 4 && now - lastTs <= 80) {
         e.preventDefault();
-        const code = buf.trim().toLowerCase();
+        const raw = buf.trim();
         buf = "";
+        if (BILL_NO_RE.test(raw)) {
+          void tryOpenBillByScan(raw);
+          return;
+        }
+        const code = raw.toLowerCase();
         const match = products.value.find(
           (p) => (p.barcode ?? "").toLowerCase() === code || p.sku.toLowerCase() === code
         );

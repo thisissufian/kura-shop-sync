@@ -2,6 +2,7 @@ use rusqlite::{params, OptionalExtension, Transaction};
 use serde::{Deserialize, Serialize};
 
 use crate::ledger_customers::apply_customer_event;
+use crate::ledger_expenses::apply_expense_event;
 use crate::models::{BillItem, BillReceipt, LedgerEvent};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -157,6 +158,9 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
         }
         "CUSTOMER_UPSERT" | "CUSTOMER_PAYMENT" => {
             apply_customer_event(tx, ev)?;
+        }
+        "EXPENSE_LOGGED" => {
+            apply_expense_event(tx, ev)?;
         }
         "SHOP_SETTINGS_UPDATED" => {
             let s: ShopSettingsPayload = serde_json::from_str(&ev.payload_json)

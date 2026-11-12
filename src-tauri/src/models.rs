@@ -167,6 +167,27 @@ pub struct OwnerAnalytics {
     pub terminal_breakdown: Vec<TerminalSalesSummary>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShopExpense {
+    pub expense_id: String,
+    pub category: String,
+    pub amount_minor: i64,
+    pub note: String,
+    pub node_id: String,
+    pub hlc: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CashDrawerSummary {
+    pub cash_sales_minor: i64,
+    pub wallet_sales_minor: i64,
+    pub due_issued_minor: i64,
+    pub khata_cash_collected_minor: i64,
+    pub total_expenses_minor: i64,
+    pub expected_drawer_cash_minor: i64,
+    pub recent_expenses: Vec<ShopExpense>,
+}
+
 #[derive(Debug, Clone)]
 pub struct ChainConfig {
     pub node_id: String,
