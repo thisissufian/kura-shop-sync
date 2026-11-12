@@ -1,0 +1,115 @@
+import { useEffect } from "preact/hooks";
+import {
+  activeTab,
+  cartCount,
+  isTauriRuntime,
+  loading,
+  refreshBootstrap,
+  syncStatus,
+  toastMessage,
+} from "./state/kuraStore";
+import type { KuraTab } from "./types/kura";
+import { SegmentedControl } from "./ui/primitives/SegmentedControl";
+import { ProductFormSheet } from "./ui/sheets/ProductFormSheet";
+import { ReceiptSheet } from "./ui/sheets/ReceiptSheet";
+import { BillsHistoryView } from "./ui/views/BillsHistoryView";
+import { CounterView } from "./ui/views/CounterView";
+import { KuraVaultView } from "./ui/views/KuraVaultView";
+import { SyncAndPrintView } from "./ui/views/SyncAndPrintView";
+
+export function App() {
+  useEffect(() => {
+    void refreshBootstrap();
+  }, []);
+
+  const status = syncStatus.value;
+  const tab = activeTab.value;
+  const toast = toastMessage.value;
+
+  const tabs: { id: KuraTab; label: string; badge?: number }[] = [
+    { id: "counter", label: "Counter", badge: cartCount.value },
+    { id: "vault", label: "Kura Vault" },
+    { id: "bills", label: "Bills" },
+    { id: "sync", label: "Sync & Print" },
+  ];
+
+  return (
+    <div class="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
+      <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-black/[0.06]">
+        <div class="mx-auto max-w-5xl px-4 py-2.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#007AFF] text-[15px] font-bold text-white shadow-xs">
+                蔵
+              </div>
+              <div class="min-w-0">
+                <h1 class="truncate text-[16px] font-bold tracking-tight text-[#1D1D1F]">
+                  {status?.shop_name ?? "Kura"}
+                </h1>
+                <div class="flex items-center gap-1.5 text-[11px] text-[#86868B] tabular-nums">
+                  <span
+                    class={`h-1.5 w-1.5 rounded-full ${
+                      (status?.peer_count ?? 0) > 0 ? "bg-[#34C759]" : "bg-[#007AFF]"
+                    }`}
+                  />
+                  <span>
+                    {status?.node_id ?? "K1"} · {status?.role ?? "OWNER"}
+                  </span>
+                  {!isTauriRuntime && (
+                    <span class="rounded bg-black/[0.06] px-1.5 py-0.2 text-[10px]">
+                      Preview
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div class="text-right text-[11px] text-[#86868B] tabular-nums">
+              <div>{(status?.peer_count ?? 0)} LAN peers</div>
+              <div>{status?.pending_events ?? 0} pending</div>
+            </div>
+          </div>
+
+          <SegmentedControl
+            options={tabs}
+            value={tab}
+            onChange={(next) => {
+              activeTab.value = next;
+            }}
+          />
+        </div>
+      </header>
+
+      <main class="mx-auto max-w-5xl px-4 pt-4">
+        {loading.value ? (
+          <div class="py-20 text-center text-[14px] text-[#86868B]">
+            Loading Kura Vault…
+          </div>
+        ) : tab === "counter" ? (
+          <CounterView />
+        ) : tab === "vault" ? (
+          <KuraVaultView />
+        ) : tab === "bills" ? (
+          <BillsHistoryView />
+        ) : (
+          <SyncAndPrintView />
+        )}
+      </main>
+
+      {toast && (
+        <div class="fixed top-4 left-1/2 z-50 -translate-x-1/2 pointer-events-none">
+          <div
+            class={`rounded-full px-4 py-2 text-[13px] font-medium text-white shadow-lg ${
+              toast.tone === "err" ? "bg-[#FF3B30]" : "bg-[#1D1D1F]/90 backdrop-blur-md"
+            }`}
+          >
+            {toast.text}
+          </div>
+        </div>
+      )}
+
+      <ReceiptSheet />
+      <ProductFormSheet />
+    </div>
+  );
+}

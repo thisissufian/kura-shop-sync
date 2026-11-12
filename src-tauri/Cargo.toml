@@ -1,0 +1,32 @@
+[package]
+name = "kura"
+version = "0.1.0"
+description = "Kura (蔵) — Offline-first Shop Stock, POS & Bill Sync"
+authors = ["Kura Systems"]
+edition = "2021"
+
+[lib]
+name = "kura_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+aes-gcm = "0.10"
+sha2 = "0.10"
+hkdf = "0.12"
+rand = "0.8"
+base64 = "0.22"
+tokio = { version = "1", features = ["net", "sync", "time", "rt-multi-thread", "macros"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

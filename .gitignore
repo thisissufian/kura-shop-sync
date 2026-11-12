@@ -1,0 +1,23 @@
+# Dependencies & Build Artifacts
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Rust & Tauri Build Targets
+src-tauri/target/
+src-tauri/gen/
+src-tauri/WixTools/
+
+# SQLite Local Databases & Receipts
+*.db
+*.db-wal
+*.db-shm
+*.pdf
+*.kura
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
