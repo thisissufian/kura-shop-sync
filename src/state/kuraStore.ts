@@ -13,7 +13,7 @@ export const syncStatus = signal<SyncChainStatus | null>(null);
 export const cart = signal<Record<string, number>>({});
 export const discountMinor = signal<number>(0);
 export const paymentMode = signal<"CASH" | "WALLET" | "DUE">("CASH");
-export const activeTab = signal<KuraTab>("counter");
+export const activeTab = signal<KuraTab>("home");
 export const activeReceipt = signal<BillReceipt | null>(null);
 export const editingProduct = signal<Product | null>(null);
 export const productSheetOpen = signal<boolean>(false);
@@ -117,12 +117,22 @@ export async function adjustProductStock(sku: string, delta: number, reason: str
 }
 
 export async function chargeAndIssueBill(): Promise<BillReceipt | null> {
-  const items = cartLines.value.map((l) => ({ sku: l.product.sku, qty: l.qty }));
+  const items = cartLines.value.map((l) => ({
+    sku: l.product.sku,
+    qty: l.qty,
+    warranty_label: l.product.warranty_label,
+  }));
   if (items.length === 0) return null;
   if (paymentMode.value === "DUE" && !selectedCustomerId.value) {
     showToast("Select or add a customer for Customer Due", "err");
     return null;
   }
+  const cust = customers.value.find((c) => c.customer_id === selectedCustomerId.value);
+  const client_label = cust?.name || "Walk-in Customer";
+  const role = syncStatus.value?.role || "OWNER";
+  const node = syncStatus.value?.node_id || "K1";
+  const cashier_label = `${role === "OWNER" ? "Owner" : "Cashier"} · ${node}`;
+
   try {
     const receipt = await callBackend<BillReceipt>("issue_bill", {
       input: {
@@ -130,6 +140,8 @@ export async function chargeAndIssueBill(): Promise<BillReceipt | null> {
         discount_minor: discountMinor.value,
         payment_mode: paymentMode.value,
         customer_id: paymentMode.value === "DUE" ? selectedCustomerId.value : null,
+        client_label,
+        cashier_label,
       },
     });
     clearCart();

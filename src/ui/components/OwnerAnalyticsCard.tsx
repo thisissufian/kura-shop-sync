@@ -50,7 +50,7 @@ export function OwnerAnalyticsCard() {
         <div class="rounded-[11px] bg-[#34C759]/10 p-2.5">
           <div class="text-[10px] font-medium text-[#1E8E3E]">Net Profit</div>
           <div class="mt-0.5 text-[15px] font-bold text-[#1E8E3E] tabular-nums">
-            {formatMoney(a.net_profit_minor, sym)}
+            {formatMoney(a.net_operating_profit_minor, sym)}
           </div>
           <div class="text-[10px] text-[#1E8E3E]/80 tabular-nums">Owner Only</div>
         </div>

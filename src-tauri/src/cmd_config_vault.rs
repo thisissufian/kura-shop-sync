@@ -96,13 +96,16 @@ pub fn update_shop_settings(
 }
 
 #[tauri::command]
-pub fn get_owner_analytics(state: State<'_, AppState>) -> Result<OwnerAnalytics, String> {
+pub fn get_owner_analytics(
+    period: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<OwnerAnalytics, String> {
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
     let cfg = get_chain_config(&conn)?;
     if cfg.role != "OWNER" {
         return Err("Profit analytics are locked to OWNER devices".to_string());
     }
-    compute_owner_analytics(&conn)
+    compute_owner_analytics(&conn, period.as_deref().unwrap_or("ALL"))
 }
 
 #[tauri::command]

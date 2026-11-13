@@ -49,9 +49,10 @@ pub fn format_receipt_bytes(
     buf.extend_from_slice(&[0x1B, 0x61, 0]); // Align left
 
     let date_part = bill.hlc.get(..19).unwrap_or(&bill.hlc).replace('T', " ");
-    buf.extend_from_slice(format!("Bill: {}\n", bill.bill_no).as_bytes());
-    buf.extend_from_slice(format!("Time: {date_part} UTC\n").as_bytes());
-    buf.extend_from_slice(format!("Pay : {}  Node: {}\n", bill.payment_mode, bill.node_id).as_bytes());
+    buf.extend_from_slice(format!("Bill   : {}\n", bill.bill_no).as_bytes());
+    buf.extend_from_slice(format!("Time   : {date_part} UTC\n").as_bytes());
+    buf.extend_from_slice(format!("Client : {} ({})\n", bill.client_label, bill.payment_mode).as_bytes());
+    buf.extend_from_slice(format!("Cashier: {}\n", bill.cashier_label).as_bytes());
 
     let sep = "-".repeat(cols);
     buf.extend_from_slice(format!("{sep}\n").as_bytes());
@@ -71,6 +72,9 @@ pub fn format_receipt_bytes(
         buf.extend_from_slice(
             format!("{name_col}{qty_str:>w_qty$}{tot_str:>w_tot$}\n").as_bytes(),
         );
+        if !item.warranty_label.is_empty() {
+            buf.extend_from_slice(format!("  Warr: {}\n", item.warranty_label).as_bytes());
+        }
     }
 
     buf.extend_from_slice(format!("{sep}\n").as_bytes());
@@ -87,6 +91,7 @@ pub fn format_receipt_bytes(
     buf.extend_from_slice(&[0x1B, 0x45, 0]); // Bold off
 
     buf.extend_from_slice(format!("{sep}\n").as_bytes());
+    buf.extend_from_slice(b"* Warranty claims require this invoice & serial tag.\n");
     buf.extend_from_slice(&[0x1B, 0x61, 1]); // Center
     let footer = if receipt_footer.trim().is_empty() {
         "Thank you for shopping!"

@@ -52,6 +52,9 @@ pub fn upsert_product(
         } else {
             input.category.trim().to_string()
         },
+        brand: input.brand.unwrap_or_default().trim().to_string(),
+        variant: input.variant.unwrap_or_default().trim().to_string(),
+        warranty_label: input.warranty_label.unwrap_or_else(|| "No Warranty (ওয়ারেন্টি নেই)".to_string()).trim().to_string(),
         sell_price_minor: input.sell_price_minor.max(0),
         cost_price_minor: input.cost_price_minor.max(0),
         low_stock_threshold: input.low_stock_threshold.max(0),

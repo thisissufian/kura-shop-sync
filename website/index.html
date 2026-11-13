@@ -7,7 +7,7 @@
     <title>Kura (蔵) — Offline Shop Stock, POS &amp; Multi-Phone Bill Sync</title>
     <meta
       name="description"
-      content="Ultra-lightweight, zero-account, offline-first Point-of-Sale, CRDT inventory ledger, Customer Khata, and thermal/PDF receipts built on Tauri v2 &amp; Preact."
+      content="Ultra-lightweight, zero-account, offline-first Point-of-Sale, CRDT inventory ledger, Executive Home Dashboard, P&L Statement, Supplier Payables, Customer Khata, and thermal/PDF warranty receipts built on Tauri v2 &amp; Preact."
     />
     <link rel="icon" type="image/svg+xml" href="./kura-icon.svg" />
     <link rel="stylesheet" href="./styles.css" />
@@ -24,9 +24,9 @@
           <ul class="nav-links">
             <li><a href="#overview">Overview</a></li>
             <li><a href="#bento">Features</a></li>
+            <li><a href="#dashboard">Executive Hub</a></li>
             <li><a href="#sync-chain">Sync Chain</a></li>
             <li><a href="#benchmarks">Benchmarks</a></li>
-            <li><a href="#architecture">Architecture</a></li>
             <li><a href="#downloads">Downloads</a></li>
           </ul>
         </nav>
@@ -52,9 +52,10 @@
           Kura 蔵.<br />Featherlight power for every counter.
         </h1>
         <p class="hero-subtitle">
-          Say goodbye to \$79/month cloud POS subscriptions and 150 MB bloated apps.
+          Say goodbye to $79/month cloud POS subscriptions and 150 MB bloated apps.
           Kura is a 100% private, zero-account, multi-phone shop ledger that syncs
           conflict-free over local Wi-Fi with end-to-end AES-256-GCM encryption.
+          Now featuring an <strong>Executive Home Dashboard</strong>, <strong>Full P&amp;L Statement</strong>, and <strong>Supplier Payables</strong>.
         </p>
 
         <div class="hero-actions">
@@ -82,7 +83,7 @@
             </div>
           </div>
           <div class="stage-badge-footer">
-            <span>Tap items above to test the live WebAudio checkout &amp; cart queue ·</span>
+            <span>Tap items above to test the live WebAudio checkout, 5-tab dock &amp; Executive Dashboard ·</span>
             <a href="./app/" target="_blank" rel="noopener" style="color: var(--apple-blue); text-decoration: none; font-weight: 500;">
               Open Fullscreen ↗
             </a>
@@ -94,38 +95,39 @@
       <section id="bento" class="section-wrapper">
         <div class="section-header">
           <div class="section-eyebrow">Engineered Without Compromise</div>
-          <h2 class="section-title">Everything your shop needs. In 48 KB.</h2>
+          <h2 class="section-title">Everything your shop needs. In 54 KB.</h2>
           <p class="section-desc">
-            From fast 1-handed barcode scanning to multi-phone CRDT synchronization,
+            From executive P&amp;L analytics to 1-handed barcode scanning and multi-phone CRDT synchronization,
             Kura is meticulously optimized for speed, reliability, and local privacy.
           </p>
         </div>
 
         <div class="bento-grid">
-          <!-- Card 1: Brave-Style Sync Chain (7 cols) -->
-          <div class="bento-card col-7" id="sync-chain">
+          <!-- Card 1: Executive Home Dashboard & P&L Statement (7 cols) -->
+          <div class="bento-card col-7" id="dashboard">
             <div>
               <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-blue); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Multi-Device Synchronization
+                Executive Intelligence
               </div>
-              <h3 class="card-title">"Brave-Style" Multi-Phone Sync Chain</h3>
+              <h3 class="card-title">Executive Home Dashboard &amp; Full P&amp;L</h3>
               <p class="card-desc">
-                Pair Owner and Cashier phones in 2 seconds via QR code or a 12-word recovery mnemonic.
-                Phones discover each other automatically over shop Wi-Fi (UDP port 42851) and stream
-                encrypted deltas (TCP port 42850) with 0 cloud dependencies.
+                Today's Net Turnover hero card, 4-card non-redundant balance grid, and animated 7-day revenue trend.
+                Switch to Reports for period-filtered P&amp;L statements (Today, 7D, 30D, Yearly, All) computing
+                Revenue, COGS, Gross Profit, Petty Expenses, and Net Operating Profit with integer precision.
               </p>
             </div>
             <div style="background: rgba(125,125,125,0.06); border: 1px solid var(--hairline-soft); border-radius: 18px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                <span style="font-size: 0.82rem; font-weight: 600;">Node Convergence (K1 ↔ K2 ↔ K3)</span>
-                <span style="font-size: 0.75rem; color: var(--apple-emerald); font-weight: 600;">● LAN Active</span>
+                <span style="font-size: 0.82rem; font-weight: 600;">P&amp;L Operating Statement (i64 Math)</span>
+                <span style="font-size: 0.75rem; color: var(--apple-emerald); font-weight: 600;">● Real-time CRDT</span>
               </div>
               <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6;">
-                <div>K1 (Owner)   → Issued K1-261113-0001 (Cash) · HLC 10:00:00.000Z</div>
-                <div>K2 (Cashier) → Issued K2-261113-0001 (Due)  · HLC 10:05:00.000Z</div>
-                <div>K3 (Cashier) → Restock +25 SKU-101          · HLC 10:10:00.000Z</div>
-                <div style="color: var(--apple-blue); font-weight: 600; margin-top: 0.25rem;">
-                  ✓ Deterministic convergence in &lt;50ms over local Wi-Fi / Hotspot
+                <div>Gross Revenue (Today)    : ৳ 42,850.00 (18 bills)</div>
+                <div>Cost of Goods Sold (COGS) : ৳ 29,400.00 (68.6% cost basis)</div>
+                <div>Gross Profit              : ৳ 13,450.00 (31.4% gross margin)</div>
+                <div>Operating Petty Expenses  : ৳    650.00 (Tea, courier, supplies)</div>
+                <div style="color: var(--apple-emerald); font-weight: 700; margin-top: 0.35rem; border-top: 1px dashed var(--hairline-soft); padding-top: 0.35rem;">
+                  ✓ Net Operating Profit       : ৳ 12,800.00 (29.9% net margin)
                 </div>
               </div>
             </div>
@@ -137,17 +139,17 @@
               <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-emerald); margin-bottom: 0.35rem; text-transform: uppercase;">
                 Zero-Bloat Performance
               </div>
-              <h3 class="card-title">48 KB Frontend. Instant Boot.</h3>
+              <h3 class="card-title">54 KB Frontend. 200ms Boot.</h3>
               <p class="card-desc">
                 Built with Preact + Signals and a compiled Rust native engine, Kura boots in 200ms
-                and uses 98% less memory than bloated web/desktop POS solutions.
+                and uses 98% less memory than bloated web or Electron POS solutions.
               </p>
             </div>
             <div class="visual-bar-chart">
               <div class="bar-row">
                 <span class="bar-label">Kura (蔵)</span>
                 <div class="bar-track">
-                  <div class="bar-fill bar-kura">48 KB</div>
+                  <div class="bar-fill bar-kura">54 KB</div>
                 </div>
               </div>
               <div class="bar-row">
@@ -165,82 +167,85 @@
             </div>
           </div>
 
-          <!-- Card 3: ESC/POS & WhatsApp Bills (4 cols) -->
+          <!-- Card 3: ESC/POS & Warranty Receipts (4 cols) -->
           <div class="bento-card col-4">
             <div>
               <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-amber); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Receipts &amp; Hardware
+                Warranty &amp; Receipts
               </div>
-              <h3 class="card-title">58mm/80mm ESC/POS &amp; WhatsApp</h3>
+              <h3 class="card-title">Warranty Labels &amp; Thermal Print</h3>
               <p class="card-desc">
-                Direct TCP 9100 thermal stream with ASCII currency fallback, zero-dependency PDF 1.4
-                receipts with scannable Code-39 barcodes, and 1-tap WhatsApp sharing.
+                Support for Brand, Variant, and Warranty policies (7-day replacement, 6 months, 1 year).
+                Direct TCP 9100 thermal stream, zero-dependency vector PDF invoices, and 1-tap WhatsApp dispatch.
               </p>
             </div>
             <div class="receipt-graphic">
-              <div style="text-align: center; font-weight: bold; margin-bottom: 0.35rem;">KURA GENERAL STORE</div>
-              <div style="border-bottom: 1px dashed #AEAEB2; padding-bottom: 0.35rem; margin-bottom: 0.35rem; font-size: 0.72rem; color: #636366;">
-                Bill: K1-261113-0042 · Node K1
+              <div style="text-align: center; font-weight: bold; margin-bottom: 0.25rem;">KURA FLAGSHIP STORE</div>
+              <div style="border-bottom: 1px dashed #AEAEB2; padding-bottom: 0.25rem; margin-bottom: 0.25rem; font-size: 0.72rem; color: #636366;">
+                Client: Rafiqul Islam · Cashier: Owner (K1)
               </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                <span>Cold Brew x2</span>
-                <span class="tabular-nums">$7.00</span>
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                <span>GaN Charger 65W x1</span>
+                <span class="tabular-nums">৳ 1,850.00</span>
+              </div>
+              <div style="font-size: 0.68rem; font-style: italic; color: #636366; margin-bottom: 0.25rem;">
+                Warranty: 1 Year Official Warranty
               </div>
               <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #1D1D1F; padding-top: 0.25rem;">
-                <span>TOTAL</span>
-                <span class="tabular-nums">$7.00</span>
+                <span>NET TOTAL</span>
+                <span class="tabular-nums">৳ 1,850.00</span>
               </div>
-              <div style="text-align: center; margin-top: 0.5rem; font-size: 0.7rem; color: #007AFF;">
-                ||||| | |||| || ||| |||| (SCAN RETURN)
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 4: Conflict-Free CRDT Ledger (4 cols) -->
-          <div class="bento-card col-4">
-            <div>
-              <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-blue); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Data Integrity
-              </div>
-              <h3 class="card-title">Commutative CRDT Stock Ledger</h3>
-              <p class="card-desc">
-                Stock is derived strictly from immutable event deltas. Two cashiers selling the same
-                item offline never overwrite counts.
-              </p>
-            </div>
-            <div style="background: rgba(125,125,125,0.06); border: 1px solid var(--hairline-soft); border-radius: 16px; padding: 1rem; font-family: var(--font-mono); font-size: 0.75rem;">
-              <div style="color: var(--apple-emerald); font-weight: 600; margin-bottom: 0.35rem;">
-                Stock = Opening + ∑(Restocks) - ∑(Sales)
-              </div>
-              <div style="color: var(--text-secondary); line-height: 1.5;">
-                • Integer minor units (i64)<br />
-                • 0% floating-point drift<br />
-                • Idempotent replay protection
+              <div style="text-align: center; margin-top: 0.35rem; font-size: 0.68rem; color: #007AFF;">
+                * Requires intact serial tag &amp; invoice
               </div>
             </div>
           </div>
 
-          <!-- Card 5: Khata & Cash Drawer (4 cols) -->
+          <!-- Card 4: Supplier Payables & Restock (4 cols) -->
           <div class="bento-card col-4">
             <div>
               <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-emerald); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Market Ergonomics
+                Vendor Ledger
               </div>
-              <h3 class="card-title">Customer Khata &amp; Cash Till</h3>
+              <h3 class="card-title">Supplier Payables ("Vendor Dues")</h3>
               <p class="card-desc">
-                Track customer credit balances, record 1-tap due settlements, and reconcile expected
-                drawer cash against petty expense logs in real time.
+                Record stock purchases from suppliers with partial cash payments. Kura atomically restocks inventory,
+                updates the unit cost basis, and tracks outstanding vendor payables.
               </p>
             </div>
             <div style="background: rgba(125,125,125,0.06); border: 1px solid var(--hairline-soft); border-radius: 16px; padding: 1rem;">
               <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">
-                Expected Cash in Drawer
+                Vendor Payables Due
               </div>
-              <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0;" class="tabular-nums">
-                $1,420.50
+              <div style="font-size: 1.5rem; font-weight: 700; color: #FF3B30; margin: 0.2rem 0;" class="tabular-nums">
+                ৳ 45,000.00
               </div>
-              <div style="font-size: 0.72rem; color: var(--apple-emerald); font-weight: 500;">
-                Cash Bills + Khata Collected - Expenses
+              <div style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 500;">
+                Anker BD · HOCO Global · Ispahani
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Brave-Style Sync Chain (4 cols) -->
+          <div class="bento-card col-4" id="sync-chain">
+            <div>
+              <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-blue); margin-bottom: 0.35rem; text-transform: uppercase;">
+                Decentralized Sync
+              </div>
+              <h3 class="card-title">"Brave-Style" Sync Chain</h3>
+              <p class="card-desc">
+                Pair Owner &amp; Cashier devices via QR code or 12-word mnemonic.
+                Zero cloud server required; phones discover each other over UDP 42851 and sync deltas over TCP 42850.
+              </p>
+            </div>
+            <div style="background: rgba(125,125,125,0.06); border: 1px solid var(--hairline-soft); border-radius: 16px; padding: 1rem; font-family: var(--font-mono); font-size: 0.75rem;">
+              <div style="color: var(--apple-emerald); font-weight: 600; margin-bottom: 0.35rem;">
+                Commutative CRDT Ledger
+              </div>
+              <div style="color: var(--text-secondary); line-height: 1.5;">
+                • Integer minor units (i64)<br />
+                • End-to-end AES-256-GCM<br />
+                • Conflict-free HLC timestamps
               </div>
             </div>
           </div>
@@ -259,9 +264,10 @@
                   The native BarcodeDetector camera scans EAN-13, UPC-A, Code-128, and Code-39 with zero third-party libraries.
                 </p>
               </div>
-              <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                 <span class="btn-pill-small btn-glass" style="color: var(--apple-blue); font-weight: 600;">HID Hotkeys: / · F2 · F4 · F6</span>
                 <span class="btn-pill-small btn-glass" style="color: var(--apple-emerald); font-weight: 600;">A4 3x8 Label PDF</span>
+                <span class="btn-pill-small btn-glass" style="color: var(--apple-amber); font-weight: 600;">OLED Dark Mode</span>
               </div>
             </div>
           </div>
@@ -295,7 +301,7 @@
           <a href="./app/" class="download-box" style="border-color: rgba(0, 122, 255, 0.35);">
             <div class="download-icon">🌐</div>
             <div class="download-title" style="color: var(--apple-blue);">Launch Web App (Browser POS)</div>
-            <div class="download-meta">Runs 100% client-side · 48 KB bundle · Zero installation</div>
+            <div class="download-meta">Runs 100% client-side · 54 KB bundle · Zero installation</div>
           </a>
 
           <a href="https://github.com/thisissufian/kura-shop-sync" target="_blank" rel="noopener" class="download-box">

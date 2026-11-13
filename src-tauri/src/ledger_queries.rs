@@ -28,25 +28,28 @@ pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
 pub fn list_products(conn: &Connection, redact_cost: bool) -> Result<Vec<Product>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT sku, name, barcode, category, sell_price_minor, cost_price_minor,
-                    stock_qty, low_stock_threshold, updated_hlc
+            "SELECT sku, name, barcode, category, brand, variant, warranty_label,
+                    sell_price_minor, cost_price_minor, stock_qty, low_stock_threshold, updated_hlc
              FROM products
              ORDER BY category ASC, name ASC",
         )
         .map_err(|e| format!("Prepare products: {e}"))?;
     let rows = stmt
         .query_map([], |r| {
-            let cost: i64 = r.get(5)?;
+            let cost: i64 = r.get(8)?;
             Ok(Product {
                 sku: r.get(0)?,
                 name: r.get(1)?,
                 barcode: r.get(2)?,
                 category: r.get(3)?,
-                sell_price_minor: r.get(4)?,
+                brand: r.get(4)?,
+                variant: r.get(5)?,
+                warranty_label: r.get(6)?,
+                sell_price_minor: r.get(7)?,
                 cost_price_minor: if redact_cost { 0 } else { cost },
-                stock_qty: r.get(6)?,
-                low_stock_threshold: r.get(7)?,
-                updated_hlc: r.get(8)?,
+                stock_qty: r.get(9)?,
+                low_stock_threshold: r.get(10)?,
+                updated_hlc: r.get(11)?,
             })
         })
         .map_err(|e| format!("Query products: {e}"))?;
@@ -61,7 +64,8 @@ pub fn list_products(conn: &Connection, redact_cost: bool) -> Result<Vec<Product
 pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceipt>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, customer_id, voided
+            "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor,
+                    payment_mode, customer_id, client_label, cashier_label, voided
              FROM bills
              ORDER BY hlc DESC
              LIMIT ?1",
@@ -70,7 +74,7 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
     let rows = stmt
         .query_map(params![limit], |r| {
             let items_json: String = r.get(3)?;
-            let voided_int: i64 = r.get(8)?;
+            let voided_int: i64 = r.get(10)?;
             let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
             Ok(BillReceipt {
                 bill_no: r.get(0)?,
@@ -81,6 +85,8 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
                 total_minor: r.get(5)?,
                 payment_mode: r.get(6)?,
                 customer_id: r.get(7)?,
+                client_label: r.get(8)?,
+                cashier_label: r.get(9)?,
                 voided: voided_int != 0,
             })
         })
@@ -95,12 +101,13 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
 
 pub fn get_bill_by_no(conn: &Connection, bill_no: &str) -> Result<BillReceipt, String> {
     conn.query_row(
-        "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor, payment_mode, customer_id, voided
+        "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor,
+                payment_mode, customer_id, client_label, cashier_label, voided
          FROM bills WHERE bill_no = ?1",
         params![bill_no],
         |r| {
             let items_json: String = r.get(3)?;
-            let voided_int: i64 = r.get(8)?;
+            let voided_int: i64 = r.get(10)?;
             let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
             Ok(BillReceipt {
                 bill_no: r.get(0)?,
@@ -111,6 +118,8 @@ pub fn get_bill_by_no(conn: &Connection, bill_no: &str) -> Result<BillReceipt, S
                 total_minor: r.get(5)?,
                 payment_mode: r.get(6)?,
                 customer_id: r.get(7)?,
+                client_label: r.get(8)?,
+                cashier_label: r.get(9)?,
                 voided: voided_int != 0,
             })
         },

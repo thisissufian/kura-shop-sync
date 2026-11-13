@@ -25,11 +25,11 @@ pub fn issue_bill(
         if req.qty <= 0 {
             return Err("Item quantity must be positive".to_string());
         }
-        let (name, sell_price_minor): (String, i64) = conn
+        let (name, sell_price_minor, default_warranty): (String, i64, String) = conn
             .query_row(
-                "SELECT name, sell_price_minor FROM products WHERE sku = ?1",
+                "SELECT name, sell_price_minor, warranty_label FROM products WHERE sku = ?1",
                 params![req.sku],
-                |r| Ok((r.get(0)?, r.get(1)?)),
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
             )
             .map_err(|_| format!("Product not found: {}", req.sku))?;
         let line_total_minor = sell_price_minor.saturating_mul(req.qty);
@@ -40,6 +40,7 @@ pub fn issue_bill(
             qty: req.qty,
             unit_price_minor: sell_price_minor,
             line_total_minor,
+            warranty_label: req.warranty_label.clone().unwrap_or(default_warranty),
         });
     }
 
@@ -58,6 +59,13 @@ pub fn issue_bill(
         get_customer_by_id(&conn, cid)?;
     }
 
+    let client_label = input.client_label
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "Walk-in Customer".to_string());
+    let cashier_label = input.cashier_label
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| format!("{} · {}", cfg.role, cfg.node_id));
+
     let bill_no = next_invoice_number(&conn, &cfg.node_id)?;
     let hlc = next_hlc(&conn, &cfg.node_id)?;
     let receipt = BillReceipt {
@@ -69,6 +77,8 @@ pub fn issue_bill(
         total_minor,
         payment_mode: mode,
         customer_id,
+        client_label,
+        cashier_label,
         voided: false,
     };
 

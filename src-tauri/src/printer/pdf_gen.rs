@@ -38,11 +38,11 @@ pub fn generate_receipt_pdf(
     let width_pt: f32 = 226.0; // ~80mm thermal roll width
     let line_h: f32 = 12.5;
     let has_sub = !shop_subtitle.trim().is_empty();
-    let total_lines = 12
+    let total_lines = 16
         + usize::from(has_sub)
-        + bill.items.len()
+        + bill.items.len() * 2
         + usize::from(bill.discount_minor > 0);
-    let height_pt = (100.0 + (total_lines as f32) * line_h).max(276.0);
+    let height_pt = (120.0 + (total_lines as f32) * line_h).max(300.0);
 
     let mut content = String::with_capacity(2048);
     let mut y = height_pt - 24.0;
@@ -58,18 +58,13 @@ pub fn generate_receipt_pdf(
         y -= line_h;
     }
     let dt = bill.hlc.get(..19).unwrap_or(&bill.hlc).replace('T', " ");
-    push_line(&mut content, "F1", 8, 14.0, y, &format!("Bill: {}", bill.bill_no));
+    push_line(&mut content, "F1", 8, 14.0, y, &format!("Bill   : {}", bill.bill_no));
     y -= 11.0;
-    push_line(&mut content, "F1", 8, 14.0, y, &format!("Time: {dt} UTC"));
+    push_line(&mut content, "F1", 8, 14.0, y, &format!("Time   : {dt} UTC"));
     y -= 11.0;
-    push_line(
-        &mut content,
-        "F1",
-        8,
-        14.0,
-        y,
-        &format!("Pay: {}  Node: {}", bill.payment_mode, bill.node_id),
-    );
+    push_line(&mut content, "F1", 8, 14.0, y, &format!("Client : {} ({})", bill.client_label, bill.payment_mode));
+    y -= 11.0;
+    push_line(&mut content, "F1", 8, 14.0, y, &format!("Cashier: {}", bill.cashier_label));
     y -= 11.0;
     push_line(&mut content, "F1", 8, 14.0, y, "----------------------------------------");
     y -= 11.0;
@@ -84,6 +79,10 @@ pub fn generate_receipt_pdf(
         let row = format!("{short_name:<19} {:>3} {:>16}", item.qty, tot);
         push_line(&mut content, "F1", 8, 14.0, y, &row);
         y -= line_h;
+        if !item.warranty_label.is_empty() {
+            push_line(&mut content, "F1", 7, 20.0, y, &format!("Warr: {}", item.warranty_label));
+            y -= 10.0;
+        }
     }
 
     push_line(&mut content, "F1", 8, 14.0, y, "----------------------------------------");
@@ -96,6 +95,10 @@ pub fn generate_receipt_pdf(
     let grand = format_minor_money(bill.total_minor, currency_symbol);
     push_line(&mut content, "F2", 9, 14.0, y, &format!("{:<20}{:>15}", "TOTAL", grand));
     y -= 16.0;
+
+    push_line(&mut content, "F1", 6, 14.0, y, "* Warranty claims require this invoice & serial tag.");
+    y -= 12.0;
+
     let footer = if receipt_footer.trim().is_empty() {
         "Thank you for shopping!"
     } else {

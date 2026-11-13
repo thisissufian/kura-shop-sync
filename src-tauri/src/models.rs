@@ -1,11 +1,32 @@
 use serde::{Deserialize, Serialize};
 
+pub use crate::models_analytics::*;
+pub use crate::models_supplier::*;
+
+fn default_warranty() -> String {
+    "No Warranty (ওয়ারেন্টি নেই)".to_string()
+}
+
+fn default_client() -> String {
+    "Walk-in Customer".to_string()
+}
+
+fn default_cashier() -> String {
+    "Owner · K1".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Product {
     pub sku: String,
     pub name: String,
     pub barcode: Option<String>,
     pub category: String,
+    #[serde(default)]
+    pub brand: String,
+    #[serde(default)]
+    pub variant: String,
+    #[serde(default = "default_warranty")]
+    pub warranty_label: String,
     pub sell_price_minor: i64,
     pub cost_price_minor: i64,
     pub stock_qty: i64,
@@ -20,6 +41,8 @@ pub struct BillItem {
     pub qty: i64,
     pub unit_price_minor: i64,
     pub line_total_minor: i64,
+    #[serde(default = "default_warranty")]
+    pub warranty_label: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,6 +56,10 @@ pub struct BillReceipt {
     pub payment_mode: String,
     #[serde(default)]
     pub customer_id: Option<String>,
+    #[serde(default = "default_client")]
+    pub client_label: String,
+    #[serde(default = "default_cashier")]
+    pub cashier_label: String,
     #[serde(default)]
     pub voided: bool,
 }
@@ -88,6 +115,12 @@ pub struct UpsertProductInput {
     pub name: String,
     pub barcode: Option<String>,
     pub category: String,
+    #[serde(default)]
+    pub brand: Option<String>,
+    #[serde(default)]
+    pub variant: Option<String>,
+    #[serde(default)]
+    pub warranty_label: Option<String>,
     pub sell_price_minor: i64,
     pub cost_price_minor: i64,
     pub stock_qty: i64,
@@ -98,6 +131,8 @@ pub struct UpsertProductInput {
 pub struct IssueBillItemInput {
     pub sku: String,
     pub qty: i64,
+    #[serde(default)]
+    pub warranty_label: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,6 +142,10 @@ pub struct IssueBillInput {
     pub payment_mode: String,
     #[serde(default)]
     pub customer_id: Option<String>,
+    #[serde(default)]
+    pub client_label: Option<String>,
+    #[serde(default)]
+    pub cashier_label: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -147,45 +186,6 @@ pub struct ShopSettingsInput {
     pub shop_subtitle: String,
     pub currency_symbol: String,
     pub receipt_footer: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TerminalSalesSummary {
-    pub node_id: String,
-    pub bills_count: i64,
-    pub revenue_minor: i64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OwnerAnalytics {
-    pub gross_revenue_minor: i64,
-    pub estimated_cogs_minor: i64,
-    pub net_profit_minor: i64,
-    pub margin_bps: i64,
-    pub total_bills_count: i64,
-    pub voided_bills_count: i64,
-    pub terminal_breakdown: Vec<TerminalSalesSummary>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ShopExpense {
-    pub expense_id: String,
-    pub category: String,
-    pub amount_minor: i64,
-    pub note: String,
-    pub node_id: String,
-    pub hlc: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CashDrawerSummary {
-    pub cash_sales_minor: i64,
-    pub wallet_sales_minor: i64,
-    pub due_issued_minor: i64,
-    pub khata_cash_collected_minor: i64,
-    pub total_expenses_minor: i64,
-    pub expected_drawer_cash_minor: i64,
-    pub recent_expenses: Vec<ShopExpense>,
 }
 
 #[derive(Debug, Clone)]

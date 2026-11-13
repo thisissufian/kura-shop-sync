@@ -4,6 +4,7 @@ mod cmd_catalog_csv;
 mod cmd_config_vault;
 mod cmd_customers;
 mod cmd_expenses;
+mod cmd_suppliers;
 mod cmd_sync_print;
 mod commands;
 mod crypto_chain;
@@ -16,13 +17,18 @@ mod ledger_customers;
 mod ledger_expenses;
 mod ledger_init;
 mod ledger_queries;
+mod ledger_suppliers;
 mod mnemonic;
 mod models;
+mod models_analytics;
+mod models_supplier;
 mod printer;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tests_print_csv;
+#[cfg(test)]
+mod tests_p_and_l;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
@@ -87,6 +93,9 @@ pub fn run() {
             cmd_catalog_csv::import_catalog_csv,
             cmd_expenses::log_shop_expense,
             cmd_expenses::get_cash_drawer_summary,
+            cmd_suppliers::get_suppliers,
+            cmd_suppliers::record_stock_purchase,
+            cmd_suppliers::record_supplier_payment,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Kura");

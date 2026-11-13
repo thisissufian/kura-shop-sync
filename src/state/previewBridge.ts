@@ -1,27 +1,38 @@
 import type {
-  BillReceipt,
   BootstrapState,
   CustomerAccount,
   IssueBillInput,
   PdfExportResult,
-  Product,
+  StockPurchaseInput,
   UpsertProductInput,
 } from "../types/kura";
-import { calcMockDrawer, mockBills, mockCustomers, mockExpenses, mockKhataCollected, mockProducts, mockSync, nowHlc } from "./previewFixtures";
+import { calcMockAnalytics } from "./previewAnalytics";
+import {
+  calcMockDrawer,
+  mockBills,
+  mockCustomers,
+  mockExpenses,
+  mockKhataCollected,
+  mockProducts,
+  mockSuppliers,
+  mockSync,
+  nowHlc,
+} from "./previewFixtures";
+import { handleIssueBill, handleStockPurchase, handleUpsertProduct } from "./previewHandlers";
 
 export async function previewInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (cmd === "get_bootstrap_state") {
-    const state: BootstrapState = { products: [...mockProducts], recent_bills: [...mockBills], customers: [...mockCustomers], sync_status: { ...mockSync } };
+    const state: BootstrapState = {
+      products: [...mockProducts],
+      recent_bills: [...mockBills],
+      customers: [...mockCustomers],
+      sync_status: { ...mockSync },
+    };
     return state as T;
   }
   if (cmd === "upsert_product") {
     if (mockSync.role !== "OWNER") throw new Error("Cashier role cannot edit catalog");
-    const input = args?.input as UpsertProductInput;
-    const idx = mockProducts.findIndex((p) => p.sku === input.sku);
-    const next: Product = { ...input, updated_hlc: nowHlc(9) };
-    if (idx >= 0) mockProducts[idx] = next;
-    else mockProducts.push(next);
-    return next as T;
+    return handleUpsertProduct(args?.input as UpsertProductInput) as T;
   }
   if (cmd === "adjust_stock") {
     const sku = String(args?.sku);
@@ -33,33 +44,7 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     return { ...item } as T;
   }
   if (cmd === "issue_bill") {
-    const input = args?.input as IssueBillInput;
-    const items = input.items.map((req) => {
-      const p = mockProducts.find((x) => x.sku === req.sku);
-      if (!p) throw new Error(`Product not found: ${req.sku}`);
-      p.stock_qty -= req.qty;
-      return { sku: p.sku, name: p.name, qty: req.qty, unit_price_minor: p.sell_price_minor, line_total_minor: p.sell_price_minor * req.qty };
-    });
-    const sub = items.reduce((a, b) => a + b.line_total_minor, 0);
-    const disc = Math.max(0, Math.min(input.discount_minor, sub));
-    const mode = (input.payment_mode || "CASH").toUpperCase();
-    const bill: BillReceipt = {
-      bill_no: `${mockSync.node_id}-261112-${String(mockBills.length + 1).padStart(4, "0")}`,
-      node_id: mockSync.node_id,
-      hlc: nowHlc(mockBills.length + 20),
-      items,
-      discount_minor: disc,
-      total_minor: sub - disc,
-      payment_mode: mode,
-      customer_id: input.customer_id ?? null,
-      voided: false,
-    };
-    if (mode === "DUE" && input.customer_id) {
-      const cust = mockCustomers.find((c) => c.customer_id === input.customer_id);
-      if (cust) cust.balance_due_minor += bill.total_minor;
-    }
-    mockBills.unshift(bill);
-    return bill as T;
+    return handleIssueBill(args?.input as IssueBillInput) as T;
   }
   if (cmd === "void_bill") {
     if (mockSync.role !== "OWNER") throw new Error("Only OWNER devices can void bills");
@@ -95,6 +80,20 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     mockKhataCollected.minor += amt;
     return { ...cust } as T;
   }
+  if (cmd === "get_suppliers") return [...mockSuppliers] as T;
+  if (cmd === "record_stock_purchase") {
+    return handleStockPurchase(args?.input as StockPurchaseInput) as T;
+  }
+  if (cmd === "record_supplier_payment") {
+    const supp = mockSuppliers.find((s) => s.supplier_id === args?.supplierId);
+    if (!supp) throw new Error("Supplier not found");
+    supp.payable_balance_minor -= Number(args?.amountMinor ?? 0);
+    return supp as T;
+  }
+  if (cmd === "get_owner_analytics") {
+    if (mockSync.role !== "OWNER") throw new Error("Profit analytics are locked to OWNER devices");
+    return calcMockAnalytics(String(args?.period ?? "ALL")) as T;
+  }
   if (cmd === "get_recent_bills") return [...mockBills] as T;
   if (cmd === "find_bill_by_no") {
     const target = String(args?.billNo ?? "").toUpperCase();
@@ -117,16 +116,8 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
   if (cmd === "join_sync_chain") {
     const raw = String(args?.input ?? "");
     mockSync.is_linked = true;
-    if (raw.includes("role=CASHIER")) {
-      mockSync.role = "CASHIER";
-      mockSync.node_id = "K3";
-    } else if (args?.roleOverride === "CASHIER") {
-      mockSync.role = "CASHIER";
-      mockSync.node_id = "K3";
-    } else {
-      mockSync.role = "OWNER";
-      mockSync.node_id = "K2";
-    }
+    mockSync.role = raw.includes("role=CASHIER") || args?.roleOverride === "CASHIER" ? "CASHIER" : "OWNER";
+    mockSync.node_id = mockSync.role === "CASHIER" ? "K3" : "K2";
     return { ...mockSync } as T;
   }
   if (cmd === "trigger_peer_sync") return `Preview LAN check: ${mockSync.peer_count} peer(s)` as T;
@@ -142,7 +133,6 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     } as T;
   }
   if (cmd === "update_shop_settings") {
-    if (mockSync.role !== "OWNER") throw new Error("Only OWNER devices can update shop profile");
     const input = args?.input as { shop_name: string; shop_subtitle: string; currency_symbol: string; receipt_footer: string };
     mockSync.shop_name = input.shop_name;
     mockSync.shop_subtitle = input.shop_subtitle;
@@ -150,41 +140,8 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     mockSync.receipt_footer = input.receipt_footer;
     return { ...mockSync } as T;
   }
-  if (cmd === "get_owner_analytics") {
-    if (mockSync.role !== "OWNER") throw new Error("Profit analytics are locked to OWNER devices");
-    let gross = 0;
-    let cogs = 0;
-    let voided = 0;
-    const perNode = new Map<string, { bills_count: number; revenue_minor: number }>();
-    for (const b of mockBills) {
-      if (b.voided) { voided++; continue; }
-      gross += b.total_minor;
-      const cur = perNode.get(b.node_id) ?? { bills_count: 0, revenue_minor: 0 };
-      cur.bills_count += 1;
-      cur.revenue_minor += b.total_minor;
-      perNode.set(b.node_id, cur);
-      for (const it of b.items) {
-        const p = mockProducts.find((x) => x.sku === it.sku);
-        cogs += (p?.cost_price_minor ?? 0) * it.qty;
-      }
-    }
-    const net = gross - cogs;
-    return {
-      gross_revenue_minor: gross,
-      estimated_cogs_minor: cogs,
-      net_profit_minor: net,
-      margin_bps: gross > 0 ? Math.trunc((net * 10000) / gross) : 0,
-      total_bills_count: mockBills.length - voided,
-      voided_bills_count: voided,
-      terminal_breakdown: Array.from(perNode.entries()).map(([node_id, v]) => ({ node_id, ...v })),
-    } as T;
-  }
   if (cmd === "export_barcode_labels_pdf") {
-    return {
-      file_path: "KuraReceipts/kura-labels-261112.pdf",
-      data_url: "data:text/plain;base64,S3VyYSBMYWJlbHMgUERG",
-      size_bytes: 4096,
-    } as T;
+    return { file_path: "KuraReceipts/kura-labels-261113.pdf", data_url: "data:text/plain;base64,S3VyYQ==", size_bytes: 4096 } as T;
   }
   if (cmd === "export_catalog_csv") {
     const header = "sku,name,barcode,category,sell_price,cost_price,stock_qty,low_stock_threshold\n";
@@ -192,12 +149,7 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
   }
   if (cmd === "import_catalog_csv") return 0 as T;
   if (cmd === "export_encrypted_vault") {
-    return {
-      file_path: "KuraReceipts/kura-vault-261112.kura",
-      payload_b64: "S3VyYVZhdWx0UHJldmlldw==",
-      events_count: mockProducts.length + mockBills.length,
-      size_bytes: 512,
-    } as T;
+    return { file_path: "KuraReceipts/kura-vault-261113.kura", payload_b64: "S3VyYVZhdWx0", events_count: mockProducts.length + mockBills.length, size_bytes: 512 } as T;
   }
   if (cmd === "import_encrypted_vault") return 0 as T;
   if (cmd === "prepare_relay_envelope") {
@@ -207,7 +159,7 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
   if (cmd === "export_bill_pdf") {
     const res: PdfExportResult = {
       file_path: `KuraReceipts/${args?.billNo}.pdf`,
-      data_url: "data:text/plain;base64,S3VyYSBQREYgUHJldmlldw==",
+      data_url: "data:text/plain;base64,S3VyYSBQREY=",
       size_bytes: 2048,
     };
     return res as T;

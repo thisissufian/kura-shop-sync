@@ -42,6 +42,9 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            name TEXT NOT NULL,
            barcode TEXT,
            category TEXT NOT NULL,
+           brand TEXT NOT NULL DEFAULT '',
+           variant TEXT NOT NULL DEFAULT '',
+           warranty_label TEXT NOT NULL DEFAULT 'No Warranty (ওয়ারেন্টি নেই)',
            sell_price_minor INTEGER NOT NULL,
            cost_price_minor INTEGER NOT NULL,
            stock_qty INTEGER NOT NULL DEFAULT 0,
@@ -57,6 +60,8 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            total_minor INTEGER NOT NULL,
            payment_mode TEXT NOT NULL,
            customer_id TEXT,
+           client_label TEXT NOT NULL DEFAULT 'Walk-in Customer',
+           cashier_label TEXT NOT NULL DEFAULT 'Owner · K1',
            voided INTEGER NOT NULL DEFAULT 0
          );
          CREATE TABLE IF NOT EXISTS customers (
@@ -64,6 +69,13 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            name TEXT NOT NULL,
            phone TEXT NOT NULL,
            balance_due_minor INTEGER NOT NULL DEFAULT 0,
+           updated_hlc TEXT NOT NULL
+         );
+         CREATE TABLE IF NOT EXISTS suppliers (
+           supplier_id TEXT PRIMARY KEY,
+           name TEXT NOT NULL,
+           phone TEXT NOT NULL,
+           payable_balance_minor INTEGER NOT NULL DEFAULT 0,
            updated_hlc TEXT NOT NULL
          );
          CREATE TABLE IF NOT EXISTS expenses (
@@ -78,15 +90,13 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     .map_err(|e| format!("Schema init: {e}"))?;
 
     let _ = conn.execute("ALTER TABLE bills ADD COLUMN customer_id TEXT", []);
-
-    let _ = conn.execute(
-        "ALTER TABLE chain_config ADD COLUMN shop_subtitle TEXT NOT NULL DEFAULT ''",
-        [],
-    );
-    let _ = conn.execute(
-        "ALTER TABLE chain_config ADD COLUMN receipt_footer TEXT NOT NULL DEFAULT 'Thank you for shopping!'",
-        [],
-    );
+    let _ = conn.execute("ALTER TABLE bills ADD COLUMN client_label TEXT NOT NULL DEFAULT 'Walk-in Customer'", []);
+    let _ = conn.execute("ALTER TABLE bills ADD COLUMN cashier_label TEXT NOT NULL DEFAULT 'Owner · K1'", []);
+    let _ = conn.execute("ALTER TABLE products ADD COLUMN brand TEXT NOT NULL DEFAULT ''", []);
+    let _ = conn.execute("ALTER TABLE products ADD COLUMN variant TEXT NOT NULL DEFAULT ''", []);
+    let _ = conn.execute("ALTER TABLE products ADD COLUMN warranty_label TEXT NOT NULL DEFAULT 'No Warranty (ওয়ারেন্টি নেই)'", []);
+    let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN shop_subtitle TEXT NOT NULL DEFAULT ''", []);
+    let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN receipt_footer TEXT NOT NULL DEFAULT 'Thank you for shopping!'", []);
 
     let cfg_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM chain_config", [], |r| r.get(0))
@@ -115,19 +125,22 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
 
 fn seed_starter_inventory(conn: &mut Connection) -> Result<(), String> {
     let starters = [
-        ("SKU-101", "Artisan Cold Brew 250ml", "890101001010", "Beverages", 350, 180, 24, 6),
-        ("SKU-102", "Organic Whole Milk 1L", "890101001027", "Dairy", 295, 210, 18, 5),
-        ("SKU-103", "Sourdough Country Loaf", "890101001034", "Bakery", 550, 290, 9, 4),
-        ("SKU-104", "Sea Salt Kettle Chips", "890101001041", "Snacks", 225, 120, 4, 5),
-        ("SKU-105", "Matcha Green Tea Tin", "890101001058", "Pantry", 1490, 890, 12, 3),
+        ("SKU-101", "Artisan Cold Brew 250ml", "890101001010", "Beverages", "Kura Brew", "250ml Bottle", "No Warranty (ওয়ারেন্টি নেই)", 350, 180, 24, 6),
+        ("SKU-102", "Organic Whole Milk 1L", "890101001027", "Dairy", "FarmFresh", "1 Liter Tetra", "No Warranty (ওয়ারেন্টি নেই)", 295, 210, 18, 5),
+        ("SKU-103", "Sourdough Country Loaf", "890101001034", "Bakery", "Artisan Oven", "Rustic Round", "No Warranty (ওয়ারেন্টি নেই)", 550, 290, 9, 4),
+        ("SKU-104", "Sea Salt Kettle Chips", "890101001041", "Snacks", "Kettle Co", "Classic Salty", "No Warranty (ওয়ারেন্টি নেই)", 225, 120, 4, 5),
+        ("SKU-105", "Matcha Green Tea Tin", "890101001058", "Pantry", "Uji Reserve", "Ceremonial 30g", "7 Days Replacement", 1490, 890, 12, 3),
     ];
-    for (sku, name, bc, cat, sell, cost, qty, thresh) in starters {
+    for (sku, name, bc, cat, brand, variant, warranty, sell, cost, qty, thresh) in starters {
         let hlc1 = next_hlc(conn, "K1")?;
         let upsert = ProductUpsertPayload {
             sku: sku.to_string(),
             name: name.to_string(),
             barcode: Some(bc.to_string()),
             category: cat.to_string(),
+            brand: brand.to_string(),
+            variant: variant.to_string(),
+            warranty_label: warranty.to_string(),
             sell_price_minor: sell,
             cost_price_minor: cost,
             low_stock_threshold: thresh,
