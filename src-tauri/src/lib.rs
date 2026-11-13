@@ -21,6 +21,8 @@ mod models;
 mod printer;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_print_csv;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;

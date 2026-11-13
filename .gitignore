@@ -16,6 +16,11 @@ src-tauri/WixTools/
 *.pdf
 *.kura
 
+# Local Toolchains & Showcase Build Artifacts
+SupportingSofts/
+website/dist/
+dist-site/
+
 # OS & IDE
 .DS_Store
 Thumbs.db

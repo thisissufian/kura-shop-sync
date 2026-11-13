@@ -73,7 +73,7 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
                    cost_price_minor = excluded.cost_price_minor,
                    low_stock_threshold = excluded.low_stock_threshold,
                    updated_hlc = excluded.updated_hlc
-                 WHERE products.updated_hlc <= excluded.updated_hlc",
+                 WHERE products.updated_hlc <= excluded.updated_hlc OR products.name = products.sku",
                 params![
                     p.sku, p.name, p.barcode, p.category,
                     p.sell_price_minor, p.cost_price_minor, p.low_stock_threshold, ev.hlc
@@ -85,8 +85,12 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
             let s: StockAdjustPayload =
                 serde_json::from_str(&ev.payload_json).map_err(|e| format!("STOCK_ADJUST: {e}"))?;
             tx.execute(
-                "UPDATE products SET stock_qty = stock_qty + ?1, updated_hlc = ?2 WHERE sku = ?3",
-                params![s.delta, ev.hlc, s.sku],
+                "INSERT INTO products (sku, name, category, sell_price_minor, cost_price_minor, stock_qty, low_stock_threshold, updated_hlc)
+                 VALUES (?1, ?1, 'General', 0, 0, ?2, 5, ?3)
+                 ON CONFLICT(sku) DO UPDATE SET
+                   stock_qty = stock_qty + excluded.stock_qty,
+                   updated_hlc = excluded.updated_hlc",
+                params![s.sku, s.delta, ev.hlc],
             )
             .map_err(|e| format!("Project STOCK_ADJUST: {e}"))?;
         }
@@ -103,8 +107,12 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
             if tx.changes() > 0 {
                 for item in &b.items {
                     tx.execute(
-                        "UPDATE products SET stock_qty = stock_qty - ?1, updated_hlc = ?2 WHERE sku = ?3",
-                        params![item.qty, ev.hlc, item.sku],
+                        "INSERT INTO products (sku, name, category, sell_price_minor, cost_price_minor, stock_qty, low_stock_threshold, updated_hlc)
+                         VALUES (?1, ?1, 'General', 0, 0, -?2, 5, ?3)
+                         ON CONFLICT(sku) DO UPDATE SET
+                           stock_qty = stock_qty + excluded.stock_qty,
+                           updated_hlc = excluded.updated_hlc",
+                        params![item.sku, item.qty, ev.hlc],
                     )
                     .map_err(|e| format!("Deduct stock for bill: {e}"))?;
                 }
@@ -140,8 +148,12 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
                     serde_json::from_str(&items_json).map_err(|e| e.to_string())?;
                 for item in items {
                     tx.execute(
-                        "UPDATE products SET stock_qty = stock_qty + ?1, updated_hlc = ?2 WHERE sku = ?3",
-                        params![item.qty, ev.hlc, item.sku],
+                        "INSERT INTO products (sku, name, category, sell_price_minor, cost_price_minor, stock_qty, low_stock_threshold, updated_hlc)
+                         VALUES (?1, ?1, 'General', 0, 0, ?2, 5, ?3)
+                         ON CONFLICT(sku) DO UPDATE SET
+                           stock_qty = stock_qty + excluded.stock_qty,
+                           updated_hlc = excluded.updated_hlc",
+                        params![item.sku, item.qty, ev.hlc],
                     )
                     .map_err(|e| format!("Restore stock on void: {e}"))?;
                 }

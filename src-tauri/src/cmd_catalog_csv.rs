@@ -9,13 +9,13 @@ use crate::ledger_queries::{get_chain_config, list_products};
 use crate::models::{LedgerEvent, PdfExportResult, Product};
 use crate::printer::barcode_pdf::generate_barcode_labels_pdf;
 
-fn format_decimal(minor: i64) -> String {
+pub(crate) fn format_decimal(minor: i64) -> String {
     let neg = minor < 0;
     let abs = minor.unsigned_abs();
     format!("{}{}.{:02}", if neg { "-" } else { "" }, abs / 100, abs % 100)
 }
 
-fn parse_decimal_minor(raw: &str) -> i64 {
+pub(crate) fn parse_decimal_minor(raw: &str) -> i64 {
     let s = raw.trim().replace(',', "");
     if s.is_empty() {
         return 0;
