@@ -13,6 +13,7 @@ mod lan_peer;
 mod lan_sync;
 mod ledger;
 mod ledger_analytics;
+mod ledger_analytics_trend;
 mod ledger_customers;
 mod ledger_expenses;
 mod ledger_init;
@@ -29,6 +30,8 @@ mod tests;
 mod tests_print_csv;
 #[cfg(test)]
 mod tests_p_and_l;
+#[cfg(test)]
+mod tests_receipt_warranty;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;

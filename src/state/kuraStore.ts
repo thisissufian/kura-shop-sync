@@ -183,9 +183,7 @@ export async function joinChain(input: string, roleOverride?: string): Promise<v
 
 export async function syncWithPeer(peerIp?: string): Promise<void> {
   try {
-    const msg = await callBackend<string>("trigger_peer_sync", {
-      peerIp: peerIp?.trim() ? peerIp.trim() : null,
-    });
+    const msg = await callBackend<string>("trigger_peer_sync", { peerIp: peerIp?.trim() ? peerIp.trim() : null });
     await refreshBootstrap();
     showToast(msg);
   } catch (err) {
@@ -196,12 +194,7 @@ export async function syncWithPeer(peerIp?: string): Promise<void> {
 export async function printThermal(billNo: string): Promise<void> {
   const cfg = printerSettings.value;
   try {
-    const msg = await callBackend<string>("print_bill_thermal", {
-      ip: cfg.ip,
-      port: cfg.port,
-      widthMm: cfg.widthMm,
-      billNo,
-    });
+    const msg = await callBackend<string>("print_bill_thermal", { ip: cfg.ip, port: cfg.port, widthMm: cfg.widthMm, billNo });
     showToast(msg);
   } catch (err) {
     showToast(String(err), "err");

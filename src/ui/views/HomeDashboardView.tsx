@@ -94,38 +94,17 @@ export function HomeDashboardView() {
 
       {/* 2. 4-Button Quick Actions Row */}
       <div class="grid grid-cols-4 gap-2">
-        <button
-          type="button"
-          onClick={() => { activeTab.value = "counter"; }}
-          class="flex flex-col items-center justify-center py-2.5 rounded-[16px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs active:scale-95 transition"
-        >
-          <span class="text-[20px] mb-1">⚡</span>
-          <span class="text-[11px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">POS Sale</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => { editingProduct.value = null; productSheetOpen.value = true; }}
-          class="flex flex-col items-center justify-center py-2.5 rounded-[16px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs active:scale-95 transition"
-        >
-          <span class="text-[20px] mb-1">📦</span>
-          <span class="text-[11px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">+ Product</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => { supplierSheetOpen.value = true; }}
-          class="flex flex-col items-center justify-center py-2.5 rounded-[16px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs active:scale-95 transition"
-        >
-          <span class="text-[20px] mb-1">🚚</span>
-          <span class="text-[11px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">+ Purchase</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => { drawerSheetOpen.value = true; }}
-          class="flex flex-col items-center justify-center py-2.5 rounded-[16px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs active:scale-95 transition"
-        >
-          <span class="text-[20px] mb-1">💸</span>
-          <span class="text-[11px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">+ Expense</span>
-        </button>
+        {[
+          { label: "POS Sale", icon: "⚡", act: () => { activeTab.value = "counter"; } },
+          { label: "+ Product", icon: "📦", act: () => { editingProduct.value = null; productSheetOpen.value = true; } },
+          { label: "+ Purchase", icon: "🚚", act: () => { supplierSheetOpen.value = true; } },
+          { label: "+ Expense", icon: "💸", act: () => { drawerSheetOpen.value = true; } },
+        ].map((btn) => (
+          <button key={btn.label} type="button" onClick={btn.act} class="flex flex-col items-center justify-center py-2.5 rounded-[16px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs active:scale-95 transition">
+            <span class="text-[20px] mb-1">{btn.icon}</span>
+            <span class="text-[11px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">{btn.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* 3. 4-Card Non-Redundant Bento Grid */}
