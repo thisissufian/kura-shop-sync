@@ -17,7 +17,7 @@ jobs:
 
       - name: Enforce 220-line source file ceiling
         run: |
-          over=$(find src src-tauri/src -type f \( -name "*.rs" -o -name "*.ts" -o -name "*.tsx" \) -exec awk 'END { if (NR > 220) printf "%s:%d\n", FILENAME, NR }' {} +)
+          over=$(find src src-tauri/src -type f \( -name "*.rs" -o -name "*.ts" -o -name "*.tsx" \) -exec awk 'FNR > 220 { print FILENAME ": " FNR; nextfile }' {} +)
           if [ -n "$over" ]; then
             echo "Files exceeding 220 lines:"
             echo "$over"
