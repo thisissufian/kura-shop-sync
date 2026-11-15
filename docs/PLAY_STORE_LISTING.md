@@ -1,4 +1,4 @@
-# Google Play Store Launch Kit — Kura (蔵)
+# Google Play Store Launch Kit — Kura
 
 ## 1. Store Listing Copy (ASO-Ready)
 
@@ -9,7 +9,7 @@
 `Offline shop inventory, khata due ledger, thermal bills & multi-phone sync.` (76 chars)
 
 ### Full Description (Up to 4000 chars)
-**Kura (蔵)** is an ultra-lightweight, zero-subscription, offline-first Point-of-Sale (POS), Inventory Vault, Customer Credit (Khata) Ledger, and Thermal/PDF Billing app built for independent retail stores, kirana shops, pharmacies, cafes, and market stalls.
+**Kura** is an ultra-lightweight, zero-subscription, offline-first Point-of-Sale (POS), Inventory Vault, Customer Credit (Khata) Ledger, and Thermal/PDF Billing app built for independent retail stores, kirana shops, pharmacies, cafes, and market stalls.
 
 Unlike bloated cloud POS apps that lock your shop behind monthly fees, slow dashboards, and mandatory logins, **Kura runs 100% locally on your device** in a native Rust + SQLite engine and syncs directly across your shop's phones with end-to-end **AES-256-GCM encryption** — zero accounts, zero tracking, zero server lock-in.
 
@@ -34,7 +34,7 @@ Unlike bloated cloud POS apps that lock your shop behind monthly fees, slow dash
 ## 2. Feature Graphic & Screenshot Copy Prompts
 
 - **Feature Graphic (1024 × 500 px)**:
-  - Headline: `Kura (蔵) — Offline POS & Multi-Phone Sync`
+  - Headline: `Kura — Offline POS & Multi-Phone Sync`
   - Subhead: `Zero Cloud Fees · Thermal & PDF Bills · Khata & Till Sync`
 - **Screenshot 1 (Counter)**: *1-Handed POS Counter · Hold Carts & Scan in 1 Tap*
 - **Screenshot 2 (Customer Due / Khata)**: *Instant Customer Credit (Khata) & 1-Tap Settlement*

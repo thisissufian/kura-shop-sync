@@ -2,39 +2,45 @@
 
 <img src="public/kura-icon.svg" alt="Kura Logo" width="112" height="112" />
 
-# Kura (蔵) — Offline Shop Stock, POS & Multi-Phone Bill Sync
+# Kura — Offline Shop Stock, POS & Multi-Phone Bill Sync
 
 **Ultra-lightweight, zero-account, offline-first Point-of-Sale, CRDT Inventory Ledger, Executive Home Dashboard, Full P&L Statement, Supplier Payables, Customer Khata, Cash Drawer Reconciliation & Thermal/PDF Receipt Engine.**
 
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2.2-24C8D8?style=flat-square&logo=tauri&logoColor=white)](https://v2.tauri.app/)
 [![Rust 2021](https://img.shields.io/badge/Rust-2021-DEA584?style=flat-square&logo=rust&logoColor=black)](https://www.rust-lang.org/)
-[![Preact + Signals](https://img.shields.io/badge/Preact%20%2B%20Signals-54.72%20KB%20gzip-673AB8?style=flat-square&logo=preact&logoColor=white)](https://preactjs.com/)
+[![Preact + Signals](https://img.shields.io/badge/Preact%20%2B%20Signals-57.23%20KB%20gzip-673AB8?style=flat-square&logo=preact&logoColor=white)](https://preactjs.com/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![SQLite WAL](https://img.shields.io/badge/SQLite-WAL%20Mode-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/wal.html)
 [![Encryption](https://img.shields.io/badge/Sync-AES--256--GCM-34C759?style=flat-square)](#5-mathematical--data-integrity-guarantees)
-[![Bundle Size](https://img.shields.io/badge/dist%2F%20Total%20Gzip-54.72%20KB-007AFF?style=flat-square)](#11-developer-setup-testing--build-instructions)
+[![Bundle Size](https://img.shields.io/badge/dist%2F%20Total%20Gzip-57.23%20KB-007AFF?style=flat-square)](#11-developer-setup-testing--build-instructions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![Live Showcase](https://img.shields.io/badge/Live%20Showcase-GitHub%20Pages-black?style=flat-square&logo=github)](https://thisissufian.github.io/kura-shop-sync/)
+[![AI Architecture Ledger](https://img.shields.io/badge/Architecture%20Bible-AI%20Decisions%20Ledger-blueviolet?style=flat-square)](docs/AI_CONTEXT_AND_DECISIONS.md)
 
 </div>
 
 ---
 
+> [!TIP]
+> 📖 **Comprehensive Architectural Bible & AI Decision Ledger**: See [docs/AI_CONTEXT_AND_DECISIONS.md](docs/AI_CONTEXT_AND_DECISIONS.md) for the complete chronological milestone history, Architectural Decision Records (ADRs), full SQLite schema & CRDT mathematical invariants.
+
+---
+
 ## 1. Brand Vision & Engineering Ethos
 
-In traditional Japanese architecture, a **Kura (蔵)** is an earthen-walled merchant storehouse engineered to safeguard a family business's most valuable goods and accounting ledgers from fire, theft, and disaster.
+The name **Kura** is inspired by the traditional Japanese merchant storehouse (*kura*), an earthen-walled structure engineered to safeguard a family business's most valuable goods and accounting ledgers from fire, theft, and disaster.
 
 **Kura** applies that exact philosophy to modern neighborhood commerce across Android phones and Windows counters:
 - Your inventory counts, bills, profit margins, supplier payables, and customer due ledgers live inside a fast, ACID-compliant **SQLite WAL** vault on your own devices.
 - All business logic, CRDT merging, cryptography, LAN networking, ESC/POS encoding, and vector PDF rendering execute in native **Rust**.
-- The user interface is an Apple Cupertino HIG **Preact + Signals + Tailwind CSS v4** layer (supporting both **Cupertino Light** and **True OLED Dark Mode** plus mobile safe-area insets) delivering the entire production frontend in **`54.72 KB` gzipped** (`0.44 KB` HTML + `8.02 KB` CSS + `46.26 KB` JS), strictly enforcing a **220-line per-file ceiling** across every `.rs`, `.ts`, and `.tsx` source file.
+- The user interface is an Apple Cupertino HIG **Preact + Signals + Tailwind CSS v4** layer (supporting both **Cupertino Light** and **True OLED Dark Mode** plus mobile safe-area insets) delivering the entire production frontend in **`57.23 KB` gzipped** (`0.44 KB` HTML + `8.56 KB` CSS + `48.23 KB` JS), strictly enforcing a **220-line per-file ceiling** across every `.rs`, `.ts`, and `.tsx` source file.
 - Experience the live interactive web demo and product showcase at **[https://thisissufian.github.io/kura-shop-sync/](https://thisissufian.github.io/kura-shop-sync/)**.
 
 ---
 
 ## 2. Executive Summary: Why Kura Exists
 
-| Capability | Typical Cloud SaaS POS | **Kura (蔵)** |
+| Capability | Typical Cloud SaaS POS | **Kura** |
 | :--- | :--- | :--- |
 | **Account / Login Required** | Mandatory email, OTP & cloud workspace | **Zero accounts** — instant offline launch |
 | **Monthly / Per-Register Cost** | \$15–\$79/month per terminal | **\$0 forever** — zero developer servers |

@@ -8,7 +8,7 @@ const outDir = path.join(rootDir, "dist-site");
 const outAppDir = path.join(outDir, "app");
 
 console.log("==========================================================");
-console.log("  Kura (蔵) — Apple Showcase Website & Web App Bundler    ");
+console.log("  Kura — Apple Showcase Website & Web App Bundler    ");
 console.log("==========================================================");
 
 if (!fs.existsSync(distAppDir)) {

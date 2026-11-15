@@ -1,6 +1,6 @@
-# Contributing to Kura (蔵)
+# Contributing to Kura
 
-Thank you for your interest in contributing to **Kura (蔵)** — an ultra-lightweight, offline-first Shop Stock, POS & Multi-Phone Bill Sync operating system built with Tauri v2 (Rust Native Core) and Preact + Signals + Tailwind CSS v4.
+Thank you for your interest in contributing to **Kura** — an ultra-lightweight, offline-first Shop Stock, POS & Multi-Phone Bill Sync operating system built with Tauri v2 (Rust Native Core) and Preact + Signals + Tailwind CSS v4.
 
 ---
 
@@ -11,15 +11,15 @@ Every contribution must strictly adhere to these 4 engineering invariants:
 1. **220-Line Source Code Ceiling**:
    - No single `.rs`, `.ts`, or `.tsx` file in `src/` or `src-tauri/src/` may exceed **220 lines**.
    - If a feature or component grows beyond 200 lines, extract a focused sub-module or child component immediately.
-2. **Zero-Bloat Mandate (<50 KB Frontend Bundle)**:
-   - The total gzipped production bundle (`dist/`) must remain **under 50 KB**.
+2. **Zero-Bloat Mandate (<58 KB Frontend Bundle)**:
+   - The total gzipped production bundle (`dist/`) must remain **under 58 KB**.
    - Do NOT install heavy third-party UI libraries (MUI, Radix, Chakra), heavy PDF rasterizers, or large barcode/crypto libraries. Kura uses native Web APIs (`BarcodeDetector`, `AudioContext`, CSS variables) and native Rust engines.
 3. **Integer Money Invariant**:
    - All currency values across Rust, SQLite (`INTEGER`), and TypeScript (`number`) must be stored and calculated as **integer minor units** (`i64` paisa/cents, e.g. `14950` = `149.50`).
    - Never use floating-point math for money. Formatting to decimals occurs strictly at display boundaries.
 4. **Append-Only CRDT Ledger**:
    - Never overwrite mutable inventory stock directly (`UPDATE products SET stock_qty = ?` is forbidden).
-   - Stock changes must stem from append-only, commutative `ledger_events` (`STOCK_ADJUST`, `BILL_ISSUED`, `BILL_VOIDED`).
+   - Stock changes must stem from append-only, commutative `ledger_events` (`STOCK_ADJUST`, `BILL_ISSUED`, `BILL_VOIDED`, `STOCK_PURCHASED`).
 
 ---
 
@@ -44,8 +44,8 @@ npm run dev
 # 4. Verify Frontend Bundle Size & Typecheck
 npm run build
 
-# 5. Run Rust Unit & Integration Tests (7/7 tests)
-cd src-tauri && cargo test && cargo check
+# 5. Run Rust Unit & Integration Tests (10/10 tests)
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
 ---

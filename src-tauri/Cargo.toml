@@ -1,7 +1,7 @@
 [package]
 name = "kura"
 version = "0.1.0"
-description = "Kura (蔵) — Offline-first Shop Stock, POS & Bill Sync"
+description = "Kura — Offline-first Shop Stock, POS & Bill Sync"
 authors = ["Kura Systems"]
 edition = "2021"
 

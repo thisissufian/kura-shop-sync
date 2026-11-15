@@ -1,10 +1,10 @@
-# Privacy Policy for Kura (蔵) — Offline Shop Stock & Bill Sync
+# Privacy Policy for Kura — Offline Shop Stock & Bill Sync
 
 **Effective Date:** November 12, 2026  
 **Developer:** Kura Offline POS Project
 
 ## 1. Overview
-**Kura (蔵)** ("the App") is an offline-first Point-of-Sale, inventory management, and billing application. We believe merchant sales ledgers, product cost prices, and customer phone numbers belong strictly to the shop owner. Kura does **not** operate any developer-hosted user accounts, analytics servers, crash telemetry trackers, or advertising SDKs.
+**Kura** ("the App") is an offline-first Point-of-Sale, inventory management, and billing application. We believe merchant sales ledgers, product cost prices, and customer phone numbers belong strictly to the shop owner. Kura does **not** operate any developer-hosted user accounts, analytics servers, crash telemetry trackers, or advertising SDKs.
 
 ## 2. Data Stored Locally on Your Device
 All operational shop data created inside Kura is stored strictly inside a local SQLite database on your device's internal application storage:

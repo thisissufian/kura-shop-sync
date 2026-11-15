@@ -1,8 +1,8 @@
-# Security Policy for Kura (蔵)
+# Security Policy for Kura
 
 ## 1. Local-First Threat Model
 
-**Kura (蔵)** operates on a **zero-account, local-first** architecture. There are no developer-hosted central databases, analytics trackers, or user identity clouds.
+**Kura** operates on a **zero-account, local-first** architecture. There are no developer-hosted central databases, analytics trackers, or user identity clouds.
 
 - **Data Storage**: All shop ledgers, catalog items, customer balances, and pricing records reside in a local SQLite database in Write-Ahead Logging (WAL) mode on your device's internal application storage.
 - **Role Isolation**:

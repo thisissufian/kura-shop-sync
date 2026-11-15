@@ -18,7 +18,7 @@ if (-not (Test-Path $softs)) {
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  Kura (蔵) — Local SupportingSofts Toolchain Integrator  " -ForegroundColor Cyan
+Write-Host "  Kura — Local SupportingSofts Toolchain Integrator  " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 # 1. OpenJDK 17

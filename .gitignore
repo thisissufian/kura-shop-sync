@@ -15,6 +15,7 @@ src-tauri/WixTools/
 *.db-shm
 *.pdf
 *.kura
+*.zip
 
 # Local Toolchains & Showcase Build Artifacts
 SupportingSofts/
