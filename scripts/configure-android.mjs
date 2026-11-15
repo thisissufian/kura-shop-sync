@@ -54,3 +54,18 @@ fs.writeFileSync(manifestPath, xml, "utf8");
 console.log(
   `[android:prep] Patched ${manifestPath} (+${added} permissions, usesCleartextTraffic="true").`
 );
+
+const gradlePath = path.resolve("src-tauri", "gen", "android", "app", "build.gradle.kts");
+if (fs.existsSync(gradlePath)) {
+  let gradle = fs.readFileSync(gradlePath, "utf8");
+  if (!gradle.includes('signingConfig = signingConfigs.getByName("debug")')) {
+    gradle = gradle.replace(
+      'getByName("release") {',
+      'getByName("release") {\n            signingConfig = signingConfigs.getByName("debug")'
+    );
+  }
+  gradle = gradle.replace(/compileSdk\s*=\s*\d+/, "compileSdk = 34");
+  gradle = gradle.replace(/targetSdk\s*=\s*\d+/, "targetSdk = 34");
+  fs.writeFileSync(gradlePath, gradle, "utf8");
+  console.log(`[android:prep] Patched ${gradlePath} (debug signing for release APK, compileSdk=34).`);
+}
