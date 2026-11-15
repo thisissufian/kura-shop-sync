@@ -1,16 +1,5 @@
 import { useEffect } from "preact/hooks";
-import {
-  activeTab,
-  cartCount,
-  currencySymbol,
-  formatMoney,
-  isOwner,
-  isTauriRuntime,
-  loading,
-  refreshBootstrap,
-  syncStatus,
-  toastMessage,
-} from "./state/kuraStore";
+import { activeTab, cartCount, currencySymbol, formatMoney, isOwner, isTauriRuntime, loading, refreshBootstrap, syncStatus, toastMessage } from "./state/kuraStore";
 import { totalDueMinor } from "./state/customerActions";
 import { initRelaySettings } from "./state/remoteRelay";
 import { cycleThemeMode, initThemeListener, themeMode } from "./state/themeStore";
@@ -18,6 +7,7 @@ import { drawerSheetOpen, khataSheetOpen, remoteRelayConnected, shopSettingsShee
 import type { KuraTab } from "./types/kura";
 import { BottomNavDock } from "./ui/primitives/BottomNavDock";
 import { KuraBrandMark } from "./ui/primitives/KuraBrandMark";
+import { IconMoon, IconSun } from "./ui/primitives/KuraIcons";
 import { SegmentedControl } from "./ui/primitives/SegmentedControl";
 import { CashDrawerSheet } from "./ui/sheets/CashDrawerSheet";
 import { CsvCatalogSheet } from "./ui/sheets/CsvCatalogSheet";
@@ -50,11 +40,12 @@ export function App() {
   const status = syncStatus.value;
   const tab = activeTab.value;
   const toast = toastMessage.value;
+  const isDark = themeMode.value === "DARK";
 
   const toggleRole = () => {
     if (!syncStatus.value) return;
-    const nextRole = syncStatus.value.role === "OWNER" ? "CASHIER" : "OWNER";
-    syncStatus.value = { ...syncStatus.value, role: nextRole };
+    const next = syncStatus.value.role === "OWNER" ? "CASHIER" : "OWNER";
+    syncStatus.value = { ...syncStatus.value, role: next };
   };
 
   const tabs: { id: KuraTab; label: string; badge?: number }[] = [
@@ -67,38 +58,39 @@ export function App() {
 
   return (
     <div class="min-h-screen bg-[#F5F5F7] dark:bg-black text-[#1D1D1F] dark:text-[#F5F5F7] transition-colors duration-200">
-      <header class="sticky top-0 z-20 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-b border-black/[0.06] dark:border-white/[0.08] kura-safe-top">
+      <header class="sticky top-0 z-30 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] kura-safe-top">
         <div class="mx-auto max-w-5xl px-4 pb-2.5 space-y-2.5">
           <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <KuraBrandMark />
+            <div class="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => { if (isOwner.value) shopSettingsSheetOpen.value = true; }}
+                title="Shop Profile & Settings"
+                class="shrink-0 kura-btn-press"
+              >
+                <KuraBrandMark />
+              </button>
               <div class="min-w-0">
-                <h1 class="truncate text-[16px] font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
-                  {status?.shop_name ?? "Kura"}
-                </h1>
-                <div class="flex items-center gap-1.5 text-[11px] text-[#86868B] tabular-nums">
-                  <span class={`h-1.5 w-1.5 rounded-full ${(status?.peer_count ?? 0) > 0 ? "bg-[#34C759]" : "bg-[#007AFF]"}`} />
+                <button
+                  type="button"
+                  onClick={() => { if (isOwner.value) shopSettingsSheetOpen.value = true; }}
+                  class="text-left block truncate font-bold text-[14px] sm:text-[15px] tracking-tight uppercase text-[#1D1D1F] dark:text-[#F5F5F7] hover:opacity-85 transition"
+                >
+                  {status?.shop_name ?? "Kura Store"}
+                </button>
+                <div class="flex items-center gap-1.5 text-[11px] text-[#86868B] tabular-nums truncate">
+                  <span class={`h-2 w-2 rounded-full ${(status?.peer_count ?? 0) > 0 ? "bg-[#34C759]" : "bg-[#007AFF]"}`} />
                   <span>{status?.node_id ?? "K1"}</span>
-                  <button
-                    type="button"
-                    onClick={toggleRole}
-                    title="Tap to toggle Owner / Cashier preview mode"
-                    class={`rounded-full px-2 py-0.2 text-[10px] font-bold ${
-                      status?.role === "OWNER"
-                        ? "bg-[#007AFF]/12 text-[#007AFF]"
-                        : "bg-[#FF9500]/14 text-[#B25E00] dark:text-[#FF9500]"
-                    }`}
-                  >
-                    ● {status?.role === "OWNER" ? "Owner ⇄" : "Cashier ⇄"}
-                  </button>
+                  <span class="text-black/20 dark:text-white/20">·</span>
+                  <span class="truncate hidden xs:inline">Smart Retail POS</span>
                   {remoteRelayConnected.value && (
-                    <span class="rounded-full bg-[#34C759]/14 px-1.5 py-0.2 text-[10px] font-semibold text-[#1E8E3E] dark:text-[#34C759]">
-                      Remote Live
+                    <span class="rounded-full bg-[#34C759]/15 px-1.5 py-0.2 text-[9px] font-bold text-[#34C759]">
+                      Live
                     </span>
                   )}
                   {!isTauriRuntime && (
-                    <span class="rounded bg-black/[0.06] dark:bg-white/[0.08] px-1.5 py-0.2 text-[10px]">
-                      Preview
+                    <span class="rounded bg-black/[0.06] dark:bg-white/[0.08] px-1 py-0.2 text-[9px]">
+                      Web
                     </span>
                   )}
                 </div>
@@ -110,7 +102,7 @@ export function App() {
                 type="button"
                 onClick={() => { khataSheetOpen.value = true; }}
                 title="Customer Due / Khata Ledger"
-                class="rounded-full bg-[#FF9500]/14 px-2.5 py-1 text-[11px] font-semibold text-[#B25E00] dark:text-[#FF9500] tabular-nums hover:bg-[#FF9500]/22"
+                class="hidden sm:inline-flex rounded-full bg-[#FF9500]/14 px-2.5 py-1 text-[11px] font-semibold text-[#B25E00] dark:text-[#FF9500] tabular-nums hover:bg-[#FF9500]/22 kura-btn-press"
               >
                 Due {formatMoney(totalDueMinor.value, currencySymbol.value)}
               </button>
@@ -118,35 +110,41 @@ export function App() {
                 type="button"
                 onClick={() => { drawerSheetOpen.value = true; }}
                 title="Cash Drawer & Petty Expenses"
-                class="rounded-full bg-[#34C759]/14 px-2.5 py-1 text-[11px] font-semibold text-[#1E8E3E] dark:text-[#34C759] hover:bg-[#34C759]/22"
+                class="rounded-full bg-[#34C759]/14 px-2.5 py-1 text-[11px] font-semibold text-[#1E8E3E] dark:text-[#34C759] hover:bg-[#34C759]/22 kura-btn-press"
               >
                 Till
               </button>
-              {isOwner.value && (
-                <button
-                  type="button"
-                  onClick={() => { shopSettingsSheetOpen.value = true; }}
-                  title="Shop Profile & Currency"
-                  class="rounded-full bg-black/[0.05] dark:bg-white/[0.08] px-2.5 py-1 text-[11px] font-medium hover:bg-black/[0.09]"
-                >
-                  Shop
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={toggleRole}
+                title="Tap to toggle Owner / Cashier preview mode"
+                class={`rounded-full px-2.5 py-1 text-[11px] font-bold kura-btn-press transition ${
+                  status?.role === "OWNER"
+                    ? "bg-[#007AFF]/12 text-[#007AFF] hover:bg-[#007AFF]/20"
+                    : "bg-[#34C759]/14 text-[#1E8E3E] dark:text-[#34C759] hover:bg-[#34C759]/22"
+                }`}
+              >
+                ● {status?.role === "OWNER" ? "Owner ⇄" : "Cashier ⇄"}
+              </button>
               <button
                 type="button"
                 onClick={toggleAudioMute}
                 title={audioMuted.value ? "Unmute POS audio" : "Mute POS audio"}
-                class="rounded-full bg-black/[0.05] dark:bg-white/[0.08] px-2.5 py-1 text-[11px] font-medium text-[#86868B] hover:text-[#1D1D1F]"
+                class="hidden xs:inline-flex rounded-full bg-black/[0.05] dark:bg-white/[0.08] px-2 py-1 text-[11px] text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] kura-btn-press"
               >
-                {audioMuted.value ? "Muted" : "Sound"}
+                {audioMuted.value ? "🔇" : "🔔"}
               </button>
               <button
                 type="button"
                 onClick={cycleThemeMode}
                 title={`Theme: ${themeMode.value} (tap to cycle)`}
-                class="rounded-full bg-black/[0.05] dark:bg-white/[0.08] px-2.5 py-1 text-[11px] font-medium hover:bg-black/[0.09]"
+                class="rounded-full bg-black/[0.05] dark:bg-white/[0.08] p-1.5 text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/[0.09] dark:hover:bg-white/[0.14] kura-btn-press"
               >
-                {themeMode.value === "DARK" ? "🌙 OLED" : themeMode.value === "LIGHT" ? "☀️ Light" : "🌗 Auto"}
+                {isDark ? (
+                  <IconMoon class="w-4 h-4 text-[#A78BFA]" />
+                ) : (
+                  <IconSun class="w-4 h-4 text-[#F59E0B]" />
+                )}
               </button>
             </div>
           </div>
@@ -161,7 +159,7 @@ export function App() {
         </div>
       </header>
 
-      <main class="mx-auto max-w-5xl px-4 pt-4">
+      <main class="mx-auto max-w-5xl px-4 pt-4 pb-28">
         {loading.value ? (
           <div class="py-20 text-center text-[14px] text-[#86868B]">
             Loading Kura Store…

@@ -1,5 +1,7 @@
+import { useState } from "preact/hooks";
 import { formatMoney } from "../../state/ipcBridge";
 import type { Product } from "../../types/kura";
+import { IconCart, IconEdit, IconSliders } from "../primitives/KuraIcons";
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +20,7 @@ export function ProductCard({
   onEdit,
   onRestock,
 }: ProductCardProps) {
+  const [showAdjust, setShowAdjust] = useState(false);
   const isOut = p.stock_qty <= 0;
   const isLow = !isOut && p.stock_qty <= p.low_stock_threshold;
   const marginMinor = p.sell_price_minor - p.cost_price_minor;
@@ -28,97 +31,119 @@ export function ProductCard({
       ? "bg-[#FF9500]/12 text-[#B25E00] dark:text-[#FF9500] border-[#FF9500]/25"
       : "bg-[#34C759]/12 text-[#1E8E3E] dark:text-[#34C759] border-[#34C759]/25";
 
+  const monogram = (p.brand || p.name).slice(0, 2).toUpperCase();
+
   return (
-    <div class="rounded-[18px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3.5 shadow-xs transition hover:shadow-md space-y-2.5">
-      {/* Top badges: Brand, Category/Variant & Stock Status */}
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex flex-wrap items-center gap-1.5 min-w-0">
-          {p.brand && (
-            <span class="rounded-md bg-[#007AFF]/10 text-[#007AFF] px-2 py-0.5 text-[11px] font-semibold tracking-tight">
-              {p.brand}
-            </span>
-          )}
-          <span class="rounded-md bg-black/[0.05] dark:bg-white/[0.08] text-[#86868B] px-1.5 py-0.5 text-[11px]">
-            {p.category} {p.variant ? `· ${p.variant}` : ""}
+    <div class="kura-card p-4 transition hover:shadow-md space-y-3">
+      {/* Top Row: Brand, Category micro-pill & Stock Status */}
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-[11px] font-bold text-[#007AFF] uppercase tracking-wide truncate">
+            {p.brand || "GENERIC"}
           </span>
-          {p.warranty_label && p.warranty_label !== "No Warranty (ওয়ারেন্টি নেই)" && (
-            <span class="rounded-md bg-[#34C759]/10 text-[#1E8E3E] dark:text-[#34C759] px-1.5 py-0.5 text-[10px] font-medium">
-              🛡 {p.warranty_label}
-            </span>
-          )}
+          <span class="rounded-md bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 text-[10px] text-[#86868B] uppercase font-semibold">
+            {p.category}
+          </span>
         </div>
-        <span class={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold tabular-nums ${stockBadgeClass}`}>
+        <span class={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tabular-nums ${stockBadgeClass}`}>
           {isOut ? "Out of Stock" : `${p.stock_qty} in stock`}
         </span>
       </div>
 
-      {/* Product Title & SKU */}
-      <div class="min-w-0">
-        <h4 class="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate leading-tight">
-          {p.name}
-        </h4>
-        <div class="text-[11px] font-mono text-[#86868B] mt-0.5">
-          SKU: {p.sku} {p.barcode ? `· ${p.barcode}` : ""}
+      {/* Middle Row: Monogram Avatar & Product Details */}
+      <div class="flex items-start gap-3 min-w-0">
+        <div class="w-12 h-12 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center font-bold text-[14px] text-[#1D1D1F] dark:text-[#F5F5F7] shrink-0 tracking-wider">
+          {monogram}
+        </div>
+        <div class="min-w-0 flex-1">
+          <h4 class="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate leading-snug">
+            {p.name}
+          </h4>
+          <div class="text-[11px] text-[#86868B] truncate mt-0.5">
+            {p.variant ? `${p.variant} · ` : ""}
+            {p.warranty_label && p.warranty_label !== "No Warranty (ওয়ারেন্টি নেই)" ? `🛡 ${p.warranty_label}` : "Standard Retail"}
+          </div>
+          <div class="text-[10px] font-mono text-[#86868B]/80 mt-0.5">
+            SKU: {p.sku} {p.barcode ? `· ${p.barcode}` : ""}
+          </div>
         </div>
       </div>
 
-      {/* Pricing: Sell Price & Owner-Only Cost/Margin Strip */}
-      <div class="pt-1 border-t border-black/[0.05] dark:border-white/[0.06] flex items-baseline justify-between">
-        <div>
-          <div class="text-[18px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums">
+      {/* Bottom Row: Price & Actions */}
+      <div class="pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-end justify-between gap-2">
+        <div class="min-w-0">
+          <div class="text-[19px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums leading-none">
             {formatMoney(p.sell_price_minor, sym)}
           </div>
           {isOwner && (
-            <div class="text-[11px] font-medium text-[#1E8E3E] dark:text-[#34C759] tabular-nums">
+            <div class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums mt-1 truncate">
               Cost: {formatMoney(p.cost_price_minor, sym)} · Margin: {formatMoney(marginMinor, sym)}
             </div>
           )}
         </div>
 
-        {/* Quick inline restock buttons (owner only) */}
-        {isOwner && (
-          <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1.5 shrink-0">
+          {isOwner && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowAdjust(!showAdjust)}
+                title="Quick Stock Adjust"
+                class="w-9 h-9 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center hover:bg-black/[0.08] dark:hover:bg-white/[0.12] kura-btn-press"
+              >
+                <IconSliders class="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onEdit(p)}
+                title="Edit Product"
+                class="w-9 h-9 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center hover:bg-black/[0.08] dark:hover:bg-white/[0.12] kura-btn-press"
+              >
+                <IconEdit class="w-4 h-4" />
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={() => onSell(p.sku)}
+            disabled={isOut}
+            class="bg-[#007AFF] hover:bg-[#0062CC] text-white font-semibold px-3.5 py-2 rounded-xl text-[12px] shadow-xs flex items-center gap-1.5 disabled:opacity-40 kura-btn-press"
+          >
+            <IconCart class="w-3.5 h-3.5 text-white" />
+            <span>Sell</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Quick stock stepper flyout (Owner only) */}
+      {showAdjust && isOwner && (
+        <div class="p-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.05] flex items-center justify-between text-[11px]">
+          <span class="text-[#86868B] font-medium">Quick Adjust:</span>
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onRestock(p.sku, -1)}
+              class="px-2 py-0.5 rounded-md bg-white dark:bg-[#2C2C2E] border border-black/[0.06] dark:border-white/[0.08] font-bold text-[#FF3B30] kura-btn-press"
+            >
+              -1
+            </button>
             <button
               type="button"
               onClick={() => onRestock(p.sku, 1)}
-              title="Restock +1"
-              class="h-7 px-2 rounded-lg bg-black/[0.05] dark:bg-white/[0.08] text-[11px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/[0.08] active:scale-95 transition"
+              class="px-2 py-0.5 rounded-md bg-white dark:bg-[#2C2C2E] border border-black/[0.06] dark:border-white/[0.08] font-bold text-[#34C759] kura-btn-press"
             >
               +1
             </button>
             <button
               type="button"
               onClick={() => onRestock(p.sku, 10)}
-              title="Restock +10"
-              class="h-7 px-2 rounded-lg bg-black/[0.05] dark:bg-white/[0.08] text-[11px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/[0.08] active:scale-95 transition"
+              class="px-2.5 py-0.5 rounded-md bg-white dark:bg-[#2C2C2E] border border-black/[0.06] dark:border-white/[0.08] font-bold text-[#007AFF] kura-btn-press"
             >
               +10
             </button>
           </div>
-        )}
-      </div>
-
-      {/* Action Row: Edit & 1-tap Sell */}
-      <div class="flex items-center gap-2 pt-1">
-        {isOwner && (
-          <button
-            type="button"
-            onClick={() => onEdit(p)}
-            class="flex-1 py-2 rounded-xl border border-black/[0.08] dark:border-white/[0.12] text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/[0.04] active:scale-98 transition"
-          >
-            Edit
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onSell(p.sku)}
-          disabled={isOut}
-          class="flex-2 py-2 rounded-xl bg-[#007AFF] hover:bg-[#0062CC] disabled:opacity-40 text-white text-[13px] font-bold shadow-xs active:scale-98 transition flex items-center justify-center gap-1.5"
-        >
-          <span>🛒</span>
-          <span>Sell</span>
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

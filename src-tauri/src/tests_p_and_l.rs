@@ -46,10 +46,16 @@ fn test_p_and_l_valuation_and_operating_profit() {
     };
     apply_ledger_event(&tx, &ev_stock).unwrap();
 
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+    let today_hlc = format!("{}-0001-K1", crate::hlc::format_iso_ms(now_ms));
+
     let bill = BillReceipt {
-        bill_no: "K1-261113-0001".to_string(),
+        bill_no: "K1-0001".to_string(),
         node_id: "K1".to_string(),
-        hlc: "2026-11-13T10:05:00.000Z-0001-K1".to_string(),
+        hlc: today_hlc.clone(),
         items: vec![BillItem {
             sku: "TEST-01".to_string(),
             name: "Wireless ANC Headphones".to_string(),
@@ -68,7 +74,7 @@ fn test_p_and_l_valuation_and_operating_profit() {
     };
     let ev_bill = LedgerEvent {
         event_id: "E-B1".to_string(),
-        hlc: "2026-11-13T10:05:00.000Z-0001-K1".to_string(),
+        hlc: today_hlc.clone(),
         node_id: "K1".to_string(),
         event_type: "BILL_ISSUED".to_string(),
         payload_json: serde_json::to_string(&bill).unwrap(),
@@ -83,11 +89,11 @@ fn test_p_and_l_valuation_and_operating_profit() {
         amount_minor: 500,
         note: "Packaging tape".to_string(),
         node_id: "K1".to_string(),
-        hlc: "2026-11-13T10:10:00.000Z-0001-K1".to_string(),
+        hlc: today_hlc.clone(),
     };
     let ev_exp = LedgerEvent {
         event_id: "E-E1".to_string(),
-        hlc: "2026-11-13T10:10:00.000Z-0001-K1".to_string(),
+        hlc: today_hlc,
         node_id: "K1".to_string(),
         event_type: "EXPENSE_LOGGED".to_string(),
         payload_json: serde_json::to_string(&exp).unwrap(),

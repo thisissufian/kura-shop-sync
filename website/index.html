@@ -95,7 +95,7 @@
       <section id="bento" class="section-wrapper">
         <div class="section-header">
           <div class="section-eyebrow">Engineered Without Compromise</div>
-          <h2 class="section-title">Everything your shop needs. In 54 KB.</h2>
+          <h2 class="section-title">Everything your shop needs. In 57 KB.</h2>
           <p class="section-desc">
             From executive P&amp;L analytics to 1-handed barcode scanning and multi-phone CRDT synchronization,
             Kura is meticulously optimized for speed, reliability, and local privacy.
@@ -139,7 +139,7 @@
               <div style="font-size: 0.8rem; font-weight: 600; color: var(--apple-emerald); margin-bottom: 0.35rem; text-transform: uppercase;">
                 Zero-Bloat Performance
               </div>
-              <h3 class="card-title">54 KB Frontend. 200ms Boot.</h3>
+              <h3 class="card-title">57 KB Frontend. 200ms Boot.</h3>
               <p class="card-desc">
                 Built with Preact + Signals and a compiled Rust native engine, Kura boots in 200ms
                 and uses 98% less memory than bloated web or Electron POS solutions.
@@ -149,7 +149,7 @@
               <div class="bar-row">
                 <span class="bar-label">Kura (蔵)</span>
                 <div class="bar-track">
-                  <div class="bar-fill bar-kura">54 KB</div>
+                  <div class="bar-fill bar-kura">57 KB</div>
                 </div>
               </div>
               <div class="bar-row">
@@ -301,7 +301,7 @@
           <a href="./app/" class="download-box" style="border-color: rgba(0, 122, 255, 0.35);">
             <div class="download-icon">🌐</div>
             <div class="download-title" style="color: var(--apple-blue);">Launch Web App (Browser POS)</div>
-            <div class="download-meta">Runs 100% client-side · 54 KB bundle · Zero installation</div>
+            <div class="download-meta">Runs 100% client-side · 57 KB bundle · Zero installation</div>
           </a>
 
           <a href="https://github.com/thisissufian/kura-shop-sync" target="_blank" rel="noopener" class="download-box">
@@ -332,11 +332,23 @@
     </footer>
 
     <script>
-      // Apple Theme Switcher
+      // Apple Theme Switcher & Frame Synchronizer
       const toggleBtn = document.getElementById("themeToggle");
       const htmlEl = document.documentElement;
       let currentTheme = localStorage.getItem("kura_site_theme") || "dark";
       applySiteTheme(currentTheme);
+
+      function syncIframeTheme(t) {
+        const iframe = document.querySelector(".kura-app-frame");
+        if (!iframe) return;
+        try {
+          if (iframe.contentDocument && iframe.contentDocument.documentElement) {
+            iframe.contentDocument.documentElement.dataset.theme = t;
+          }
+        } catch (e) {
+          // ignore cross-origin restrictions
+        }
+      }
 
       function applySiteTheme(t) {
         currentTheme = t;
@@ -345,6 +357,12 @@
         if (toggleBtn) {
           toggleBtn.textContent = t === "dark" ? "☀️ Light" : "🌙 OLED";
         }
+        syncIframeTheme(t);
+      }
+
+      const appFrame = document.querySelector(".kura-app-frame");
+      if (appFrame) {
+        appFrame.addEventListener("load", () => syncIframeTheme(currentTheme));
       }
 
       if (toggleBtn) {

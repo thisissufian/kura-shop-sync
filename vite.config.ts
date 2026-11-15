@@ -23,10 +23,14 @@ export default defineConfig({
       ignored: ["**/src-tauri/**"],
     },
   },
+  esbuild: {
+    legalComments: "none",
+  },
   build: {
     target: "es2021",
     minify: "esbuild",
     sourcemap: false,
+    cssMinify: "esbuild",
     rollupOptions: {
       output: {
         manualChunks: undefined,

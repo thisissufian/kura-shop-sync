@@ -1,9 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
-import { formatMoney } from "../../state/ipcBridge";
+import { callBackend, formatMoney } from "../../state/ipcBridge";
 import { currencySymbol, isOwner } from "../../state/kuraStore";
-import { khataSheetOpen, supplierSheetOpen } from "../../state/uiSignals";
 import type { OwnerAnalytics } from "../../types/kura";
-import { callBackend } from "../../state/ipcBridge";
+import { ReportsValuationGrid } from "../components/ReportsValuationGrid";
+import { IconChart } from "../primitives/KuraIcons";
 
 const PERIODS = [
   { id: "TODAY", label: "Today" },
@@ -35,7 +35,7 @@ export function ReportsAnalyticsView() {
 
   if (!owner) {
     return (
-      <div class="rounded-2xl border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-[#1C1C1E] p-8 text-center text-[#86868B] text-[14px]">
+      <div class="kura-card p-8 text-center text-[#86868B] text-[14px]">
         🔒 Profit & Loss and Valuation Reports are strictly locked to OWNER devices.
       </div>
     );
@@ -49,117 +49,96 @@ export function ReportsAnalyticsView() {
   const netProfit = d?.net_operating_profit_minor ?? 0;
 
   return (
-    <div class="space-y-4 pb-24">
-      {/* 1. Time-Period Pill Bar */}
-      <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div class="inline-flex rounded-[14px] bg-black/[0.05] dark:bg-white/[0.08] p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPeriod(p.id)}
-              class={`rounded-[10px] px-3 py-1.5 text-[12px] font-semibold transition ${
-                period === p.id
-                  ? "bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs"
-                  : "text-[#86868B] hover:text-[#1D1D1F]"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+    <div class="space-y-4 pb-4">
+      {/* 1. Header & Time Range Selector */}
+      <div class="space-y-2">
+        <div>
+          <h2 class="text-[20px] font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+            Business Reports &amp; Analytics
+          </h2>
+          <p class="text-[12px] text-[#86868B]">
+            Real-time P&amp;L statement, stock valuation, and revenue metrics
+          </p>
         </div>
-        <span class="text-[11px] text-[#86868B] tabular-nums">
-          {d?.total_bills_count ?? 0} bills {d?.voided_bills_count ? `(${d.voided_bills_count} voided)` : ""}
-        </span>
+
+        <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-1">
+          <div class="inline-flex rounded-[14px] bg-black/[0.05] dark:bg-white/[0.08] p-1">
+            {PERIODS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPeriod(p.id)}
+                class={`rounded-[10px] px-3 py-1.5 text-[12px] font-semibold transition kura-btn-press ${
+                  period === p.id
+                    ? "bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs"
+                    : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <span class="text-[11px] text-[#86868B] tabular-nums shrink-0">
+            {d?.total_bills_count ?? 0} bills {d?.voided_bills_count ? `(${d.voided_bills_count} voided)` : ""}
+          </span>
+        </div>
       </div>
 
-      {/* 2. Profit & Loss Statement (P&L) Card */}
-      <div class="rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-5 shadow-xs space-y-3.5">
+      {/* 2. Structured Profit & Loss Statement (P&L) Ledger */}
+      <div class="kura-card p-5 space-y-4">
         <div class="flex items-center justify-between">
-          <h3 class="text-[16px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-            Profit & Loss Statement
-          </h3>
+          <div class="flex items-center gap-2.5">
+            <div class="kura-icon-squircle bg-[#34C759]/12 text-[#34C759]">
+              <IconChart class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-[16px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+                Profit &amp; Loss Statement (P&amp;L)
+              </h3>
+              <p class="text-[11px] text-[#86868B]">Accrual &amp; cash hybrid accounting</p>
+            </div>
+          </div>
           <span class="rounded-full bg-[#34C759]/12 text-[#1E8E3E] dark:text-[#34C759] px-2.5 py-0.5 text-[11px] font-bold">
             {((d?.margin_bps ?? 0) / 100).toFixed(1)}% Margin
           </span>
         </div>
 
-        <div class="space-y-2 text-[13px] pt-1">
-          <div class="flex justify-between items-center">
+        <div class="space-y-2.5 text-[13px] pt-1">
+          <div class="flex justify-between items-center py-1">
             <span class="text-[#1D1D1F] dark:text-[#F5F5F7] font-medium">Total Net Sales Revenue</span>
             <span class="font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums">
               {formatMoney(rev, sym)}
             </span>
           </div>
-          <div class="flex justify-between items-center text-[#FF3B30]">
+
+          <div class="flex justify-between items-center text-[#FF3B30] border-t border-black/[0.04] dark:border-white/[0.06] pt-2">
             <span>(-) Cost of Goods Sold (COGS)</span>
-            <span class="tabular-nums">- {formatMoney(cogs, sym)}</span>
+            <span class="tabular-nums font-semibold">- {formatMoney(cogs, sym)}</span>
           </div>
-          <div class="flex justify-between items-center font-semibold text-[#1E8E3E] dark:text-[#34C759] border-t border-black/[0.04] dark:border-white/[0.06] pt-1.5">
+
+          <div class="flex justify-between items-center font-bold text-[#1E8E3E] dark:text-[#34C759] border-t border-black/[0.04] dark:border-white/[0.06] pt-2">
             <span>Gross Operating Profit</span>
             <span class="tabular-nums">{formatMoney(grossProfit, sym)}</span>
           </div>
-          <div class="flex justify-between items-center text-[#FF9500]">
-            <span>(-) Operating Expenses (Expenses & Bills)</span>
-            <span class="tabular-nums">- {formatMoney(expenses, sym)}</span>
+
+          <div class="flex justify-between items-center text-[#FF9500] border-t border-black/[0.04] dark:border-white/[0.06] pt-2">
+            <span>(-) Operating Expenses (Rent, Salary, Bills)</span>
+            <span class="tabular-nums font-semibold">- {formatMoney(expenses, sym)}</span>
           </div>
-          <div class="flex justify-between items-center text-[16px] font-extrabold text-[#34C759] border-t border-black/[0.08] dark:border-white/[0.1] pt-2">
-            <span>Net Operating Profit</span>
+
+          <div class="flex justify-between items-center text-[17px] font-extrabold text-[#34C759] border-t-2 border-black/[0.1] dark:border-white/[0.14] pt-2.5">
+            <span>Net Operating Profit Estimate</span>
             <span class="tabular-nums">{formatMoney(netProfit, sym)}</span>
           </div>
         </div>
       </div>
 
-      {/* 3. 4-Card Balance Sheet & Inventory Valuation Grid */}
-      <div class="grid grid-cols-2 gap-2.5">
-        <div class="rounded-[18px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] p-3.5 shadow-xs">
-          <span class="text-[11px] font-medium text-[#86868B]">Inventory Cost Value</span>
-          <div class="text-[18px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums mt-0.5">
-            {formatMoney(d?.inventory_cost_value_minor ?? 0, sym)}
-          </div>
-          <div class="text-[11px] text-[#86868B] mt-0.5 tabular-nums">
-            {d?.total_inventory_units ?? 0} total units in stock
-          </div>
-        </div>
-
-        <div class="rounded-[18px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] p-3.5 shadow-xs">
-          <span class="text-[11px] font-medium text-[#86868B]">Retail Market Value</span>
-          <div class="text-[18px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums mt-0.5">
-            {formatMoney(d?.retail_market_value_minor ?? 0, sym)}
-          </div>
-          <div class="text-[11px] text-[#86868B] mt-0.5 truncate">
-            Projected customer value
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => { khataSheetOpen.value = true; }}
-          class="rounded-[18px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] p-3.5 text-left shadow-xs hover:border-[#FF9500]/40 transition"
-        >
-          <span class="text-[11px] font-medium text-[#86868B]">Customer Receivables</span>
-          <div class="text-[18px] font-bold text-[#FF9500] tabular-nums mt-0.5">
-            {formatMoney(d?.customer_receivables_minor ?? 0, sym)}
-          </div>
-          <div class="text-[11px] text-[#86868B] mt-0.5">Customer dues ledger ➔</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => { supplierSheetOpen.value = true; }}
-          class="rounded-[18px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] p-3.5 text-left shadow-xs hover:border-[#FF3B30]/40 transition"
-        >
-          <span class="text-[11px] font-medium text-[#86868B]">Supplier Payables</span>
-          <div class="text-[18px] font-bold text-[#FF3B30] tabular-nums mt-0.5">
-            {formatMoney(d?.supplier_payables_minor ?? 0, sym)}
-          </div>
-          <div class="text-[11px] text-[#86868B] mt-0.5">Vendor dues ledger ➔</div>
-        </button>
-      </div>
+      {/* 3. 4-Card Balance Sheet Valuation Grid */}
+      <ReportsValuationGrid d={d} sym={sym} />
 
       {/* 4. Terminal Breakdown Split */}
       {d?.terminal_breakdown && d.terminal_breakdown.length > 0 && (
-        <div class="rounded-[20px] bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] p-4 shadow-xs space-y-2">
+        <div class="kura-card p-4 space-y-2">
           <span class="text-[13px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
             Sales Split by Terminal
           </span>

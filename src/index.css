@@ -7,32 +7,95 @@
   --kura-glass: rgba(255, 255, 255, 0.82);
   --kura-text: #1D1D1F;
   --kura-muted: #86868B;
-  --kura-border: rgba(0, 0, 0, 0.06);
+  --kura-border: rgba(15, 23, 42, 0.06);
 }
 
 [data-theme="dark"] {
   --kura-canvas: #000000;
   --kura-card: #1C1C1E;
   --kura-secondary: #2C2C2E;
-  --kura-glass: rgba(28, 28, 30, 0.82);
+  --kura-glass: rgba(28, 28, 30, 0.85);
   --kura-text: #F5F5F7;
   --kura-muted: #98989D;
-  --kura-border: rgba(255, 255, 255, 0.10);
+  --kura-border: rgba(255, 255, 255, 0.08);
   color-scheme: dark;
 }
 
 @layer base {
   html,
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
     background-color: var(--kura-canvas);
     color: var(--kura-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
   }
 
   button, a, select, input, textarea {
     touch-action: manipulation;
   }
+}
+
+/* Tactile Surface Classes */
+.kura-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  border-radius: 18px;
+}
+
+[data-theme="dark"] .kura-card {
+  background: #1C1C1E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.kura-hero-card {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #0F766E 100%);
+  color: #FFFFFF;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 12px 32px -8px rgba(15, 23, 42, 0.35);
+  position: relative;
+}
+
+.kura-icon-squircle {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kura-btn-press {
+  transition: transform 0.14s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.14s ease;
+}
+.kura-btn-press:active {
+  transform: scale(0.96);
+}
+
+.kura-receipt-paper {
+  background: #FFFFFF;
+  color: #1D1D1F;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .kura-receipt-paper {
+  background: #1C1C1E;
+  color: #F5F5F7;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.kura-dashed-divider {
+  border-top: 1.5px dashed rgba(100, 116, 139, 0.35);
+}
+[data-theme="dark"] .kura-dashed-divider {
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.20);
 }
 
 /* OLED Cupertino Dark Semantic Overrides */

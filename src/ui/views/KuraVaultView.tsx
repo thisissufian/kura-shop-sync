@@ -14,6 +14,7 @@ import {
 } from "../../state/kuraStore";
 import { csvSheetOpen, scannerMode } from "../../state/uiSignals";
 import { ProductCard } from "../components/ProductCard";
+import { IconBarcodeScan, IconPlus, IconSearch } from "../primitives/KuraIcons";
 
 const searchQuery = signal("");
 const selectedCategory = signal("All");
@@ -22,13 +23,15 @@ const inventoryStats = computed(() => {
   let retailMinor = 0;
   let costMinor = 0;
   let lowCount = 0;
+  let totalUnits = 0;
   for (const p of products.value) {
     const qty = Math.max(0, p.stock_qty);
+    totalUnits += qty;
     retailMinor += p.sell_price_minor * qty;
     costMinor += p.cost_price_minor * qty;
     if (p.stock_qty <= p.low_stock_threshold) lowCount += 1;
   }
-  return { retailMinor, costMinor, profitMinor: retailMinor - costMinor, lowCount };
+  return { retailMinor, costMinor, profitMinor: retailMinor - costMinor, lowCount, totalUnits };
 });
 
 export function KuraVaultView() {
@@ -60,8 +63,8 @@ export function KuraVaultView() {
   };
 
   return (
-    <div class="space-y-4 pb-24">
-      {/* Header & Action Bar */}
+    <div class="space-y-4 pb-4">
+      {/* Header & Primary Actions */}
       <div class="flex items-center justify-between gap-3">
         <div>
           <h2 class="text-[20px] font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
@@ -75,27 +78,19 @@ export function KuraVaultView() {
           <button
             type="button"
             onClick={() => { csvSheetOpen.value = true; }}
-            class="rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1C1C1E] px-3 py-2 text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] active:scale-95 transition"
+            class="kura-card px-3 py-2 text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] kura-btn-press"
           >
-            CSV / Barcodes
+            CSV / Labels
           </button>
           {owner && (
-            <>
-              <button
-                type="button"
-                onClick={() => { scannerMode.value = "BARCODE_PREFILL"; }}
-                class="rounded-xl bg-[#007AFF]/10 text-[#007AFF] px-3 py-2 text-[12px] font-semibold active:scale-95 transition"
-              >
-                Scan New
-              </button>
-              <button
-                type="button"
-                onClick={() => { editingProduct.value = null; productSheetOpen.value = true; }}
-                class="rounded-xl bg-[#007AFF] hover:bg-[#0062CC] px-3.5 py-2 text-[12px] font-bold text-white shadow-xs active:scale-95 transition"
-              >
-                + New Product
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => { editingProduct.value = null; productSheetOpen.value = true; }}
+              class="rounded-xl bg-[#007AFF] hover:bg-[#0062CC] px-3.5 py-2 text-[12px] font-bold text-white shadow-xs flex items-center gap-1 kura-btn-press"
+            >
+              <IconPlus class="w-4 h-4" />
+              <span>New Product</span>
+            </button>
           )}
         </div>
       </div>
@@ -103,19 +98,19 @@ export function KuraVaultView() {
       {/* Valuation Strip (Owner Only) */}
       {owner && (
         <div class="grid grid-cols-3 gap-2.5">
-          <div class="rounded-[16px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3 shadow-xs">
+          <div class="kura-card p-3 shadow-xs">
             <div class="text-[11px] font-medium text-[#86868B]">Retail Value</div>
             <div class="mt-0.5 text-[16px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums">
               {formatMoney(stats.retailMinor, sym)}
             </div>
           </div>
-          <div class="rounded-[16px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3 shadow-xs">
+          <div class="kura-card p-3 shadow-xs">
             <div class="text-[11px] font-medium text-[#86868B]">Cost Basis</div>
             <div class="mt-0.5 text-[16px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums">
               {formatMoney(stats.costMinor, sym)}
             </div>
           </div>
-          <div class="rounded-[16px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3 shadow-xs">
+          <div class="kura-card p-3 shadow-xs">
             <div class="text-[11px] font-medium text-[#86868B]">Est. Margin</div>
             <div class="mt-0.5 text-[16px] font-bold text-[#34C759] tabular-nums">
               {formatMoney(stats.profitMinor, sym)}
@@ -124,31 +119,48 @@ export function KuraVaultView() {
         </div>
       )}
 
-      {/* Search & Category Filter Pills */}
-      <div class="space-y-2">
+      {/* Search Bar with Camera Scan Button */}
+      <div class="relative flex items-center">
+        <IconSearch class="absolute left-3.5 w-4 h-4 text-[#86868B] pointer-events-none" />
         <input
           type="search"
-          placeholder="Search product, brand, SKU or barcode…"
+          placeholder="Search by name, SKU, barcode, brand..."
           value={searchQuery.value}
           onInput={(e) => { searchQuery.value = (e.target as HTMLInputElement).value; }}
-          class="w-full rounded-[14px] border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-[#1C1C1E] px-3.5 py-2.5 text-[13px] text-[#1D1D1F] dark:text-[#F5F5F7]"
+          class="w-full rounded-[14px] border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-[#1C1C1E] pl-10 pr-12 py-2.5 text-[13px] text-[#1D1D1F] dark:text-[#F5F5F7] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
         />
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {categories.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => { selectedCategory.value = c; }}
-              class={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                selectedCategory.value === c
-                  ? "bg-[#007AFF] text-white shadow-xs"
-                  : "bg-black/[0.05] dark:bg-white/[0.08] text-[#86868B]"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={() => { scannerMode.value = "BARCODE_PREFILL"; }}
+          title="Scan barcode with camera"
+          class="absolute right-2 p-1.5 rounded-lg bg-black/[0.05] dark:bg-white/[0.08] text-[#007AFF] hover:bg-[#007AFF]/15 kura-btn-press"
+        >
+          <IconBarcodeScan class="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Horizontally Scrollable Category Pills */}
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+        {categories.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => { selectedCategory.value = c; }}
+            class={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition kura-btn-press ${
+              selectedCategory.value === c
+                ? "bg-[#007AFF] text-white shadow-xs"
+                : "bg-black/[0.05] dark:bg-white/[0.08] text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {/* Summary Bar */}
+      <div class="flex items-center justify-between text-[11px] text-[#86868B] px-1">
+        <span>{filtered.length} Products Found</span>
+        <span class="tabular-nums">Total Stock: {stats.totalUnits} units</span>
       </div>
 
       {/* Product Cards Grid */}
