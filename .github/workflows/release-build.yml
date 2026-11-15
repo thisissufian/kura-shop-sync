@@ -148,13 +148,17 @@ jobs:
           npm run build
           npx tauri android init
           node scripts/configure-android.mjs
-          npx tauri android build --apk --target aarch64,armv7,x86_64
+          npx tauri android build --apk --target aarch64
 
       - name: Stage APKs for distribution
         run: |
           mkdir -p dist-apk
           find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -exec cp {} dist-apk/ \;
-          ls -lah dist-apk/
+          cd dist-apk
+          for f in *.apk; do
+            cp "$f" "kura-v1.0.0-$f" 2>/dev/null || true
+          done
+          ls -lah .
 
       - uses: actions/upload-artifact@v4
         with:
