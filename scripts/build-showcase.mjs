@@ -58,11 +58,18 @@ if (fs.existsSync(privacySrc)) {
   fs.copyFileSync(privacySrc, path.join(outDir, "PRIVACY_POLICY.md"));
 }
 
+const headersSrc = path.join(websiteDir, "_headers");
+if (fs.existsSync(headersSrc)) {
+  fs.copyFileSync(headersSrc, path.join(outDir, "_headers"));
+}
+
 // 5. Verify & Report Structure
 const outFiles = fs.readdirSync(outDir);
 const appFiles = fs.readdirSync(outAppDir);
+const hasHeaders = fs.existsSync(path.join(outDir, "_headers"));
 
 console.log("[4/4] Showcase build assembled successfully!");
 console.log(`  - Root Showcase : dist-site/index.html (${outFiles.length} items)`);
 console.log(`  - Live Web POS  : dist-site/app/index.html (${appFiles.length} items)`);
+console.log(`  - Cloudflare CF : dist-site/_headers (${hasHeaders ? "verified" : "missing"})`);
 console.log("==========================================================");
