@@ -145,7 +145,7 @@ export function ReceiptSheet() {
             type="button"
             disabled={busy}
             onClick={handlePdf}
-            class="rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] px-3.5 py-2.5 text-[13px] font-bold text-[#1D1D1F] dark:text-white flex items-center justify-center gap-1.5 kura-btn-press disabled:opacity-50"
+            class="rounded-xl kura-subtle hover:brightness-110 px-3.5 py-2.5 text-[13px] font-bold kura-text-main flex items-center justify-center gap-1.5 kura-btn-press disabled:opacity-50"
           >
             <IconPdf class="w-4 h-4" />
             <span>Save PDF</span>
@@ -162,7 +162,7 @@ export function ReceiptSheet() {
           <button
             type="button"
             onClick={() => { activeReceipt.value = null; }}
-            class="rounded-xl bg-black/[0.08] dark:bg-white/[0.12] hover:bg-black/[0.12] px-3.5 py-2.5 text-[12px] font-bold text-[#1D1D1F] dark:text-white flex items-center justify-center kura-btn-press"
+            class="rounded-xl kura-subtle hover:brightness-110 px-3.5 py-2.5 text-[12px] font-bold kura-text-main flex items-center justify-center kura-btn-press"
           >
             Done
           </button>

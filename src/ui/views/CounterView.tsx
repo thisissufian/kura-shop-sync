@@ -69,20 +69,20 @@ export function CounterView() {
 
         {/* Counter Search with inline Cam Scan button */}
         <form onSubmit={handleScanEnter} class="relative flex items-center">
-          <IconSearch class="absolute left-3.5 w-4 h-4 text-[#86868B] pointer-events-none" />
+          <IconSearch class="absolute left-3.5 w-4 h-4 kura-text-muted pointer-events-none" />
           <input
             id="kura-counter-search"
             type="search"
             value={query}
             onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
             placeholder="Search item, SKU, brand, or scan barcode (Enter)…"
-            class="w-full rounded-[14px] border border-black/[0.08] dark:border-white/[0.1] bg-white dark:bg-[#1C1C1E] pl-10 pr-12 py-2.5 text-[14px] text-[#1D1D1F] dark:text-[#F5F5F7] placeholder-[#AEAEB2] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
+            class="w-full rounded-[14px] kura-input pl-10 pr-12 py-2.5 text-[14px] kura-text-main placeholder-[#AEAEB2] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
           />
           <button
             type="button"
             onClick={() => { scannerMode.value = "BARCODE_CART"; }}
             title="Open camera barcode scanner"
-            class="absolute right-2 p-1.5 rounded-lg bg-black/[0.05] dark:bg-white/[0.08] text-[#007AFF] hover:bg-[#007AFF]/15 kura-btn-press"
+            class="absolute right-2 p-1.5 rounded-lg kura-subtle text-[#007AFF] hover:bg-[#007AFF]/15 kura-btn-press"
           >
             <IconBarcodeScan class="w-4 h-4" />
           </button>
@@ -100,7 +100,7 @@ export function CounterView() {
                 class={`shrink-0 rounded-full px-3.5 py-1 text-[12px] font-semibold transition kura-btn-press ${
                   active
                     ? "bg-[#007AFF] text-white shadow-xs"
-                    : "kura-card text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
+                    : "kura-subtle kura-text-muted hover:kura-text-main"
                 }`}
               >
                 {cat}
@@ -126,7 +126,7 @@ export function CounterView() {
                 key={p.sku}
                 class={`kura-card p-3.5 transition ${
                   inCart > 0
-                    ? "border-[#007AFF] ring-1 ring-[#007AFF]/30 shadow-md bg-white dark:bg-[#242426]"
+                    ? "border-[#007AFF] ring-1 ring-[#007AFF]/30 shadow-md"
                     : ""
                 }`}
               >
@@ -134,12 +134,12 @@ export function CounterView() {
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5 text-[11px] font-semibold text-[#007AFF]">
                       {p.brand && <span>{p.brand} ·</span>}
-                      <span class="text-[#86868B]">{p.category}</span>
+                      <span class="kura-text-muted">{p.category}</span>
                     </div>
-                    <div class="truncate text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] mt-0.5">
+                    <div class="truncate text-[15px] font-semibold kura-text-main mt-0.5">
                       {p.name}
                     </div>
-                    <div class="text-[10px] font-mono text-[#AEAEB2] tabular-nums mt-0.5">
+                    <div class="text-[10px] font-mono kura-text-muted tabular-nums mt-0.5">
                       {p.sku} {p.variant ? `· ${p.variant}` : ""}
                     </div>
                   </div>
@@ -157,7 +157,7 @@ export function CounterView() {
                 </div>
 
                 <div class="mt-3 pt-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between">
-                  <span class="text-[17px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums">
+                  <span class="text-[17px] font-bold kura-text-main tabular-nums">
                     {formatMoney(p.sell_price_minor, sym)}
                   </span>
 
@@ -167,11 +167,11 @@ export function CounterView() {
                         <button
                           type="button"
                           onClick={() => setCartQty(p.sku, inCart - 1)}
-                          class="h-8 w-8 rounded-full bg-black/[0.06] dark:bg-white/[0.08] text-[16px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center kura-btn-press"
+                          class="h-8 w-8 rounded-full kura-subtle text-[16px] font-bold kura-text-main flex items-center justify-center kura-btn-press"
                         >
                           −
                         </button>
-                        <span class="w-6 text-center text-[13px] font-bold tabular-nums">
+                        <span class="w-6 text-center text-[13px] font-bold kura-text-main tabular-nums">
                           {inCart}
                         </span>
                       </>

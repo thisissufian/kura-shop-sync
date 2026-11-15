@@ -77,16 +77,16 @@ export function SupplierPayablesSheet() {
     }
   };
 
-  const inp = "mt-1 w-full rounded-[10px] border border-black/[0.08] dark:border-white/[0.1] bg-[#F5F5F7] dark:bg-white/[0.05] px-3 py-1.5 text-[13px]";
+  const inp = "mt-1 w-full rounded-xl kura-input px-3 py-1.5 text-[13px]";
 
   return (
     <SpringSheet open={open} title="Supplier Payables & Purchase" subtitle="Vendor Dues & Inventory Restock Ledger" onClose={close}>
       <div class="space-y-3 pb-6">
-        <div class="flex rounded-xl bg-black/[0.05] dark:bg-white/[0.08] p-1">
-          <button type="button" onClick={() => setTab("LIST")} class={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${tab === "LIST" ? "bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-xs" : "text-[#86868B]"}`}>
+        <div class="flex rounded-xl kura-subtle p-1">
+          <button type="button" onClick={() => setTab("LIST")} class={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${tab === "LIST" ? "kura-card kura-text-main shadow-xs" : "kura-text-muted"}`}>
             Vendors & Dues ({suppList.length})
           </button>
-          <button type="button" onClick={() => setTab("PURCHASE")} class={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${tab === "PURCHASE" ? "bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-xs" : "text-[#86868B]"}`}>
+          <button type="button" onClick={() => setTab("PURCHASE")} class={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${tab === "PURCHASE" ? "kura-card kura-text-main shadow-xs" : "kura-text-muted"}`}>
             + Stock Purchase
           </button>
         </div>
@@ -94,14 +94,14 @@ export function SupplierPayablesSheet() {
         {tab === "LIST" ? (
           <div class="space-y-2.5">
             {suppList.map((s) => (
-              <div key={s.supplier_id} class="rounded-[16px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3.5 space-y-2 shadow-xs">
+              <div key={s.supplier_id} class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2 shadow-xs">
                 <div class="flex items-start justify-between">
                   <div>
-                    <h4 class="font-bold text-[14px] text-[#1D1D1F] dark:text-white">{s.name}</h4>
-                    <p class="text-[11px] text-[#86868B]">{s.phone || "No phone"} · {s.supplier_id}</p>
+                    <h4 class="font-bold text-[14px] kura-text-main">{s.name}</h4>
+                    <p class="text-[11px] kura-text-muted">{s.phone || "No phone"} · {s.supplier_id}</p>
                   </div>
                   <div class="text-right">
-                    <span class="text-[10px] text-[#86868B] uppercase font-semibold">Payable Due</span>
+                    <span class="text-[10px] kura-text-muted uppercase font-semibold">Payable Due</span>
                     <div class="text-[16px] font-bold text-[#FF3B30] tabular-nums">{formatMoney(s.payable_balance_minor, sym)}</div>
                   </div>
                 </div>
@@ -112,7 +112,7 @@ export function SupplierPayablesSheet() {
                       <input placeholder="Note / Ref" value={payNote} onInput={(e) => setPayNote((e.target as HTMLInputElement).value)} class={`flex-1 ${inp} mt-0`} />
                     </div>
                     <div class="flex gap-2">
-                      <button type="button" onClick={() => setPayTargetId(null)} class="flex-1 py-1.5 rounded-lg border border-black/[0.08] text-[12px] font-medium">Cancel</button>
+                      <button type="button" onClick={() => setPayTargetId(null)} class="flex-1 py-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-subtle kura-text-main text-[12px] font-medium">Cancel</button>
                       <button type="submit" class="flex-1 py-1.5 rounded-lg bg-[#34C759] text-white text-[12px] font-bold">Confirm Payment</button>
                     </div>
                   </form>
@@ -124,23 +124,23 @@ export function SupplierPayablesSheet() {
               </div>
             ))}
             {suppList.length === 0 && !loading && (
-              <div class="text-center py-8 text-[#86868B] text-[13px]">
+              <div class="text-center py-8 kura-text-muted text-[13px]">
                 No supplier records yet. Switch to "+ Stock Purchase" to record your first vendor purchase.
               </div>
             )}
           </div>
         ) : (
-          <form onSubmit={handlePurchase} class="rounded-[16px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3.5 space-y-2.5 shadow-xs">
+          <form onSubmit={handlePurchase} class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2.5 shadow-xs">
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Supplier Name</span>
+              <span class="text-[11px] font-medium kura-text-muted">Supplier Name</span>
               <input required placeholder="e.g. Anker BD Official" value={supplierName} onInput={(e) => setSupplierName((e.target as HTMLInputElement).value)} class={inp} />
             </label>
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Phone</span>
+              <span class="text-[11px] font-medium kura-text-muted">Phone</span>
               <input placeholder="e.g. 01700-112233" value={supplierPhone} onInput={(e) => setSupplierPhone((e.target as HTMLInputElement).value)} class={inp} />
             </label>
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Product SKU</span>
+              <span class="text-[11px] font-medium kura-text-muted">Product SKU</span>
               <select value={sku} onChange={(e) => setSku((e.target as HTMLSelectElement).value)} class={`${inp} py-2`}>
                 {prodList.map((p) => (
                   <option key={p.sku} value={p.sku}>{p.name} ({p.sku}) · Stock: {p.stock_qty}</option>
@@ -149,15 +149,15 @@ export function SupplierPayablesSheet() {
             </label>
             <div class="grid grid-cols-3 gap-2">
               <label class="block">
-                <span class="text-[11px] font-medium text-[#86868B]">Qty</span>
+                <span class="text-[11px] font-medium kura-text-muted">Qty</span>
                 <input required type="number" value={qtyStr} onInput={(e) => setQtyStr((e.target as HTMLInputElement).value)} class={`${inp} px-2 tabular-nums`} />
               </label>
               <label class="block">
-                <span class="text-[11px] font-medium text-[#86868B]">Unit Cost</span>
+                <span class="text-[11px] font-medium kura-text-muted">Unit Cost</span>
                 <input required inputMode="decimal" value={costStr} onInput={(e) => setCostStr((e.target as HTMLInputElement).value)} class={`${inp} px-2 tabular-nums`} />
               </label>
               <label class="block">
-                <span class="text-[11px] font-medium text-[#86868B]">Amount Paid</span>
+                <span class="text-[11px] font-medium kura-text-muted">Amount Paid</span>
                 <input required inputMode="decimal" value={paidStr} onInput={(e) => setPaidStr((e.target as HTMLInputElement).value)} class={`${inp} px-2 tabular-nums`} />
               </label>
             </div>

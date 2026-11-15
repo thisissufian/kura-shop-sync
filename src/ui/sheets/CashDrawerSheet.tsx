@@ -70,9 +70,9 @@ export function CashDrawerSheet() {
 
         <form
           onSubmit={handleSubmit}
-          class="rounded-[14px] border border-black/[0.06] bg-[#F5F5F7] p-3 space-y-2.5"
+          class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3 space-y-2.5"
         >
-          <div class="text-[12px] font-semibold text-[#1D1D1F]">Log Petty Cash Expense</div>
+          <div class="text-[12px] font-semibold kura-text-main">Log Petty Cash Expense</div>
           <div class="flex flex-wrap gap-1.5">
             {CATEGORIES.map((c) => (
               <button
@@ -81,8 +81,8 @@ export function CashDrawerSheet() {
                 onClick={() => setCategory(c)}
                 class={`rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
                   category === c
-                    ? "bg-[#1D1D1F] text-white"
-                    : "bg-white border border-black/[0.06] text-[#86868B]"
+                    ? "bg-[#007AFF] text-white"
+                    : "kura-subtle kura-text-muted"
                 }`}
               >
                 {c}
@@ -96,18 +96,18 @@ export function CashDrawerSheet() {
               placeholder="Amount (0.00)"
               value={amountInput}
               onInput={(e) => setAmountInput((e.target as HTMLInputElement).value)}
-              class="w-28 rounded-[10px] border border-black/[0.08] bg-white px-2.5 py-2 text-[13px] tabular-nums"
+              class="w-28 rounded-xl kura-input px-2.5 py-2 text-[13px] tabular-nums"
             />
             <input
               placeholder="Note (e.g. Milk & cups)"
               value={note}
               onInput={(e) => setNote((e.target as HTMLInputElement).value)}
-              class="flex-1 rounded-[10px] border border-black/[0.08] bg-white px-2.5 py-2 text-[13px]"
+              class="flex-1 rounded-xl kura-input px-2.5 py-2 text-[13px]"
             />
             <button
               type="submit"
               disabled={saving || parseMoneyInput(amountInput) <= 0}
-              class="rounded-[10px] bg-[#007AFF] px-3.5 py-2 text-[13px] font-semibold text-white disabled:opacity-40"
+              class="rounded-xl bg-[#007AFF] px-3.5 py-2 text-[13px] font-semibold text-white disabled:opacity-40"
             >
               {saving ? "…" : "Log"}
             </button>
@@ -115,12 +115,12 @@ export function CashDrawerSheet() {
         </form>
 
         <div class="space-y-1.5">
-          <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
+          <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide kura-text-muted">
             <span>Recent Expenses</span>
             {drawerLoading.value && <span>Syncing…</span>}
           </div>
           {!summary || summary.recent_expenses.length === 0 ? (
-            <div class="rounded-[12px] border border-black/[0.05] bg-white p-4 text-center text-[12px] text-[#86868B]">
+            <div class="rounded-xl border border-black/[0.05] dark:border-white/[0.08] kura-card p-4 text-center text-[12px] kura-text-muted">
               No petty expenses logged yet.
             </div>
           ) : (
@@ -128,11 +128,11 @@ export function CashDrawerSheet() {
               {summary.recent_expenses.map((ex) => (
                 <div
                   key={ex.expense_id}
-                  class="flex items-center justify-between rounded-[12px] border border-black/[0.06] bg-white px-3 py-2 text-[12px]"
+                  class="flex items-center justify-between rounded-xl border border-black/[0.06] dark:border-white/[0.08] kura-card px-3 py-2 text-[12px]"
                 >
                   <div class="min-w-0">
-                    <div class="font-semibold text-[#1D1D1F]">{ex.category}</div>
-                    <div class="truncate text-[11px] text-[#86868B]">
+                    <div class="font-semibold kura-text-main">{ex.category}</div>
+                    <div class="truncate text-[11px] kura-text-muted">
                       {ex.note || "No note"} · {ex.node_id}
                     </div>
                   </div>

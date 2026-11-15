@@ -193,11 +193,11 @@ export function ScannerSheet() {
                 ? "Paste or simulate kura://join?... URI"
                 : "Type/simulate barcode (e.g. 890101001010)"
             }
-            class="flex-1 rounded-[12px] border border-black/[0.08] bg-white px-3.5 py-2.5 text-[13px] tabular-nums"
+            class="flex-1 rounded-xl kura-input px-3.5 py-2.5 text-[13px] tabular-nums"
           />
           <button
             type="submit"
-            class="rounded-[12px] bg-[#007AFF] px-4 py-2.5 text-[13px] font-semibold text-white active:scale-95 transition"
+            class="rounded-xl bg-[#007AFF] px-4 py-2.5 text-[13px] font-semibold text-white active:scale-95 transition"
           >
             Match
           </button>

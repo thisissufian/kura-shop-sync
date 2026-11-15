@@ -16,9 +16,9 @@ export function OwnerAnalyticsCard() {
   const marginPct = (a.margin_bps / 100).toFixed(2);
 
   return (
-    <div class="rounded-[14px] border border-black/[0.06] bg-white p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
+    <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 shadow-xs space-y-3">
       <div class="flex items-center justify-between">
-        <span class="text-[12px] font-semibold uppercase tracking-wide text-[#86868B]">
+        <span class="text-[12px] font-semibold uppercase tracking-wide kura-text-muted">
           Owner Profit Analytics
         </span>
         <span class="rounded-full bg-[#34C759]/12 px-2.5 py-0.5 text-[11px] font-bold text-[#1E8E3E] tabular-nums">
@@ -27,27 +27,27 @@ export function OwnerAnalyticsCard() {
       </div>
 
       <div class="grid grid-cols-3 gap-2">
-        <div class="rounded-[11px] bg-[#F5F5F7] p-2.5">
-          <div class="text-[10px] font-medium text-[#86868B]">Gross Revenue</div>
-          <div class="mt-0.5 text-[15px] font-bold text-[#1D1D1F] tabular-nums">
+        <div class="rounded-xl kura-subtle p-2.5">
+          <div class="text-[10px] font-medium kura-text-muted">Gross Revenue</div>
+          <div class="mt-0.5 text-[15px] font-bold kura-text-main tabular-nums">
             {formatMoney(a.gross_revenue_minor, sym)}
           </div>
-          <div class="text-[10px] text-[#AEAEB2] tabular-nums">
+          <div class="text-[10px] kura-text-muted tabular-nums">
             {a.total_bills_count} bill(s)
           </div>
         </div>
 
-        <div class="rounded-[11px] bg-[#F5F5F7] p-2.5">
-          <div class="text-[10px] font-medium text-[#86868B]">Est. COGS</div>
-          <div class="mt-0.5 text-[15px] font-bold text-[#1D1D1F] tabular-nums">
+        <div class="rounded-xl kura-subtle p-2.5">
+          <div class="text-[10px] font-medium kura-text-muted">Est. COGS</div>
+          <div class="mt-0.5 text-[15px] font-bold kura-text-main tabular-nums">
             {formatMoney(a.estimated_cogs_minor, sym)}
           </div>
-          <div class="text-[10px] text-[#AEAEB2] tabular-nums">
+          <div class="text-[10px] kura-text-muted tabular-nums">
             {a.voided_bills_count} voided
           </div>
         </div>
 
-        <div class="rounded-[11px] bg-[#34C759]/10 p-2.5">
+        <div class="rounded-xl bg-[#34C759]/10 p-2.5">
           <div class="text-[10px] font-medium text-[#1E8E3E]">Net Profit</div>
           <div class="mt-0.5 text-[15px] font-bold text-[#1E8E3E] tabular-nums">
             {formatMoney(a.net_operating_profit_minor, sym)}
@@ -61,13 +61,13 @@ export function OwnerAnalyticsCard() {
           {a.terminal_breakdown.map((t) => (
             <div
               key={t.node_id}
-              class="inline-flex items-center gap-1.5 rounded-full border border-black/[0.06] bg-[#F5F5F7] px-2.5 py-1 text-[11px] tabular-nums"
+              class="inline-flex items-center gap-1.5 rounded-full border border-black/[0.06] dark:border-white/[0.08] kura-subtle px-2.5 py-1 text-[11px] tabular-nums"
             >
               <span class="font-bold text-[#007AFF]">{t.node_id}</span>
-              <span class="text-[#1D1D1F] font-semibold">
+              <span class="kura-text-main font-semibold">
                 {formatMoney(t.revenue_minor, sym)}
               </span>
-              <span class="text-[#86868B]">({t.bills_count})</span>
+              <span class="kura-text-muted">({t.bills_count})</span>
             </div>
           ))}
         </div>

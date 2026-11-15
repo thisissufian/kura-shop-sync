@@ -89,7 +89,7 @@ export function ProductFormSheet() {
     if (ok) close();
   };
 
-  const inputCls = "mt-1 w-full rounded-[10px] border border-black/[0.08] dark:border-white/[0.1] bg-[#F5F5F7] dark:bg-white/[0.05] px-3 py-1.5 text-[13px]";
+  const inputCls = "mt-1 w-full rounded-xl kura-input px-3 py-1.5 text-[13px]";
 
   return (
     <SpringSheet
@@ -99,50 +99,50 @@ export function ProductFormSheet() {
       onClose={close}
     >
       <form onSubmit={handleSubmit} class="space-y-3 pb-4">
-        <div class="rounded-[16px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1C1C1E] p-3.5 space-y-2.5">
+        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2.5">
           <div class="grid grid-cols-2 gap-2">
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">SKU</span>
+              <span class="text-[11px] font-medium kura-text-muted">SKU</span>
               <input required disabled={Boolean(existing)} value={sku} onInput={(e) => setSku((e.target as HTMLInputElement).value)} class={`${inputCls} disabled:opacity-60`} />
             </label>
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Category</span>
+              <span class="text-[11px] font-medium kura-text-muted">Category</span>
               <input value={category} onInput={(e) => setCategory((e.target as HTMLInputElement).value)} class={inputCls} />
             </label>
           </div>
 
           <label class="block">
-            <span class="text-[11px] font-medium text-[#86868B]">Product Name</span>
+            <span class="text-[11px] font-medium kura-text-muted">Product Name</span>
             <input required placeholder="e.g. Rapid Charger 65W GaN" value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} class={`${inputCls} py-2 text-[14px]`} />
           </label>
 
           <div class="grid grid-cols-2 gap-2">
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Brand</span>
+              <span class="text-[11px] font-medium kura-text-muted">Brand</span>
               <input placeholder="e.g. HOCO / Anker" value={brand} onInput={(e) => setBrand((e.target as HTMLInputElement).value)} class={inputCls} />
             </label>
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Variant / Color</span>
+              <span class="text-[11px] font-medium kura-text-muted">Variant / Color</span>
               <input placeholder="e.g. White · 128GB" value={variant} onInput={(e) => setVariant((e.target as HTMLInputElement).value)} class={inputCls} />
             </label>
           </div>
 
           <label class="block">
-            <span class="text-[11px] font-medium text-[#86868B]">Warranty Policy</span>
+            <span class="text-[11px] font-medium kura-text-muted">Warranty Policy</span>
             <select value={warranty} onChange={(e) => setWarranty((e.target as HTMLSelectElement).value)} class={`${inputCls} py-2`}>
               {WARRANTY_PRESETS.map((p) => (<option key={p} value={p}>{p}</option>))}
             </select>
           </label>
 
           <div class="block">
-            <span class="text-[11px] font-medium text-[#86868B]">Barcode (Optional)</span>
+            <span class="text-[11px] font-medium kura-text-muted">Barcode (Optional)</span>
             <div class="mt-1 flex gap-2">
               <input placeholder="Scan or type EAN / UPC" value={barcode} onInput={(e) => setBarcode((e.target as HTMLInputElement).value)} class={`flex-1 ${inputCls} mt-0 tabular-nums`} />
               {!existing && (
                 <button
                   type="button"
                   onClick={() => { productSheetOpen.value = false; scannerMode.value = "BARCODE_PREFILL"; }}
-                  class="rounded-[10px] bg-[#007AFF]/10 text-[#007AFF] px-3 py-1.5 text-[12px] font-semibold active:scale-95"
+                  class="rounded-xl bg-[#007AFF]/10 text-[#007AFF] px-3 py-1.5 text-[12px] font-semibold active:scale-95"
                 >
                   Cam
                 </button>
@@ -152,22 +152,22 @@ export function ProductFormSheet() {
 
           <div class="grid grid-cols-2 gap-2">
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Sell Price</span>
+              <span class="text-[11px] font-medium kura-text-muted">Sell Price</span>
               <input required inputMode="decimal" value={sellStr} onInput={(e) => setSellStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
             </label>
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Cost Price</span>
+              <span class="text-[11px] font-medium kura-text-muted">Cost Price</span>
               <input required inputMode="decimal" value={costStr} onInput={(e) => setCostStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
             </label>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Stock Qty</span>
+              <span class="text-[11px] font-medium kura-text-muted">Stock Qty</span>
               <input type="number" value={stockStr} onInput={(e) => setStockStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
             </label>
             <label class="block">
-              <span class="text-[11px] font-medium text-[#86868B]">Low Alert</span>
+              <span class="text-[11px] font-medium kura-text-muted">Low Alert</span>
               <input type="number" value={threshStr} onInput={(e) => setThreshStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
             </label>
           </div>
@@ -176,7 +176,7 @@ export function ProductFormSheet() {
         <button
           type="submit"
           disabled={saving}
-          class="w-full rounded-[14px] bg-[#007AFF] py-3 text-[14px] font-bold text-white shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 transition"
+          class="w-full rounded-2xl bg-[#007AFF] py-3 text-[14px] font-bold text-white shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 transition"
         >
           {saving ? "Saving…" : existing ? "Update Product" : "Add to Kura Vault"}
         </button>

@@ -56,31 +56,31 @@ export function ShopSettingsSheet() {
       onClose={close}
     >
       <form onSubmit={handleSubmit} class="space-y-3.5">
-        <div class="rounded-[14px] border border-black/[0.06] bg-white p-3.5 space-y-3">
+        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-3">
           <label class="block">
-            <span class="text-[11px] font-medium text-[#86868B]">Shop Name</span>
+            <span class="text-[11px] font-medium kura-text-muted">Shop Name</span>
             <input
               required
               value={shopName}
               onInput={(e) => setShopName((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[14px]"
+              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[14px]"
             />
           </label>
 
           <label class="block">
-            <span class="text-[11px] font-medium text-[#86868B]">
+            <span class="text-[11px] font-medium kura-text-muted">
               Address / Phone Subtitle (Receipts)
             </span>
             <input
               placeholder="e.g. 42 Main Rd · +880 1700-000000"
               value={subtitle}
               onInput={(e) => setSubtitle((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[13px]"
+              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px]"
             />
           </label>
 
           <div>
-            <span class="text-[11px] font-medium text-[#86868B]">Currency Symbol</span>
+            <span class="text-[11px] font-medium kura-text-muted">Currency Symbol</span>
             <div class="mt-1.5 flex flex-wrap gap-1.5">
               {CURRENCIES.map((c) => {
                 const active = currency === c.symbol;
@@ -92,7 +92,7 @@ export function ShopSettingsSheet() {
                     class={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
                       active
                         ? "bg-[#007AFF] text-white"
-                        : "bg-[#F5F5F7] text-[#1D1D1F] border border-black/[0.06]"
+                        : "kura-subtle kura-text-muted"
                     }`}
                   >
                     {c.label}
@@ -103,17 +103,17 @@ export function ShopSettingsSheet() {
           </div>
 
           <label class="block">
-            <span class="text-[11px] font-medium text-[#86868B]">Receipt Footer</span>
+            <span class="text-[11px] font-medium kura-text-muted">Receipt Footer</span>
             <input
               placeholder="Thank you for shopping!"
               value={footer}
               onInput={(e) => setFooter((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[13px]"
+              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px]"
             />
           </label>
 
           <div>
-            <span class="text-[11px] font-medium text-[#86868B]">Display Appearance</span>
+            <span class="text-[11px] font-medium kura-text-muted">Display Appearance</span>
             <div class="mt-1.5 flex gap-1.5">
               {(
                 [
@@ -128,8 +128,8 @@ export function ShopSettingsSheet() {
                   onClick={() => setThemeMode(m.id)}
                   class={`flex-1 rounded-full py-1.5 text-[12px] font-semibold transition ${
                     themeMode.value === m.id
-                      ? "bg-[#1D1D1F] text-white"
-                      : "bg-[#F5F5F7] text-[#1D1D1F] border border-black/[0.06]"
+                      ? "bg-[#007AFF] text-white"
+                      : "kura-subtle kura-text-muted"
                   }`}
                 >
                   {m.label}
@@ -142,7 +142,7 @@ export function ShopSettingsSheet() {
         <button
           type="submit"
           disabled={saving}
-          class="w-full rounded-[14px] bg-[#007AFF] py-3.5 text-[15px] font-semibold text-white shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 transition"
+          class="w-full rounded-2xl bg-[#007AFF] py-3.5 text-[15px] font-semibold text-white shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 transition"
         >
           {saving ? "Saving…" : "Save & Sync Shop Profile"}
         </button>

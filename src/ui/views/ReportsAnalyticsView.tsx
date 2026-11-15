@@ -53,16 +53,16 @@ export function ReportsAnalyticsView() {
       {/* 1. Header & Time Range Selector */}
       <div class="space-y-2">
         <div>
-          <h2 class="text-[20px] font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+          <h2 class="text-[20px] font-bold tracking-tight kura-text-main">
             Business Reports &amp; Analytics
           </h2>
-          <p class="text-[12px] text-[#86868B]">
+          <p class="text-[12px] kura-text-muted">
             Real-time P&amp;L statement, stock valuation, and revenue metrics
           </p>
         </div>
 
         <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-1">
-          <div class="inline-flex rounded-[14px] bg-black/[0.05] dark:bg-white/[0.08] p-1">
+          <div class="inline-flex rounded-[14px] kura-subtle p-1">
             {PERIODS.map((p) => (
               <button
                 key={p.id}
@@ -70,15 +70,15 @@ export function ReportsAnalyticsView() {
                 onClick={() => setPeriod(p.id)}
                 class={`rounded-[10px] px-3 py-1.5 text-[12px] font-semibold transition kura-btn-press ${
                   period === p.id
-                    ? "bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs"
-                    : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
+                    ? "kura-card kura-text-main shadow-xs"
+                    : "kura-text-muted hover:kura-text-main"
                 }`}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <span class="text-[11px] text-[#86868B] tabular-nums shrink-0">
+          <span class="text-[11px] kura-text-muted tabular-nums shrink-0">
             {d?.total_bills_count ?? 0} bills {d?.voided_bills_count ? `(${d.voided_bills_count} voided)` : ""}
           </span>
         </div>
@@ -92,10 +92,10 @@ export function ReportsAnalyticsView() {
               <IconChart class="w-5 h-5" />
             </div>
             <div>
-              <h3 class="text-[16px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+              <h3 class="text-[16px] font-bold kura-text-main tracking-tight">
                 Profit &amp; Loss Statement (P&amp;L)
               </h3>
-              <p class="text-[11px] text-[#86868B]">Accrual &amp; cash hybrid accounting</p>
+              <p class="text-[11px] kura-text-muted">Accrual &amp; cash hybrid accounting</p>
             </div>
           </div>
           <span class="rounded-full bg-[#34C759]/12 text-[#1E8E3E] dark:text-[#34C759] px-2.5 py-0.5 text-[11px] font-bold">
@@ -105,8 +105,8 @@ export function ReportsAnalyticsView() {
 
         <div class="space-y-2.5 text-[13px] pt-1">
           <div class="flex justify-between items-center py-1">
-            <span class="text-[#1D1D1F] dark:text-[#F5F5F7] font-medium">Total Net Sales Revenue</span>
-            <span class="font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums">
+            <span class="kura-text-main font-medium">Total Net Sales Revenue</span>
+            <span class="font-bold kura-text-main tabular-nums">
               {formatMoney(rev, sym)}
             </span>
           </div>
@@ -139,14 +139,14 @@ export function ReportsAnalyticsView() {
       {/* 4. Terminal Breakdown Split */}
       {d?.terminal_breakdown && d.terminal_breakdown.length > 0 && (
         <div class="kura-card p-4 space-y-2">
-          <span class="text-[13px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+          <span class="text-[13px] font-bold kura-text-main">
             Sales Split by Terminal
           </span>
-          <div class="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
+          <div class="divide-y border-t border-black/[0.04] dark:border-white/[0.06]">
             {d.terminal_breakdown.map((t) => (
               <div key={t.node_id} class="flex items-center justify-between py-2 text-[13px]">
-                <span class="font-medium text-[#1D1D1F] dark:text-[#F5F5F7]">Terminal {t.node_id}</span>
-                <span class="tabular-nums font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                <span class="font-medium kura-text-main">Terminal {t.node_id}</span>
+                <span class="tabular-nums font-semibold kura-text-main">
                   {formatMoney(t.revenue_minor, sym)} ({t.bills_count} bills)
                 </span>
               </div>

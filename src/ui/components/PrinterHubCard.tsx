@@ -46,13 +46,13 @@ export function PrinterHubCard() {
   };
 
   return (
-    <div class="rounded-[14px] border border-black/[0.06] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
+    <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-4 shadow-xs space-y-3">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-[15px] font-semibold text-[#1D1D1F]">
+          <h3 class="text-[15px] font-semibold kura-text-main">
             Wireless Thermal &amp; PDF Hub
           </h3>
-          <p class="text-[12px] text-[#86868B]">
+          <p class="text-[12px] kura-text-muted">
             Raw ESC/POS over TCP port 9100 &amp; pure vector PDF
           </p>
         </div>
@@ -66,10 +66,10 @@ export function PrinterHubCard() {
               key={w}
               type="button"
               onClick={() => saveCfg(w)}
-              class={`rounded-[11px] border px-3 py-2 text-[13px] font-semibold transition ${
+              class={`rounded-xl border px-3 py-2 text-[13px] font-semibold transition ${
                 active
                   ? "border-[#007AFF] bg-[#007AFF]/10 text-[#007AFF]"
-                  : "border-black/[0.08] bg-[#F5F5F7] text-[#86868B]"
+                  : "border-black/[0.08] dark:border-white/[0.08] kura-subtle kura-text-muted"
               }`}
             >
               {w}mm ({w === 58 ? "32 cols" : "48 cols"})
@@ -80,23 +80,23 @@ export function PrinterHubCard() {
 
       <div class="grid grid-cols-[1fr_92px] gap-2">
         <label class="block">
-          <span class="text-[11px] font-medium text-[#86868B]">Printer IP</span>
+          <span class="text-[11px] font-medium kura-text-muted">Printer IP</span>
           <input
             value={ip}
             onInput={(e) => setIp((e.target as HTMLInputElement).value)}
             onBlur={() => saveCfg()}
             placeholder="192.168.1.100"
-            class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[13px] tabular-nums"
+            class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px] tabular-nums"
           />
         </label>
         <label class="block">
-          <span class="text-[11px] font-medium text-[#86868B]">Port</span>
+          <span class="text-[11px] font-medium kura-text-muted">Port</span>
           <input
             type="number"
             value={port}
             onInput={(e) => setPort((e.target as HTMLInputElement).value)}
             onBlur={() => saveCfg()}
-            class="mt-1 w-full rounded-[10px] border border-black/[0.08] bg-[#F5F5F7] px-3 py-2 text-[13px] tabular-nums"
+            class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px] tabular-nums"
           />
         </label>
       </div>
@@ -106,7 +106,7 @@ export function PrinterHubCard() {
           type="button"
           disabled={busy}
           onClick={handleTestPrint}
-          class="rounded-[11px] bg-[#007AFF] py-2.5 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-50 transition"
+          class="rounded-xl bg-[#007AFF] py-2.5 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-50 transition"
         >
           Test Thermal Print
         </button>
@@ -114,7 +114,7 @@ export function PrinterHubCard() {
           type="button"
           disabled={busy}
           onClick={handleExportLatestPdf}
-          class="rounded-[11px] border border-black/[0.08] bg-white py-2.5 text-[13px] font-semibold text-[#1D1D1F] active:scale-95 disabled:opacity-50 transition"
+          class="rounded-xl border border-black/[0.08] dark:border-white/[0.08] kura-subtle py-2.5 text-[13px] font-semibold kura-text-main active:scale-95 disabled:opacity-50 transition"
         >
           Export Latest PDF
         </button>

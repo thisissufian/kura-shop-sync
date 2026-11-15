@@ -23,7 +23,7 @@ export function BottomNavDock() {
         type="button"
         onClick={() => { activeTab.value = id; }}
         class={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition kura-btn-press ${
-          active ? "text-[#007AFF] font-bold" : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
+          active ? "text-[#007AFF] font-bold" : "kura-text-muted hover:kura-text-main"
         }`}
       >
         <div class="relative">
@@ -42,7 +42,7 @@ export function BottomNavDock() {
   return (
     <nav
       aria-label="Bottom Navigation"
-      class="fixed bottom-0 inset-x-0 z-40 bg-white/85 dark:bg-[#1C1C1E]/85 backdrop-blur-2xl border-t border-black/[0.06] dark:border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.06)] kura-safe-bottom"
+      class="fixed bottom-0 inset-x-0 z-40 kura-glass-bar border-t shadow-[0_-4px_24px_rgba(0,0,0,0.06)] kura-safe-bottom"
     >
       <div class="max-w-md mx-auto px-3 h-16 flex items-center justify-between relative">
         <div class="flex items-center gap-1 flex-1 justify-around">
@@ -65,7 +65,7 @@ export function BottomNavDock() {
             <IconRegister class="w-6 h-6 stroke-[2]" />
             <span class="text-[9px] font-bold tracking-tight uppercase leading-none mt-0.5">Till</span>
             {count > 0 && (
-              <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#FF3B30] text-white text-[11px] font-black flex items-center justify-center tabular-nums shadow-sm ring-2 ring-white dark:ring-[#1C1C1E]">
+              <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#FF3B30] text-white text-[11px] font-black flex items-center justify-center tabular-nums shadow-sm ring-2 ring-white dark:ring-[#161618]">
                 {count}
               </span>
             )}
@@ -78,7 +78,7 @@ export function BottomNavDock() {
             type="button"
             onClick={() => { activeTab.value = "sync"; }}
             class={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition kura-btn-press ${
-              current === "sync" ? "text-[#007AFF] font-bold" : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
+              current === "sync" ? "text-[#007AFF] font-bold" : "kura-text-muted hover:kura-text-main"
             }`}
           >
             <div class="relative">

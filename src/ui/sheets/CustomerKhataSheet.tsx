@@ -71,31 +71,31 @@ export function CustomerKhataSheet() {
           value={query}
           onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
           placeholder="Search customer by name or phone…"
-          class="w-full rounded-[12px] border border-black/[0.08] bg-white px-3.5 py-2.5 text-[13px]"
+          class="w-full rounded-xl kura-input px-3.5 py-2.5 text-[13px]"
         />
 
         <form
           onSubmit={handleAdd}
-          class="rounded-[14px] border border-black/[0.06] bg-white p-3 flex gap-2"
+          class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3 flex gap-2"
         >
           <input
             required
             placeholder="Customer Name"
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
-            class="flex-1 min-w-0 rounded-[9px] border border-black/[0.08] bg-[#F5F5F7] px-2.5 py-1.5 text-[12px]"
+            class="flex-1 min-w-0 rounded-lg kura-input px-2.5 py-1.5 text-[12px]"
           />
           <input
             required
             placeholder="Phone"
             value={phone}
             onInput={(e) => setPhone((e.target as HTMLInputElement).value)}
-            class="w-28 rounded-[9px] border border-black/[0.08] bg-[#F5F5F7] px-2.5 py-1.5 text-[12px] tabular-nums"
+            class="w-28 rounded-lg kura-input px-2.5 py-1.5 text-[12px] tabular-nums"
           />
           <button
             type="submit"
             disabled={busy}
-            class="rounded-[9px] bg-[#007AFF] px-3 py-1.5 text-[12px] font-semibold text-white active:scale-95"
+            class="rounded-lg bg-[#007AFF] px-3 py-1.5 text-[12px] font-semibold text-white active:scale-95"
           >
             Add
           </button>
@@ -103,21 +103,21 @@ export function CustomerKhataSheet() {
 
         <div class="space-y-2">
           {filtered.length === 0 ? (
-            <div class="rounded-[14px] bg-white p-6 text-center text-[13px] text-[#86868B]">
+            <div class="rounded-2xl kura-card p-6 text-center text-[13px] kura-text-muted">
               No matching customer accounts.
             </div>
           ) : (
             filtered.map((c) => (
               <div
                 key={c.customer_id}
-                class="rounded-[14px] border border-black/[0.06] bg-white p-3.5 space-y-2.5"
+                class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2.5"
               >
                 <div class="flex items-center justify-between gap-2">
                   <div class="min-w-0">
-                    <div class="truncate text-[14px] font-semibold text-[#1D1D1F]">
+                    <div class="truncate text-[14px] font-semibold kura-text-main">
                       {c.name}
                     </div>
-                    <div class="text-[11px] text-[#86868B] tabular-nums">
+                    <div class="text-[11px] kura-text-muted tabular-nums">
                       {c.phone} · {c.customer_id}
                     </div>
                   </div>
@@ -145,25 +145,25 @@ export function CustomerKhataSheet() {
                 </div>
 
                 {payingId === c.customer_id && (
-                  <div class="flex gap-2 pt-1 border-t border-black/[0.06]">
+                  <div class="flex gap-2 pt-1 border-t border-black/[0.06] dark:border-white/[0.08]">
                     <input
                       inputMode="decimal"
                       value={payAmount}
                       onInput={(e) => setPayAmount((e.target as HTMLInputElement).value)}
-                      class="flex-1 rounded-[9px] border border-black/[0.08] bg-[#F5F5F7] px-2.5 py-1.5 text-[13px] tabular-nums"
+                      class="flex-1 rounded-lg kura-input px-2.5 py-1.5 text-[13px] tabular-nums"
                     />
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => void handleSettle(c.customer_id)}
-                      class="rounded-[9px] bg-[#34C759] px-3 py-1.5 text-[12px] font-semibold text-white"
+                      class="rounded-lg bg-[#34C759] px-3 py-1.5 text-[12px] font-semibold text-white"
                     >
                       Receive
                     </button>
                     <button
                       type="button"
                       onClick={() => setPayingId(null)}
-                      class="px-2 text-[12px] text-[#86868B]"
+                      class="px-2 text-[12px] kura-text-muted"
                     >
                       Cancel
                     </button>

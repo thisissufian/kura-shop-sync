@@ -38,24 +38,24 @@ export function SpringSheet({
         onClick={onClose}
       />
       <div
-        class="spring-sheet-panel relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[22px] bg-[#F5F5F7] shadow-2xl sm:rounded-[20px] border border-black/[0.08]"
+        class="spring-sheet-panel relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[22px] kura-canvas shadow-2xl sm:rounded-2xl border border-black/[0.08] dark:border-white/[0.1]"
         style={{ transform: "translateY(0)" }}
       >
-        <div class="flex flex-col items-center bg-white/90 backdrop-blur-xl px-5 pt-2.5 pb-3 border-b border-black/[0.06]">
-          <div class="mb-2.5 h-1 w-10 rounded-full bg-black/15 sm:hidden" />
+        <div class="flex flex-col items-center kura-glass-bar px-5 pt-2.5 pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
+          <div class="mb-2.5 h-1 w-10 rounded-full bg-black/15 dark:bg-white/20 sm:hidden" />
           <div class="flex w-full items-center justify-between gap-3">
             <div>
-              <h2 class="text-[17px] font-semibold tracking-tight text-[#1D1D1F]">
+              <h2 class="text-[17px] font-semibold tracking-tight kura-text-main">
                 {title}
               </h2>
               {subtitle && (
-                <p class="text-[12px] text-[#86868B]">{subtitle}</p>
+                <p class="text-[12px] kura-text-muted">{subtitle}</p>
               )}
             </div>
             <button
               type="button"
               onClick={onClose}
-              class="rounded-full bg-black/[0.06] px-3 py-1.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-black/[0.1] active:scale-95 transition"
+              class="rounded-full kura-subtle px-3 py-1.5 text-[13px] font-medium kura-text-main hover:brightness-110 active:scale-95 transition"
             >
               Done
             </button>

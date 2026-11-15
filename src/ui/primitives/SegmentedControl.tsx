@@ -17,7 +17,7 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   return (
     <div
-      class="inline-flex w-full rounded-[12px] bg-black/[0.06] p-1"
+      class="inline-flex w-full rounded-xl kura-subtle p-1"
       role="tablist"
     >
       {options.map((opt) => {
@@ -29,10 +29,10 @@ export function SegmentedControl<T extends string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(opt.id)}
-            class={`flex-1 flex items-center justify-center gap-1.5 rounded-[9px] px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200 ${
+            class={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200 ${
               active
-                ? "bg-white text-[#1D1D1F] shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                : "text-[#86868B] hover:text-[#1D1D1F]"
+                ? "kura-card kura-text-main shadow-xs"
+                : "kura-text-muted hover:kura-text-main"
             }`}
           >
             <span class="truncate">{opt.label}</span>

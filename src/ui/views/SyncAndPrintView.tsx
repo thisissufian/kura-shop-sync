@@ -11,11 +11,11 @@ export function SyncAndPrintView() {
 
   return (
     <div class="space-y-4 pb-10">
-      <div class="rounded-[14px] border border-black/[0.06] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3">
+      <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-4 shadow-xs space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="text-[16px] font-bold text-[#1D1D1F]">Kura Sync Chain</h3>
+              <h3 class="text-[16px] font-bold kura-text-main">Kura Sync Chain</h3>
               <span class="rounded-full bg-[#007AFF]/12 px-2 py-0.5 text-[11px] font-bold text-[#007AFF] tabular-nums">
                 {status?.node_id ?? "K1"}
               </span>
@@ -29,7 +29,7 @@ export function SyncAndPrintView() {
                 {status?.role ?? "OWNER"}
               </span>
             </div>
-            <p class="mt-0.5 text-[12px] text-[#86868B] tabular-nums">
+            <p class="mt-0.5 text-[12px] kura-text-muted tabular-nums">
               LAN {status?.lan_ip ?? "—"} · {status?.peer_count ?? 0} peer(s) ·{" "}
               {status?.pending_events ?? 0} pending
             </p>
@@ -37,9 +37,9 @@ export function SyncAndPrintView() {
         </div>
 
         {owner && status && (
-          <div class="rounded-[11px] bg-[#F5F5F7] p-3">
+          <div class="rounded-xl kura-subtle p-3">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-semibold text-[#86868B]">
+              <span class="text-[11px] font-semibold kura-text-muted">
                 12-Word Master Recovery Phrase
               </span>
               <button
@@ -50,7 +50,7 @@ export function SyncAndPrintView() {
                 {showPhrase ? "Hide" : "Reveal"}
               </button>
             </div>
-            <div class="mt-1.5 font-mono text-[12px] text-[#1D1D1F] select-all">
+            <div class="mt-1.5 font-mono text-[12px] kura-text-main select-all">
               {showPhrase
                 ? status.recovery_phrase
                 : "•••• •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• ••••"}

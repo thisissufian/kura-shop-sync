@@ -1,32 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --kura-canvas: #F5F5F7;
-  --kura-card: #FFFFFF;
-  --kura-secondary: #F2F2F7;
-  --kura-glass: rgba(255, 255, 255, 0.82);
-  --kura-text: #1D1D1F;
-  --kura-muted: #86868B;
-  --kura-border: rgba(15, 23, 42, 0.06);
+:root, [data-theme="light"] {
+  --kura-bg-canvas: #F2F4F8;
+  --kura-bg-card: #FFFFFF;
+  --kura-bg-subtle: #F1F5F9;
+  --kura-bg-input: #F8FAFC;
+  --kura-bg-glass: rgba(255, 255, 255, 0.88);
+  --kura-text-primary: #0F172A;
+  --kura-text-secondary: #475569;
+  --kura-text-muted: #64748B;
+  --kura-border: rgba(15, 23, 42, 0.08);
+  --kura-chart-empty: #E2E8F0;
+  --kura-shadow-card: 0 2px 10px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+  color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --kura-canvas: #000000;
-  --kura-card: #1C1C1E;
-  --kura-secondary: #2C2C2E;
-  --kura-glass: rgba(28, 28, 30, 0.85);
-  --kura-text: #F5F5F7;
-  --kura-muted: #98989D;
-  --kura-border: rgba(255, 255, 255, 0.08);
+  --kura-bg-canvas: #000000;
+  --kura-bg-card: #161618;
+  --kura-bg-subtle: #232326;
+  --kura-bg-input: #1C1C1F;
+  --kura-bg-glass: rgba(20, 20, 22, 0.88);
+  --kura-text-primary: #F8FAFC;
+  --kura-text-secondary: #94A3B8;
+  --kura-text-muted: #64748B;
+  --kura-border: rgba(255, 255, 255, 0.09);
+  --kura-chart-empty: #27272A;
+  --kura-shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 20px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
 }
 
 @layer base {
   html,
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
-    background-color: var(--kura-canvas);
-    color: var(--kura-text);
+    background-color: var(--kura-bg-canvas);
+    color: var(--kura-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
@@ -37,27 +56,62 @@
   }
 }
 
-/* Tactile Surface Classes */
+/* Surface & Semantic Utility Rules */
+body, #app, .kura-canvas {
+  background-color: var(--kura-bg-canvas) !important;
+  color: var(--kura-text-primary) !important;
+}
+
 .kura-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  background-color: var(--kura-bg-card) !important;
+  color: var(--kura-text-primary) !important;
+  border: 1px solid var(--kura-border) !important;
+  box-shadow: var(--kura-shadow-card);
   border-radius: 18px;
 }
 
-[data-theme="dark"] .kura-card {
-  background: #1C1C1E;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.4);
+.kura-glass-bar {
+  background-color: var(--kura-bg-glass) !important;
+  color: var(--kura-text-primary) !important;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-color: var(--kura-border) !important;
 }
 
+.kura-subtle {
+  background-color: var(--kura-bg-subtle) !important;
+  color: var(--kura-text-primary) !important;
+}
+
+.kura-input {
+  background-color: var(--kura-bg-input) !important;
+  color: var(--kura-text-primary) !important;
+  border: 1px solid var(--kura-border) !important;
+}
+
+.kura-text-main { color: var(--kura-text-primary) !important; }
+.kura-text-sub { color: var(--kura-text-secondary) !important; }
+.kura-text-muted { color: var(--kura-text-muted) !important; }
+.kura-chart-idle { background-color: var(--kura-chart-empty) !important; }
+
+/* Hero Card & Dedicated CTA */
 .kura-hero-card {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #0F766E 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #0F172A 0%, #132A3E 52%, #0D6E6E 100%);
+  color: #FFFFFF !important;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 12px 32px -8px rgba(15, 23, 42, 0.35);
   position: relative;
+}
+
+.kura-hero-cta {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+.kura-hero-cta:hover {
+  background-color: #F8FAFC !important;
 }
 
 .kura-icon-squircle {
@@ -78,51 +132,15 @@
 }
 
 .kura-receipt-paper {
-  background: #FFFFFF;
-  color: #1D1D1F;
+  background-color: var(--kura-bg-card);
+  color: var(--kura-text-primary);
   border-radius: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-[data-theme="dark"] .kura-receipt-paper {
-  background: #1C1C1E;
-  color: #F5F5F7;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 24px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--kura-border);
+  box-shadow: var(--kura-shadow-card);
 }
 
 .kura-dashed-divider {
-  border-top: 1.5px dashed rgba(100, 116, 139, 0.35);
-}
-[data-theme="dark"] .kura-dashed-divider {
-  border-top: 1.5px dashed rgba(255, 255, 255, 0.20);
-}
-
-/* OLED Cupertino Dark Semantic Overrides */
-[data-theme="dark"] .bg-\[\#F5F5F7\] { background-color: var(--kura-canvas) !important; }
-[data-theme="dark"] .bg-white { background-color: var(--kura-card) !important; }
-[data-theme="dark"] .bg-\[\#1D1D1F\] { background-color: #3A3A3C !important; color: #FFFFFF !important; }
-[data-theme="dark"] .bg-white\/80,
-[data-theme="dark"] .bg-white\/90 { background-color: var(--kura-glass) !important; }
-[data-theme="dark"] .spring-sheet-panel.bg-\[\#F5F5F7\] { background-color: #1C1C1E !important; }
-[data-theme="dark"] .spring-sheet-panel .bg-white,
-[data-theme="dark"] .spring-sheet-panel .bg-\[\#F5F5F7\] { background-color: var(--kura-secondary) !important; }
-[data-theme="dark"] .text-\[\#1D1D1F\] { color: var(--kura-text) !important; }
-[data-theme="dark"] .text-\[\#86868B\] { color: var(--kura-muted) !important; }
-[data-theme="dark"] .border-black\/\[0\.05\],
-[data-theme="dark"] .border-black\/\[0\.06\],
-[data-theme="dark"] .border-black\/\[0\.07\],
-[data-theme="dark"] .border-black\/\[0\.08\] { border-color: var(--kura-border) !important; }
-[data-theme="dark"] .bg-black\/\[0\.04\],
-[data-theme="dark"] .bg-black\/\[0\.05\],
-[data-theme="dark"] .bg-black\/\[0\.06\],
-[data-theme="dark"] .bg-black\/\[0\.08\] { background-color: rgba(255, 255, 255, 0.10) !important; }
-[data-theme="dark"] .bg-black\/15 { background-color: rgba(255, 255, 255, 0.25) !important; }
-[data-theme="dark"] input,
-[data-theme="dark"] select,
-[data-theme="dark"] textarea {
-  color: var(--kura-text);
-  border-color: var(--kura-border);
+  border-top: 1.5px dashed var(--kura-border);
 }
 
 .kura-safe-top {

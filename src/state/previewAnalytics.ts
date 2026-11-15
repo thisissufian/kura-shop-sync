@@ -46,8 +46,8 @@ export function calcMockAnalytics(period = "ALL"): OwnerAnalytics {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 86_400_000);
     const label = `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
-    const dayRev = i === 0 ? gross : Math.round(1500 + (6 - i) * 800);
-    const dayProfit = Math.round(dayRev * 0.42);
+    const dayRev = i === 0 ? gross : Math.round(180000 + (6 - i) * 16000);
+    const dayProfit = Math.round(dayRev * 0.45);
     daily_trend.push({
       date_label: label,
       revenue_minor: dayRev,

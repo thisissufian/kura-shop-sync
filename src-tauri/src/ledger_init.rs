@@ -125,11 +125,11 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
 
 fn seed_starter_inventory(conn: &mut Connection) -> Result<(), String> {
     let starters = [
-        ("SKU-101", "Artisan Cold Brew 250ml", "890101001010", "Beverages", "Kura Brew", "250ml Bottle", "No Warranty (ওয়ারেন্টি নেই)", 350, 180, 24, 6),
-        ("SKU-102", "Organic Whole Milk 1L", "890101001027", "Dairy", "FarmFresh", "1 Liter Tetra", "No Warranty (ওয়ারেন্টি নেই)", 295, 210, 18, 5),
-        ("SKU-103", "Sourdough Country Loaf", "890101001034", "Bakery", "Artisan Oven", "Rustic Round", "No Warranty (ওয়ারেন্টি নেই)", 550, 290, 9, 4),
-        ("SKU-104", "Sea Salt Kettle Chips", "890101001041", "Snacks", "Kettle Co", "Classic Salty", "No Warranty (ওয়ারেন্টি নেই)", 225, 120, 4, 5),
-        ("SKU-105", "Matcha Green Tea Tin", "890101001058", "Pantry", "Uji Reserve", "Ceremonial 30g", "7 Days Replacement", 1490, 890, 12, 3),
+        ("SKU-101", "Artisan Cold Brew 250ml", "890101001010", "Beverages", "Kura Brew", "250ml Bottle", "No Warranty (ওয়ারেন্টি নেই)", 35000, 18000, 24, 6),
+        ("SKU-102", "Organic Whole Milk 1L", "890101001027", "Dairy", "FarmFresh", "1 Liter Tetra", "No Warranty (ওয়ারেন্টি নেই)", 29500, 21000, 18, 5),
+        ("SKU-103", "Sourdough Country Loaf", "890101001034", "Bakery", "Artisan Oven", "Rustic Round", "No Warranty (ওয়ারেন্টি নেই)", 55000, 29000, 9, 4),
+        ("SKU-104", "Sea Salt Kettle Chips", "890101001041", "Snacks", "Kettle Co", "Classic Salty", "No Warranty (ওয়ারেন্টি নেই)", 12000, 6500, 14, 5),
+        ("SKU-105", "HOCO Rapid Charger 65W", "890101001058", "Electronics", "HOCO", "White · GaN", "6 Months Warranty", 149000, 89000, 12, 3),
     ];
     for (sku, name, bc, cat, brand, variant, warranty, sell, cost, qty, thresh) in starters {
         let hlc1 = next_hlc(conn, "K1")?;

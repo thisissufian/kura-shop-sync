@@ -43,15 +43,15 @@ export function CheckoutPanel() {
   };
 
   return (
-    <div class="rounded-2xl border border-black/[0.08] dark:border-white/[0.1] bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl p-3.5 shadow-xl space-y-2.5">
+    <div class="rounded-2xl border border-black/[0.08] dark:border-white/[0.1] kura-glass-bar p-3.5 shadow-xl space-y-2.5">
       {/* Collapsible Item Drawer */}
       {lines.length > 0 && (
         <div class={`${expanded ? "block" : "hidden lg:block"} max-h-48 overflow-y-auto space-y-2 border-b border-black/[0.06] dark:border-white/[0.08] pb-2.5`}>
           {lines.map(({ product, qty, lineTotal }) => (
             <div key={product.sku} class="flex items-center justify-between gap-2 text-[13px]">
               <div class="min-w-0 flex-1">
-                <div class="truncate font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">{product.name}</div>
-                <div class="text-[11px] text-[#86868B] tabular-nums">
+                <div class="truncate font-semibold kura-text-main">{product.name}</div>
+                <div class="text-[11px] kura-text-muted tabular-nums">
                   {qty} × {formatMoney(product.sell_price_minor, sym)}
                 </div>
               </div>
@@ -59,11 +59,11 @@ export function CheckoutPanel() {
                 <button
                   type="button"
                   onClick={() => setCartQty(product.sku, qty - 1)}
-                  class="h-6 w-6 rounded-full bg-black/[0.06] dark:bg-white/[0.08] text-[13px] font-bold kura-btn-press"
+                  class="h-6 w-6 rounded-full kura-subtle text-[13px] font-bold kura-btn-press"
                 >
                   −
                 </button>
-                <span class="tabular-nums font-bold text-[#1D1D1F] dark:text-[#F5F5F7] min-w-14 text-right">
+                <span class="tabular-nums font-bold kura-text-main min-w-14 text-right">
                   {formatMoney(lineTotal, sym)}
                 </span>
               </div>
@@ -74,7 +74,7 @@ export function CheckoutPanel() {
 
       {/* Payment Modes & Discount */}
       <div class="flex items-center justify-between gap-2">
-        <div class="inline-flex rounded-xl bg-black/[0.05] dark:bg-white/[0.08] p-0.5">
+        <div class="inline-flex rounded-xl kura-subtle p-0.5">
           {MODES.map((m) => (
             <button
               key={m.id}
@@ -84,8 +84,8 @@ export function CheckoutPanel() {
                 paymentMode.value === m.id
                   ? m.id === "DUE"
                     ? "bg-[#FF9500] text-white shadow-xs"
-                    : "bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs"
-                  : "text-[#86868B]"
+                    : "kura-card kura-text-main shadow-xs"
+                  : "kura-text-muted"
               }`}
             >
               {m.label}
@@ -94,7 +94,7 @@ export function CheckoutPanel() {
         </div>
 
         <div class="flex items-center gap-1.5">
-          <span class="text-[11px] text-[#86868B] font-medium">Disc:</span>
+          <span class="text-[11px] kura-text-muted font-medium">Disc:</span>
           <input
             inputMode="decimal"
             placeholder="0.00"
@@ -104,7 +104,7 @@ export function CheckoutPanel() {
               setDiscInput(v);
               discountMinor.value = parseMoneyInput(v);
             }}
-            class="w-16 rounded-lg border border-black/[0.08] dark:border-white/[0.1] bg-[#F5F5F7] dark:bg-black/40 px-2 py-1 text-right text-[12px] tabular-nums"
+            class="w-16 rounded-lg kura-input px-2 py-1 text-right text-[12px] tabular-nums"
           />
           {count > 0 && (
             <button
@@ -127,14 +127,14 @@ export function CheckoutPanel() {
           onClick={() => setExpanded(!expanded)}
           title="Tap to toggle item list"
         >
-          <div class="text-[11px] font-medium text-[#86868B] tabular-nums flex items-center gap-1">
+          <div class="text-[11px] font-medium kura-text-muted tabular-nums flex items-center gap-1">
             <span>{count} {count === 1 ? "item" : "items"}</span>
             <span class="lg:hidden text-[10px] text-[#007AFF] font-bold">{expanded ? "▲ Hide" : "▼ Review"}</span>
             {discountMinor.value > 0 && (
               <span>· Sub {formatMoney(cartSubtotalMinor.value, sym)}</span>
             )}
           </div>
-          <div class="text-[22px] font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums leading-tight">
+          <div class="text-[22px] font-bold tracking-tight kura-text-main tabular-nums leading-tight">
             {formatMoney(cartTotalMinor.value, sym)}
           </div>
         </div>

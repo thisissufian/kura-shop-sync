@@ -17,8 +17,8 @@ export function BillsHistoryView() {
 
       <div class="flex items-center justify-between gap-2">
         <div>
-          <h2 class="text-[18px] font-bold tracking-tight text-[#1D1D1F]">Bills Ledger</h2>
-          <p class="text-[12px] text-[#86868B] tabular-nums">
+          <h2 class="text-[18px] font-bold tracking-tight kura-text-main">Bills Ledger</h2>
+          <p class="text-[12px] kura-text-muted tabular-nums">
             {bills.length} recent receipt(s) · Click any bill to reprint, export PDF, or void
           </p>
         </div>
@@ -27,16 +27,16 @@ export function BillsHistoryView() {
           onClick={() => {
             drawerSheetOpen.value = true;
           }}
-          class="shrink-0 rounded-full bg-[#1D1D1F] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-xs hover:brightness-110 active:scale-95 transition"
+          class="shrink-0 rounded-full kura-subtle px-3.5 py-1.5 text-[12px] font-semibold kura-text-main shadow-xs hover:brightness-110 active:scale-95 transition"
         >
           Till / Cash
         </button>
       </div>
 
       {bills.length === 0 ? (
-        <div class="rounded-[14px] border border-black/[0.06] bg-white p-8 text-center">
-          <div class="text-[15px] font-semibold text-[#1D1D1F]">No bills issued yet</div>
-          <p class="mt-1 text-[13px] text-[#86868B]">
+        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-8 text-center">
+          <div class="text-[15px] font-semibold kura-text-main">No bills issued yet</div>
+          <p class="mt-1 text-[13px] kura-text-muted">
             Add items in Counter and tap Charge &amp; Print to generate a receipt.
           </p>
         </div>
@@ -49,14 +49,14 @@ export function BillsHistoryView() {
               onClick={() => {
                 activeReceipt.value = b;
               }}
-              class="w-full text-left rounded-[14px] border border-black/[0.06] bg-white p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-[#007AFF]/35 active:scale-[0.99] transition"
+              class="w-full text-left rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 shadow-xs hover:border-[#007AFF]/35 active:scale-[0.99] transition"
             >
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="rounded-md bg-[#007AFF]/12 px-2 py-0.5 text-[11px] font-bold text-[#007AFF] tabular-nums">
                     {b.node_id}
                   </span>
-                  <span class="truncate text-[14px] font-semibold text-[#1D1D1F] tabular-nums">
+                  <span class="truncate text-[14px] font-semibold kura-text-main tabular-nums">
                     {b.bill_no}
                   </span>
                   {b.voided && (
@@ -67,14 +67,14 @@ export function BillsHistoryView() {
                 </div>
                 <span
                   class={`text-[16px] font-bold tabular-nums ${
-                    b.voided ? "line-through text-[#AEAEB2]" : "text-[#1D1D1F]"
+                    b.voided ? "line-through text-[#AEAEB2]" : "kura-text-main"
                   }`}
                 >
                   {formatMoney(b.total_minor, sym)}
                 </span>
               </div>
 
-              <div class="mt-1.5 flex items-center justify-between text-[12px] text-[#86868B] tabular-nums">
+              <div class="mt-1.5 flex items-center justify-between text-[12px] kura-text-muted tabular-nums">
                 <span>
                   {b.items.length} item(s) · {b.payment_mode}
                 </span>

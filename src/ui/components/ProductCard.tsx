@@ -41,7 +41,7 @@ export function ProductCard({
           <span class="text-[11px] font-bold text-[#007AFF] uppercase tracking-wide truncate">
             {p.brand || "GENERIC"}
           </span>
-          <span class="rounded-md bg-black/[0.05] dark:bg-white/[0.08] px-1.5 py-0.5 text-[10px] text-[#86868B] uppercase font-semibold">
+          <span class="rounded-md kura-subtle px-1.5 py-0.5 text-[10px] kura-text-muted uppercase font-semibold">
             {p.category}
           </span>
         </div>
@@ -52,18 +52,18 @@ export function ProductCard({
 
       {/* Middle Row: Monogram Avatar & Product Details */}
       <div class="flex items-start gap-3 min-w-0">
-        <div class="w-12 h-12 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center font-bold text-[14px] text-[#1D1D1F] dark:text-[#F5F5F7] shrink-0 tracking-wider">
+        <div class="w-12 h-12 rounded-xl kura-subtle border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center font-bold text-[14px] kura-text-main shrink-0 tracking-wider">
           {monogram}
         </div>
         <div class="min-w-0 flex-1">
-          <h4 class="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate leading-snug">
+          <h4 class="text-[15px] font-semibold kura-text-main truncate leading-snug">
             {p.name}
           </h4>
-          <div class="text-[11px] text-[#86868B] truncate mt-0.5">
+          <div class="text-[11px] kura-text-muted truncate mt-0.5">
             {p.variant ? `${p.variant} · ` : ""}
             {p.warranty_label && p.warranty_label !== "No Warranty (ওয়ারেন্টি নেই)" ? `🛡 ${p.warranty_label}` : "Standard Retail"}
           </div>
-          <div class="text-[10px] font-mono text-[#86868B]/80 mt-0.5">
+          <div class="text-[10px] font-mono kura-text-muted mt-0.5">
             SKU: {p.sku} {p.barcode ? `· ${p.barcode}` : ""}
           </div>
         </div>
@@ -72,7 +72,7 @@ export function ProductCard({
       {/* Bottom Row: Price & Actions */}
       <div class="pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-end justify-between gap-2">
         <div class="min-w-0">
-          <div class="text-[19px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tabular-nums leading-none">
+          <div class="text-[19px] font-bold kura-text-main tabular-nums leading-none">
             {formatMoney(p.sell_price_minor, sym)}
           </div>
           {isOwner && (
@@ -89,7 +89,7 @@ export function ProductCard({
                 type="button"
                 onClick={() => setShowAdjust(!showAdjust)}
                 title="Quick Stock Adjust"
-                class="w-9 h-9 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center hover:bg-black/[0.08] dark:hover:bg-white/[0.12] kura-btn-press"
+                class="w-9 h-9 rounded-xl kura-subtle kura-text-main flex items-center justify-center hover:opacity-80 kura-btn-press"
               >
                 <IconSliders class="w-4 h-4" />
               </button>
@@ -97,7 +97,7 @@ export function ProductCard({
                 type="button"
                 onClick={() => onEdit(p)}
                 title="Edit Product"
-                class="w-9 h-9 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center hover:bg-black/[0.08] dark:hover:bg-white/[0.12] kura-btn-press"
+                class="w-9 h-9 rounded-xl kura-subtle kura-text-main flex items-center justify-center hover:opacity-80 kura-btn-press"
               >
                 <IconEdit class="w-4 h-4" />
               </button>
@@ -117,27 +117,27 @@ export function ProductCard({
 
       {/* Quick stock stepper flyout (Owner only) */}
       {showAdjust && isOwner && (
-        <div class="p-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.05] flex items-center justify-between text-[11px]">
-          <span class="text-[#86868B] font-medium">Quick Adjust:</span>
+        <div class="p-2 rounded-xl kura-subtle flex items-center justify-between text-[11px]">
+          <span class="kura-text-muted font-medium">Quick Adjust:</span>
           <div class="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => onRestock(p.sku, -1)}
-              class="px-2 py-0.5 rounded-md bg-white dark:bg-[#2C2C2E] border border-black/[0.06] dark:border-white/[0.08] font-bold text-[#FF3B30] kura-btn-press"
+              class="px-2 py-0.5 rounded-md kura-card font-bold text-[#FF3B30] kura-btn-press"
             >
               -1
             </button>
             <button
               type="button"
               onClick={() => onRestock(p.sku, 1)}
-              class="px-2 py-0.5 rounded-md bg-white dark:bg-[#2C2C2E] border border-black/[0.06] dark:border-white/[0.08] font-bold text-[#34C759] kura-btn-press"
+              class="px-2 py-0.5 rounded-md kura-card font-bold text-[#34C759] kura-btn-press"
             >
               +1
             </button>
             <button
               type="button"
               onClick={() => onRestock(p.sku, 10)}
-              class="px-2.5 py-0.5 rounded-md bg-white dark:bg-[#2C2C2E] border border-black/[0.06] dark:border-white/[0.08] font-bold text-[#007AFF] kura-btn-press"
+              class="px-2.5 py-0.5 rounded-md kura-card font-bold text-[#007AFF] kura-btn-press"
             >
               +10
             </button>

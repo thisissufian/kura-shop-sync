@@ -14,7 +14,7 @@ export function HomeTrendChart({ trend, maxTrendRev, sym }: Props) {
   return (
     <div class="kura-card p-4 space-y-3">
       <div class="flex items-center justify-between">
-        <span class="text-[13px] font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+        <span class="text-[13px] font-bold kura-text-main">
           7-Day Performance Trend
         </span>
         <button
@@ -36,11 +36,11 @@ export function HomeTrendChart({ trend, maxTrendRev, sym }: Props) {
                 class={`w-full rounded-t-lg transition-all duration-300 ${
                   isPeak
                     ? "bg-gradient-to-t from-[#007AFF] to-[#34C759] shadow-xs"
-                    : "bg-black/[0.08] dark:bg-white/[0.12] group-hover:bg-[#007AFF]/60"
+                    : "kura-chart-idle group-hover:bg-[#007AFF]/60"
                 }`}
                 title={`${pt.date_label}: ${formatMoney(pt.revenue_minor, sym)} (${pt.bills_count} bills)`}
               />
-              <span class={`text-[10px] font-mono tabular-nums ${isPeak ? "font-bold text-[#007AFF]" : "text-[#86868B]"}`}>
+              <span class={`text-[10px] font-mono tabular-nums ${isPeak ? "font-bold text-[#007AFF]" : "kura-text-sub"}`}>
                 {pt.date_label}
               </span>
             </div>

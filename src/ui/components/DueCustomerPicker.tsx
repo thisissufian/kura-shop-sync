@@ -29,7 +29,7 @@ export function DueCustomerPicker() {
             onChange={(e) => {
               selectedCustomerId.value = (e.target as HTMLSelectElement).value;
             }}
-            class="flex-1 rounded-[8px] border border-black/[0.08] bg-white px-2.5 py-1.5 text-[12px]"
+            class="flex-1 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-card kura-text-main px-2.5 py-1.5 text-[12px]"
           >
             <option value="">Select customer for due…</option>
             {custList.map((c) => (
@@ -41,7 +41,7 @@ export function DueCustomerPicker() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            class="rounded-[8px] bg-[#1D1D1F] px-2.5 py-1.5 text-[11px] font-semibold text-white"
+            class="rounded-lg bg-[#007AFF] px-2.5 py-1.5 text-[11px] font-semibold text-white"
           >
             + New
           </button>
@@ -53,25 +53,25 @@ export function DueCustomerPicker() {
             placeholder="Name"
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
-            class="w-24 flex-1 rounded-[8px] border border-black/[0.08] bg-white px-2 py-1 text-[12px]"
+            class="w-24 flex-1 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-card kura-text-main px-2 py-1 text-[12px]"
           />
           <input
             required
             placeholder="Phone"
             value={phone}
             onInput={(e) => setPhone((e.target as HTMLInputElement).value)}
-            class="w-24 flex-1 rounded-[8px] border border-black/[0.08] bg-white px-2 py-1 text-[12px] tabular-nums"
+            class="w-24 flex-1 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-card kura-text-main px-2 py-1 text-[12px] tabular-nums"
           />
           <button
             type="submit"
-            class="rounded-[8px] bg-[#007AFF] px-2.5 py-1 text-[11px] font-semibold text-white"
+            class="rounded-lg bg-[#007AFF] px-2.5 py-1 text-[11px] font-semibold text-white"
           >
             Save
           </button>
           <button
             type="button"
             onClick={() => setAdding(false)}
-            class="px-1.5 text-[11px] text-[#86868B]"
+            class="px-1.5 text-[11px] kura-text-muted"
           >
             ✕
           </button>

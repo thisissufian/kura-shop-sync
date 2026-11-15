@@ -3,13 +3,13 @@ import type { BillReceipt, CashDrawerSummary, CustomerAccount, Product, ShopExpe
 export const nowHlc = (n = 1) => `${new Date().toISOString()}-${String(n).padStart(4, "0")}-K1`;
 
 export const mockExpenses: ShopExpense[] = [
-  { expense_id: "EXP-1", category: "Rent & Bills", amount_minor: 1200, note: "Shop power bill", node_id: "K1", hlc: nowHlc(10) }
+  { expense_id: "EXP-1", category: "Rent & Bills", amount_minor: 12000, note: "Shop power bill", node_id: "K1", hlc: nowHlc(10) }
 ];
 export const mockKhataCollected = { minor: 0 };
 
 export const mockSuppliers: SupplierAccount[] = [
-  { supplier_id: "K1-V001", name: "HOCO Accessories Hub", phone: "01811-998877", payable_balance_minor: 12500, updated_hlc: nowHlc(1) },
-  { supplier_id: "K1-V002", name: "Anker BD Official", phone: "01922-334455", payable_balance_minor: 28000, updated_hlc: nowHlc(2) },
+  { supplier_id: "K1-V001", name: "HOCO Accessories Hub", phone: "01811-998877", payable_balance_minor: 125000, updated_hlc: nowHlc(1) },
+  { supplier_id: "K1-V002", name: "Anker BD Official", phone: "01922-334455", payable_balance_minor: 280000, updated_hlc: nowHlc(2) },
 ];
 
 export function calcMockDrawer(): CashDrawerSummary {
@@ -35,34 +35,36 @@ export function calcMockDrawer(): CashDrawerSummary {
 }
 
 export const mockCustomers: CustomerAccount[] = [
-  { customer_id: "K1-C001", name: "Rahim Traders", phone: "01711-000111", balance_due_minor: 1450, updated_hlc: nowHlc(1) },
+  { customer_id: "K1-C001", name: "Rahim Traders", phone: "01711-000111", balance_due_minor: 145000, updated_hlc: nowHlc(1) },
 ];
 
 export const mockProducts: Product[] = [
-  { sku: "SKU-101", name: "Artisan Cold Brew 250ml", barcode: "890101001010", category: "Beverages", brand: "Kura Brew", variant: "250ml", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 350, cost_price_minor: 180, stock_qty: 24, low_stock_threshold: 6, updated_hlc: nowHlc(1) },
-  { sku: "SKU-102", name: "Organic Whole Milk 1L", barcode: "890101001027", category: "Dairy", brand: "FarmFresh", variant: "1L Tetra", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 295, cost_price_minor: 210, stock_qty: 18, low_stock_threshold: 5, updated_hlc: nowHlc(2) },
-  { sku: "SKU-103", name: "Sourdough Country Loaf", barcode: "890101001034", category: "Bakery", brand: "Artisan Oven", variant: "Round", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 550, cost_price_minor: 290, stock_qty: 9, low_stock_threshold: 4, updated_hlc: nowHlc(3) },
-  { sku: "SKU-104", name: "Sea Salt Kettle Chips", barcode: "890101001041", category: "Snacks", brand: "Kettle Co", variant: "Original", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 225, cost_price_minor: 120, stock_qty: 4, low_stock_threshold: 5, updated_hlc: nowHlc(4) },
-  { sku: "SKU-105", name: "HOCO Rapid Charger 65W", barcode: "890101001058", category: "Electronics", brand: "HOCO", variant: "White · GaN", warranty_label: "6 Months Warranty", sell_price_minor: 1490, cost_price_minor: 890, stock_qty: 12, low_stock_threshold: 3, updated_hlc: nowHlc(5) },
+  { sku: "SKU-101", name: "Artisan Cold Brew 250ml", barcode: "890101001010", category: "Beverages", brand: "Kura Brew", variant: "250ml", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 35000, cost_price_minor: 18000, stock_qty: 24, low_stock_threshold: 6, updated_hlc: nowHlc(1) },
+  { sku: "SKU-102", name: "Organic Whole Milk 1L", barcode: "890101001027", category: "Dairy", brand: "FarmFresh", variant: "1L Tetra", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 29500, cost_price_minor: 21000, stock_qty: 18, low_stock_threshold: 5, updated_hlc: nowHlc(2) },
+  { sku: "SKU-103", name: "Sourdough Country Loaf", barcode: "890101001034", category: "Bakery", brand: "Artisan Oven", variant: "Round", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 55000, cost_price_minor: 29000, stock_qty: 9, low_stock_threshold: 4, updated_hlc: nowHlc(3) },
+  { sku: "SKU-104", name: "Sea Salt Kettle Chips", barcode: "890101001041", category: "Snacks", brand: "Kettle Co", variant: "Original", warranty_label: "No Warranty (ওয়ারেন্টি নেই)", sell_price_minor: 12000, cost_price_minor: 6500, stock_qty: 14, low_stock_threshold: 5, updated_hlc: nowHlc(4) },
+  { sku: "SKU-105", name: "HOCO Rapid Charger 65W", barcode: "890101001058", category: "Electronics", brand: "HOCO", variant: "White · GaN", warranty_label: "6 Months Warranty", sell_price_minor: 149000, cost_price_minor: 89000, stock_qty: 12, low_stock_threshold: 3, updated_hlc: nowHlc(5) },
 ];
 
 export const mockBills: BillReceipt[] = [
   {
-    bill_no: "K1-261113-0001",
+    bill_no: "K1-261115-0001",
     node_id: "K1",
     hlc: nowHlc(6),
     items: [
-      { sku: "SKU-105", name: "HOCO Rapid Charger 65W", qty: 1, unit_price_minor: 1490, line_total_minor: 1490, warranty_label: "6 Months Warranty" },
-      { sku: "SKU-101", name: "Artisan Cold Brew 250ml", qty: 2, unit_price_minor: 350, line_total_minor: 700, warranty_label: "No Warranty (ওয়ারেন্টি নেই)" }
+      { sku: "SKU-105", name: "HOCO Rapid Charger 65W", qty: 1, unit_price_minor: 149000, line_total_minor: 149000, warranty_label: "6 Months Warranty" },
+      { sku: "SKU-101", name: "Artisan Cold Brew 250ml", qty: 2, unit_price_minor: 35000, line_total_minor: 70000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)" },
+      { sku: "SKU-103", name: "Sourdough Country Loaf", qty: 1, unit_price_minor: 55000, line_total_minor: 55000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)" },
+      { sku: "SKU-104", name: "Sea Salt Kettle Chips", qty: 1, unit_price_minor: 12000, line_total_minor: 12000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)" },
     ],
     discount_minor: 0,
-    total_minor: 2190,
+    total_minor: 286000,
     payment_mode: "CASH",
     customer_id: null,
     client_label: "Walk-in Customer",
     cashier_label: "Owner · K1",
-    voided: false
-  }
+    voided: false,
+  },
 ];
 
 export const mockSync: SyncChainStatus = {
