@@ -93,7 +93,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload Windows Installers to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != ''
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != '' || github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -101,6 +101,9 @@ jobs:
           tag_name="${{ github.event.inputs.release_tag }}"
           if [ -z "$tag_name" ]; then
             tag_name="${GITHUB_REF#refs/tags/}"
+          fi
+          if [ "$tag_name" = "refs/heads/main" ] || [ -z "$tag_name" ]; then
+            tag_name="v1.0.0"
           fi
           if [ -n "$tag_name" ]; then
             echo "Uploading Windows assets to GitHub Release $tag_name..."
@@ -110,7 +113,7 @@ jobs:
   build-android-apk:
     name: Build Android APK & Play Store AAB
     needs: verify-and-test
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +126,31 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
+
+      - name: Configure Gradle Maven Central mirror
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat << 'EOF' > ~/.gradle/init.d/mirror.init.gradle
+          allprojects {
+              repositories.all { repo ->
+                  if (repo instanceof MavenArtifactRepository) {
+                      def urlStr = repo.url.toString()
+                      if (urlStr.contains("repo.maven.apache.org/maven2") || urlStr.contains("repo1.maven.org/maven2")) {
+                          repo.setUrl("https://maven-central.storage-download.googleapis.com/maven2/")
+                      }
+                  }
+              }
+              buildscript.repositories.all { repo ->
+                  if (repo instanceof MavenArtifactRepository) {
+                      def urlStr = repo.url.toString()
+                      if (urlStr.contains("repo.maven.apache.org/maven2") || urlStr.contains("repo1.maven.org/maven2")) {
+                          repo.setUrl("https://maven-central.storage-download.googleapis.com/maven2/")
+                      }
+                  }
+              }
+          }
+          EOF
 
       - name: Setup Android SDK & NDK 27
         run: |
@@ -131,7 +158,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
           export PATH="/usr/local/lib/android/sdk/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;27.0.12077973"
+          sdkmanager "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "ndk;27.0.12077973"
           echo "NDK_HOME=/usr/local/lib/android/sdk/ndk/27.0.12077973" >> "$GITHUB_ENV"
 
       - uses: dtolnay/rust-toolchain@stable
@@ -156,7 +183,9 @@ jobs:
           find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -exec cp {} dist-apk/ \;
           cd dist-apk
           for f in *.apk; do
-            cp "$f" "kura-v1.0.0-$f" 2>/dev/null || true
+            if [[ ! "$f" =~ ^kura-v1\.0\.0- ]]; then
+              cp "$f" "kura-v1.0.0-$f" 2>/dev/null || true
+            fi
           done
           ls -lah .
 
@@ -167,13 +196,16 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload APKs to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != ''
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != '' || github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag_name="${{ github.event.inputs.release_tag }}"
           if [ -z "$tag_name" ]; then
             tag_name="${GITHUB_REF#refs/tags/}"
+          fi
+          if [ "$tag_name" = "refs/heads/main" ] || [ -z "$tag_name" ]; then
+            tag_name="v1.0.0"
           fi
           if [ -n "$tag_name" ]; then
             echo "Uploading APK assets to GitHub Release $tag_name..."

@@ -69,3 +69,49 @@ if (fs.existsSync(gradlePath)) {
   fs.writeFileSync(gradlePath, gradle, "utf8");
   console.log(`[android:prep] Patched ${gradlePath} (debug signing for release APK, compileSdk=34).`);
 }
+
+const buildSrcPath = path.resolve("src-tauri", "gen", "android", "buildSrc", "build.gradle.kts");
+if (fs.existsSync(buildSrcPath)) {
+  let bSrc = fs.readFileSync(buildSrcPath, "utf8");
+  if (!bSrc.includes("maven-central.storage-download.googleapis.com")) {
+    bSrc = bSrc.replace(
+      "repositories {",
+      'repositories {\n    maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }'
+    );
+    fs.writeFileSync(buildSrcPath, bSrc, "utf8");
+    console.log(`[android:prep] Patched ${buildSrcPath} (Google Maven Central mirror).`);
+  }
+}
+
+const rootGradlePath = path.resolve("src-tauri", "gen", "android", "build.gradle.kts");
+if (fs.existsSync(rootGradlePath)) {
+  let rGradle = fs.readFileSync(rootGradlePath, "utf8");
+  if (!rGradle.includes("maven-central.storage-download.googleapis.com")) {
+    rGradle = rGradle.replaceAll(
+      "repositories {",
+      'repositories {\n        maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }'
+    );
+    fs.writeFileSync(rootGradlePath, rGradle, "utf8");
+    console.log(`[android:prep] Patched ${rootGradlePath} (Google Maven Central mirror).`);
+  }
+}
+
+const settingsPath = path.resolve("src-tauri", "gen", "android", "settings.gradle");
+if (fs.existsSync(settingsPath)) {
+  let sGrad = fs.readFileSync(settingsPath, "utf8");
+  if (!sGrad.includes("pluginManagement")) {
+    const pBlock = `pluginManagement {
+    repositories {
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+        google()
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+`;
+    sGrad = pBlock + sGrad;
+    fs.writeFileSync(settingsPath, sGrad, "utf8");
+    console.log(`[android:prep] Patched ${settingsPath} (pluginManagement mirror).`);
+  }
+}
