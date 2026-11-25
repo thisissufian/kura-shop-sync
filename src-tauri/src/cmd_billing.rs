@@ -1,11 +1,13 @@
-use rusqlite::params;
+use rusqlite::{params, Connection};
 use tauri::State;
 
 use crate::commands::AppState;
 use crate::hlc::{new_event_id, next_hlc, next_invoice_number};
 use crate::ledger::{apply_ledger_event, BillVoidPayload};
 use crate::ledger_customers::get_customer_by_id;
-use crate::ledger_queries::{get_bill_by_no, get_chain_config, list_recent_bills};
+use crate::ledger_queries::{
+    get_bill_by_no, get_chain_config, list_recent_bills, redact_bill_costs,
+};
 use crate::models::{BillItem, BillReceipt, IssueBillInput, LedgerEvent};
 
 #[tauri::command]
@@ -13,11 +15,15 @@ pub fn issue_bill(
     input: IssueBillInput,
     state: State<'_, AppState>,
 ) -> Result<BillReceipt, String> {
+    let mut conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
+    create_bill(&mut conn, input)
+}
+
+pub fn create_bill(conn: &mut Connection, input: IssueBillInput) -> Result<BillReceipt, String> {
     if input.items.is_empty() {
         return Err("Cart is empty".to_string());
     }
-    let mut conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-    let cfg = get_chain_config(&conn)?;
+    let cfg = get_chain_config(conn)?;
     let mut bill_items = Vec::with_capacity(input.items.len());
     let mut subtotal_minor: i64 = 0;
 
@@ -25,11 +31,11 @@ pub fn issue_bill(
         if req.qty <= 0 {
             return Err("Item quantity must be positive".to_string());
         }
-        let (name, sell_price_minor, default_warranty): (String, i64, String) = conn
+        let (name, sell_price_minor, cost_price_minor, default_warranty): (String, i64, i64, String) = conn
             .query_row(
-                "SELECT name, sell_price_minor, warranty_label FROM products WHERE sku = ?1",
+                "SELECT name, sell_price_minor, cost_price_minor, warranty_label FROM products WHERE sku = ?1",
                 params![req.sku],
-                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
             )
             .map_err(|_| format!("Product not found: {}", req.sku))?;
         let line_total_minor = sell_price_minor.saturating_mul(req.qty);
@@ -39,6 +45,7 @@ pub fn issue_bill(
             name,
             qty: req.qty,
             unit_price_minor: sell_price_minor,
+            unit_cost_minor: Some(cost_price_minor),
             line_total_minor,
             warranty_label: req.warranty_label.clone().unwrap_or(default_warranty),
         });
@@ -56,7 +63,7 @@ pub fn issue_bill(
         let cid = customer_id
             .as_deref()
             .ok_or_else(|| "Select or create a customer for Customer Due (Khata)".to_string())?;
-        get_customer_by_id(&conn, cid)?;
+        get_customer_by_id(conn, cid)?;
     }
 
     let client_label = input.client_label
@@ -66,9 +73,9 @@ pub fn issue_bill(
         .filter(|s| !s.trim().is_empty())
         .unwrap_or_else(|| format!("{} · {}", cfg.role, cfg.node_id));
 
-    let bill_no = next_invoice_number(&conn, &cfg.node_id)?;
-    let hlc = next_hlc(&conn, &cfg.node_id)?;
-    let receipt = BillReceipt {
+    let bill_no = next_invoice_number(conn, &cfg.node_id)?;
+    let hlc = next_hlc(conn, &cfg.node_id)?;
+    let mut receipt = BillReceipt {
         bill_no,
         node_id: cfg.node_id.clone(),
         hlc: hlc.clone(),
@@ -94,6 +101,9 @@ pub fn issue_bill(
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     apply_ledger_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
+    if cfg.role != "OWNER" {
+        redact_bill_costs(&mut receipt);
+    }
     Ok(receipt)
 }
 
@@ -104,7 +114,7 @@ pub fn void_bill(bill_no: String, state: State<'_, AppState>) -> Result<BillRece
     if cfg.role != "OWNER" {
         return Err("Only OWNER devices can void bills".to_string());
     }
-    let current = get_bill_by_no(&conn, &bill_no)?;
+    let current = get_bill_by_no(&conn, &bill_no, false)?;
     if current.voided {
         return Err("Bill is already voided".to_string());
     }
@@ -124,13 +134,18 @@ pub fn void_bill(bill_no: String, state: State<'_, AppState>) -> Result<BillRece
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     apply_ledger_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
-    get_bill_by_no(&conn, &bill_no)
+    get_bill_by_no(&conn, &bill_no, false)
 }
 
 #[tauri::command]
 pub fn get_recent_bills(state: State<'_, AppState>) -> Result<Vec<BillReceipt>, String> {
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-    list_recent_bills(&conn, 50)
+    recent_bills_for_device(&conn)
+}
+
+pub fn recent_bills_for_device(conn: &Connection) -> Result<Vec<BillReceipt>, String> {
+    let cfg = get_chain_config(conn)?;
+    list_recent_bills(conn, 50, cfg.role != "OWNER")
 }
 
 #[tauri::command]
@@ -139,5 +154,13 @@ pub fn find_bill_by_no(
     state: State<'_, AppState>,
 ) -> Result<Option<BillReceipt>, String> {
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-    Ok(get_bill_by_no(&conn, bill_no.trim()).ok())
+    find_bill_for_device(&conn, &bill_no)
+}
+
+pub fn find_bill_for_device(
+    conn: &Connection,
+    bill_no: &str,
+) -> Result<Option<BillReceipt>, String> {
+    let cfg = get_chain_config(conn)?;
+    Ok(get_bill_by_no(conn, bill_no.trim(), cfg.role != "OWNER").ok())
 }

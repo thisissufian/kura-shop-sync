@@ -1,6 +1,6 @@
 use rusqlite::{params, Connection};
 
-use crate::models::{BillItem, BillReceipt, ChainConfig, LedgerEvent, Product};
+use crate::models::{BillReceipt, ChainConfig, LedgerEvent, Product};
 
 pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
     conn.query_row(
@@ -61,7 +61,39 @@ pub fn list_products(conn: &Connection, redact_cost: bool) -> Result<Vec<Product
     Ok(out)
 }
 
-pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceipt>, String> {
+pub fn redact_bill_costs(bill: &mut BillReceipt) {
+    for it in &mut bill.items {
+        it.unit_cost_minor = None;
+    }
+}
+
+fn row_to_bill_receipt(r: &rusqlite::Row<'_>, redact_cost: bool) -> rusqlite::Result<BillReceipt> {
+    let items_json: String = r.get(3)?;
+    let voided_int: i64 = r.get(10)?;
+    let mut bill = BillReceipt {
+        bill_no: r.get(0)?,
+        node_id: r.get(1)?,
+        hlc: r.get(2)?,
+        items: serde_json::from_str(&items_json).unwrap_or_default(),
+        discount_minor: r.get(4)?,
+        total_minor: r.get(5)?,
+        payment_mode: r.get(6)?,
+        customer_id: r.get(7)?,
+        client_label: r.get(8)?,
+        cashier_label: r.get(9)?,
+        voided: voided_int != 0,
+    };
+    if redact_cost {
+        redact_bill_costs(&mut bill);
+    }
+    Ok(bill)
+}
+
+pub fn list_recent_bills(
+    conn: &Connection,
+    limit: i64,
+    redact_cost: bool,
+) -> Result<Vec<BillReceipt>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor,
@@ -72,24 +104,7 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
         )
         .map_err(|e| format!("Prepare bills: {e}"))?;
     let rows = stmt
-        .query_map(params![limit], |r| {
-            let items_json: String = r.get(3)?;
-            let voided_int: i64 = r.get(10)?;
-            let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
-            Ok(BillReceipt {
-                bill_no: r.get(0)?,
-                node_id: r.get(1)?,
-                hlc: r.get(2)?,
-                items,
-                discount_minor: r.get(4)?,
-                total_minor: r.get(5)?,
-                payment_mode: r.get(6)?,
-                customer_id: r.get(7)?,
-                client_label: r.get(8)?,
-                cashier_label: r.get(9)?,
-                voided: voided_int != 0,
-            })
-        })
+        .query_map(params![limit], |r| row_to_bill_receipt(r, redact_cost))
         .map_err(|e| format!("Query bills: {e}"))?;
 
     let mut out = Vec::new();
@@ -99,30 +114,17 @@ pub fn list_recent_bills(conn: &Connection, limit: i64) -> Result<Vec<BillReceip
     Ok(out)
 }
 
-pub fn get_bill_by_no(conn: &Connection, bill_no: &str) -> Result<BillReceipt, String> {
+pub fn get_bill_by_no(
+    conn: &Connection,
+    bill_no: &str,
+    redact_cost: bool,
+) -> Result<BillReceipt, String> {
     conn.query_row(
         "SELECT bill_no, node_id, hlc, items_json, discount_minor, total_minor,
                 payment_mode, customer_id, client_label, cashier_label, voided
          FROM bills WHERE bill_no = ?1",
         params![bill_no],
-        |r| {
-            let items_json: String = r.get(3)?;
-            let voided_int: i64 = r.get(10)?;
-            let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
-            Ok(BillReceipt {
-                bill_no: r.get(0)?,
-                node_id: r.get(1)?,
-                hlc: r.get(2)?,
-                items,
-                discount_minor: r.get(4)?,
-                total_minor: r.get(5)?,
-                payment_mode: r.get(6)?,
-                customer_id: r.get(7)?,
-                client_label: r.get(8)?,
-                cashier_label: r.get(9)?,
-                voided: voided_int != 0,
-            })
-        },
+        |r| row_to_bill_receipt(r, redact_cost),
     )
     .map_err(|_| format!("Bill not found: {bill_no}"))
 }

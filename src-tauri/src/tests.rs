@@ -65,19 +65,19 @@ fn test_crdt_ledger_replay_stock_khata_and_drawer() {
         }).unwrap()),
         ev("2026-11-12T10:00:00.000Z-0004-K1", "K1", "BILL_ISSUED", serde_json::to_string(&BillReceipt {
             bill_no: "K1-261112-0001".into(), node_id: "K1".into(), hlc: "2026-11-12T10:00:00.000Z-0004-K1".into(),
-            items: vec![BillItem { sku: "SKU-T1".into(), name: "Test Tea".into(), qty: 2, unit_price_minor: 500, line_total_minor: 1000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+            items: vec![BillItem { sku: "SKU-T1".into(), name: "Test Tea".into(), qty: 2, unit_price_minor: 500, unit_cost_minor: None, line_total_minor: 1000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
             discount_minor: 0, total_minor: 1000, payment_mode: "CASH".into(), customer_id: None,
             client_label: "Walk-in Customer".into(), cashier_label: "Owner · K1".into(), voided: false,
         }).unwrap()),
         ev("2026-11-12T10:00:00.000Z-0005-K2", "K2", "BILL_ISSUED", serde_json::to_string(&BillReceipt {
             bill_no: "K2-261112-0001".into(), node_id: "K2".into(), hlc: "2026-11-12T10:00:00.000Z-0005-K2".into(),
-            items: vec![BillItem { sku: "SKU-T1".into(), name: "Test Tea".into(), qty: 3, unit_price_minor: 500, line_total_minor: 1500, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+            items: vec![BillItem { sku: "SKU-T1".into(), name: "Test Tea".into(), qty: 3, unit_price_minor: 500, unit_cost_minor: None, line_total_minor: 1500, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
             discount_minor: 0, total_minor: 1500, payment_mode: "DUE".into(), customer_id: Some("C-T1".into()),
             client_label: "Ali".into(), cashier_label: "Cashier · K2".into(), voided: false,
         }).unwrap()),
         ev("2026-11-12T10:00:00.000Z-0006-K1", "K1", "BILL_ISSUED", serde_json::to_string(&BillReceipt {
             bill_no: "K1-261112-0002".into(), node_id: "K1".into(), hlc: "2026-11-12T10:00:00.000Z-0006-K1".into(),
-            items: vec![BillItem { sku: "SKU-T1".into(), name: "Test Tea".into(), qty: 1, unit_price_minor: 500, line_total_minor: 500, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+            items: vec![BillItem { sku: "SKU-T1".into(), name: "Test Tea".into(), qty: 1, unit_price_minor: 500, unit_cost_minor: None, line_total_minor: 500, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
             discount_minor: 0, total_minor: 500, payment_mode: "CASH".into(), customer_id: None,
             client_label: "Walk-in Customer".into(), cashier_label: "Owner · K1".into(), voided: false,
         }).unwrap()),

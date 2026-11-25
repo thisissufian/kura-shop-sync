@@ -40,6 +40,8 @@ pub struct BillItem {
     pub name: String,
     pub qty: i64,
     pub unit_price_minor: i64,
+    #[serde(default)]
+    pub unit_cost_minor: Option<i64>,
     pub line_total_minor: i64,
     #[serde(default = "default_warranty")]
     pub warranty_label: String,

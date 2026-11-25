@@ -13,6 +13,7 @@ fn test_escpos_and_pdf_warranty_and_client_labels() {
             name: "HOCO Rapid Charger 65W".to_string(),
             qty: 1,
             unit_price_minor: 1800,
+            unit_cost_minor: None,
             line_total_minor: 1800,
             warranty_label: "6 Months Warranty".to_string(),
         }],

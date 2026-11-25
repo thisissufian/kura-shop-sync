@@ -18,6 +18,7 @@ export interface BillItem {
   name: string;
   qty: number;
   unit_price_minor: number;
+  unit_cost_minor?: number | null;
   line_total_minor: number;
   warranty_label: string;
 }

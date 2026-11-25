@@ -136,7 +136,9 @@ pub fn compute_owner_analytics(conn: &Connection, period: &str) -> Result<OwnerA
 
             let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
             for it in items {
-                let unit_cost = cost_map.get(&it.sku).copied().unwrap_or(0);
+                let unit_cost = it
+                    .unit_cost_minor
+                    .unwrap_or_else(|| cost_map.get(&it.sku).copied().unwrap_or(0));
                 estimated_cogs_minor =
                     estimated_cogs_minor.saturating_add(unit_cost.saturating_mul(it.qty));
             }

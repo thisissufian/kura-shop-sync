@@ -47,21 +47,21 @@ fn test_multi_node_concurrent_offline_sales_convergence() {
 
     let ev_k1_sale = make_ev("2026-11-13T09:00:00.000Z-0001-K1", "K1", "BILL_ISSUED", serde_json::to_string(&BillReceipt {
         bill_no: "K1-261113-0001".into(), node_id: "K1".into(), hlc: "2026-11-13T09:00:00.000Z-0001-K1".into(),
-        items: vec![BillItem { sku: "SKU-MULTI".into(), name: "Convergence Tea".into(), qty: 10, unit_price_minor: 1000, line_total_minor: 10000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+        items: vec![BillItem { sku: "SKU-MULTI".into(), name: "Convergence Tea".into(), qty: 10, unit_price_minor: 1000, unit_cost_minor: None, line_total_minor: 10000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
         discount_minor: 0, total_minor: 10000, payment_mode: "CASH".into(), customer_id: None,
         client_label: "Walk-in Customer".into(), cashier_label: "Owner · K1".into(), voided: false,
     }).unwrap());
 
     let ev_k2_sale = make_ev("2026-11-13T09:05:00.000Z-0001-K2", "K2", "BILL_ISSUED", serde_json::to_string(&BillReceipt {
         bill_no: "K2-261113-0001".into(), node_id: "K2".into(), hlc: "2026-11-13T09:05:00.000Z-0001-K2".into(),
-        items: vec![BillItem { sku: "SKU-MULTI".into(), name: "Convergence Tea".into(), qty: 20, unit_price_minor: 1000, line_total_minor: 20000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+        items: vec![BillItem { sku: "SKU-MULTI".into(), name: "Convergence Tea".into(), qty: 20, unit_price_minor: 1000, unit_cost_minor: None, line_total_minor: 20000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
         discount_minor: 0, total_minor: 20000, payment_mode: "WALLET".into(), customer_id: None,
         client_label: "Walk-in Customer".into(), cashier_label: "Cashier · K2".into(), voided: false,
     }).unwrap());
 
     let ev_k3_sale = make_ev("2026-11-13T09:10:00.000Z-0001-K3", "K3", "BILL_ISSUED", serde_json::to_string(&BillReceipt {
         bill_no: "K3-261113-0001".into(), node_id: "K3".into(), hlc: "2026-11-13T09:10:00.000Z-0001-K3".into(),
-        items: vec![BillItem { sku: "SKU-MULTI".into(), name: "Convergence Tea".into(), qty: 15, unit_price_minor: 1000, line_total_minor: 15000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+        items: vec![BillItem { sku: "SKU-MULTI".into(), name: "Convergence Tea".into(), qty: 15, unit_price_minor: 1000, unit_cost_minor: None, line_total_minor: 15000, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
         discount_minor: 0, total_minor: 15000, payment_mode: "CASH".into(), customer_id: None,
         client_label: "Walk-in Customer".into(), cashier_label: "Cashier · K3".into(), voided: false,
     }).unwrap());
@@ -108,7 +108,7 @@ fn test_escpos_58mm_and_80mm_column_bounds() {
         bill_no: "K1-261113-0042".into(),
         node_id: "K1".into(),
         hlc: "2026-11-13T10:00:00.000Z-0001-K1".into(),
-        items: vec![BillItem { sku: "SKU-1".into(), name: "Fresh Milk 1L".into(), qty: 2, unit_price_minor: 250, line_total_minor: 500, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+        items: vec![BillItem { sku: "SKU-1".into(), name: "Fresh Milk 1L".into(), qty: 2, unit_price_minor: 250, unit_cost_minor: None, line_total_minor: 500, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
         discount_minor: 50,
         total_minor: 450,
         payment_mode: "CASH".into(),
@@ -140,7 +140,7 @@ fn test_vector_pdf_and_barcode_sheet_generation() {
         bill_no: "K1-261113-0099".into(),
         node_id: "K1".into(),
         hlc: "2026-11-13T11:00:00.000Z-0001-K1".into(),
-        items: vec![BillItem { sku: "SKU-9".into(), name: "Matcha Pack".into(), qty: 1, unit_price_minor: 1200, line_total_minor: 1200, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
+        items: vec![BillItem { sku: "SKU-9".into(), name: "Matcha Pack".into(), qty: 1, unit_price_minor: 1200, unit_cost_minor: None, line_total_minor: 1200, warranty_label: "No Warranty (ওয়ারেন্টি নেই)".into() }],
         discount_minor: 0,
         total_minor: 1200,
         payment_mode: "CASH".into(),

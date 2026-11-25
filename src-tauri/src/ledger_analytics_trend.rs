@@ -39,7 +39,9 @@ pub fn compute_7day_trend(
             let items: Vec<BillItem> = serde_json::from_str(&items_json).unwrap_or_default();
             let mut cogs = 0i64;
             for it in items {
-                let cost = cost_map.get(&it.sku).copied().unwrap_or(0);
+                let cost = it
+                    .unit_cost_minor
+                    .unwrap_or_else(|| cost_map.get(&it.sku).copied().unwrap_or(0));
                 cogs = cogs.saturating_add(cost.saturating_mul(it.qty));
             }
             entry.1 = entry.1.saturating_add(total.saturating_sub(cogs));

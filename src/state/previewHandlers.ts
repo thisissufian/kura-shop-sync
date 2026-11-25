@@ -39,6 +39,7 @@ export function handleIssueBill(input: IssueBillInput): BillReceipt {
       name: p.name,
       qty: req.qty,
       unit_price_minor: p.sell_price_minor,
+      unit_cost_minor: p.cost_price_minor,
       line_total_minor: p.sell_price_minor * req.qty,
       warranty_label: req.warranty_label || p.warranty_label || "No Warranty (ওয়ারেন্টি নেই)",
     };
