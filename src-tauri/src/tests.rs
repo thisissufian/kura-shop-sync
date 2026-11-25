@@ -1,6 +1,10 @@
+use rusqlite::params;
 use std::path::PathBuf;
 
-use crate::crypto_chain::{decrypt_events, encrypt_events, generate_seed};
+use crate::crypto_chain::{
+    build_pairing_uri, decrypt_events, encode_seed_b64, encrypt_events, generate_seed,
+    parse_pairing_uri, url_decode,
+};
 use crate::hlc::{new_event_id, next_hlc, observe_remote_hlc};
 use crate::ledger::{apply_ledger_event, BillVoidPayload, ProductUpsertPayload, StockAdjustPayload};
 use crate::ledger_customers::{get_customer_by_id, CustomerPaymentPayload, CustomerUpsertPayload};
@@ -130,4 +134,43 @@ fn test_aes_gcm_roundtrip_and_mnemonic_recovery() {
 
     let wrong_seed = [9u8; 16];
     assert!(decrypt_events(&wrong_seed, &packet).is_err());
+}
+
+#[test]
+fn test_url_decode_trailing_utf8_escape() {
+    assert_eq!(url_decode("Caf%C3%A9"), "Café");
+    assert_eq!(url_decode("100%25+Pure%20Tea%21"), "100% Pure Tea!");
+    let seed = generate_seed();
+    let uri = build_pairing_uri(&seed, &encode_seed_b64(&seed), "OWNER", "K2", "Café", "192.168.1.5:42850");
+    let parsed = parse_pairing_uri(&uri).expect("parse pairing uri");
+    assert_eq!(parsed.shop_name, "Café");
+}
+
+#[test]
+fn test_hlc_counter_rollover_advances_ms() {
+    let path = temp_db_path("hlc_rollover");
+    let conn = init_db(&path).expect("init_db");
+
+    let start = "2099-01-01T00:00:00.000Z-9999-K1";
+    conn.execute("UPDATE chain_config SET last_hlc = ?1 WHERE id = 1", params![start]).unwrap();
+
+    let h1 = next_hlc(&conn, "K1").expect("h1");
+    let h2 = next_hlc(&conn, "K1").expect("h2");
+    assert_ne!(h1, h2, "HLCs after counter 9999 must be distinct: {h1} vs {h2}");
+    assert!(h1.as_str() > start, "First HLC must advance past {start}: {h1}");
+    assert!(h2 > h1, "Second HLC must strictly increase: {h1} vs {h2}");
+    assert_eq!(h1, "2099-01-01T00:00:00.001Z-0000-K1");
+    assert_eq!(h2, "2099-01-01T00:00:00.001Z-0001-K1");
+
+    let remote_y_end = "2099-12-31T23:59:59.999Z-9999-K2";
+    let merged = observe_remote_hlc(&conn, remote_y_end, "K1").expect("observe rollover");
+    assert_eq!(merged, "2100-01-01T00:00:00.000Z-0000-K1");
+    assert!(merged.as_str() > remote_y_end);
+
+    let local_at_max = "2100-01-01T00:00:00.000Z-9999-K1";
+    conn.execute("UPDATE chain_config SET last_hlc = ?1 WHERE id = 1", params![local_at_max]).unwrap();
+    let merged2 = observe_remote_hlc(&conn, "2026-01-01T00:00:00.000Z-0001-K2", "K1").expect("observe local max");
+    assert_eq!(merged2, "2100-01-01T00:00:00.001Z-0000-K1");
+
+    let _ = std::fs::remove_file(&path);
 }
