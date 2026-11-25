@@ -1,5 +1,6 @@
 use rusqlite::{params, Connection};
 
+use crate::ledger_init::STARTER_EVENT_COUNT;
 use crate::models::{BillReceipt, ChainConfig, LedgerEvent, Product};
 
 pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
@@ -137,6 +138,22 @@ pub fn count_pending_events(conn: &Connection) -> Result<i64, String> {
         |r| r.get(0),
     )
     .map_err(|e| format!("Count pending events: {e}"))
+}
+
+pub fn has_local_business_data(conn: &Connection) -> Result<bool, String> {
+    for tbl in ["bills", "customers", "suppliers", "expenses"] {
+        let sql = format!("SELECT EXISTS(SELECT 1 FROM {tbl})");
+        let exists: bool = conn
+            .query_row(&sql, [], |r| r.get(0))
+            .map_err(|e| format!("Check {tbl}: {e}"))?;
+        if exists {
+            return Ok(true);
+        }
+    }
+    let ev_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM ledger_events", [], |r| r.get(0))
+        .map_err(|e| format!("Count ledger_events: {e}"))?;
+    Ok(ev_count > STARTER_EVENT_COUNT as i64)
 }
 
 pub fn events_after_hlc(conn: &Connection, since_hlc: &str) -> Result<Vec<LedgerEvent>, String> {

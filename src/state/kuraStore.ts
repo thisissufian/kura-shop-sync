@@ -2,6 +2,7 @@ import { computed, signal } from "@preact/signals";
 import { playCheckoutChime, playScanBeep, playWarningTone } from "../ui/utils/posAudio";
 import type { BillReceipt, BootstrapState, CustomerAccount, KuraTab, PdfExportResult, PrinterSettings, Product, SyncChainStatus, UpsertProductInput } from "../types/kura";
 import { callBackend, formatMoney, isTauriRuntime, loadPrinterSettings, parseMoneyInput, PRINTER_STORAGE_KEY } from "./ipcBridge";
+import { pendingChainJoin } from "./uiSignals";
 
 export { formatMoney, isTauriRuntime, parseMoneyInput };
 
@@ -168,16 +169,17 @@ export async function voidExistingBill(billNo: string): Promise<void> {
   }
 }
 
-export async function joinChain(input: string, roleOverride?: string): Promise<void> {
+export async function joinChain(input: string, roleOverride?: string, forceReset?: boolean): Promise<boolean> {
   try {
-    await callBackend<SyncChainStatus>("join_sync_chain", {
-      input,
-      roleOverride: roleOverride ?? null,
-    });
+    await callBackend<SyncChainStatus>("join_sync_chain", { input, roleOverride: roleOverride ?? null, forceReset: forceReset ?? null });
+    pendingChainJoin.value = null;
     await refreshBootstrap();
     showToast("Linked to Sync Chain");
+    return true;
   } catch (err) {
-    showToast(String(err), "err");
+    if (String(err).includes("CONFIRM_RESET")) pendingChainJoin.value = input.trim();
+    else showToast(String(err), "err");
+    return false;
   }
 }
 

@@ -1,5 +1,5 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
-use rusqlite::params;
+use rusqlite::{params, Connection};
 use tauri::State;
 
 use crate::commands::{build_sync_status, AppState};
@@ -10,6 +10,7 @@ use crate::crypto_chain::{
 use crate::hlc::observe_remote_hlc;
 use crate::lan_peer::sync_with_peer_ip;
 use crate::ledger::apply_ledger_event;
+pub use crate::ledger_queries::has_local_business_data;
 use crate::ledger_queries::{events_after_hlc, get_bill_by_no, get_chain_config};
 use crate::mnemonic::phrase_to_seed;
 use crate::models::{PdfExportResult, RelayEnvelope, SyncChainStatus};
@@ -26,46 +27,74 @@ pub fn get_sync_status(state: State<'_, AppState>) -> Result<SyncChainStatus, St
 pub async fn join_sync_chain(
     input: String,
     role_override: Option<String>,
+    force_reset: Option<bool>,
     state: State<'_, AppState>,
 ) -> Result<SyncChainStatus, String> {
-    let trimmed = input.trim();
-    let (seed_b64, role, node_id, shop_name, lan_addr) = if trimmed.starts_with("kura://join?") {
-        let p = parse_pairing_uri(trimmed)?;
-        (p.seed_b64, p.role, p.node_id, p.shop_name, p.lan_addr)
-    } else {
-        let seed = phrase_to_seed(trimmed)?;
-        let role = role_override
-            .unwrap_or_else(|| "OWNER".to_string())
-            .to_uppercase();
-        if role != "OWNER" && role != "CASHIER" {
-            return Err("Role must be OWNER or CASHIER".to_string());
-        }
-        let node = if role == "CASHIER" { "K3" } else { "K2" };
-        (
-            encode_seed_b64(&seed),
-            role,
-            node.to_string(),
-            "Kura Synced Shop".to_string(),
-            None,
-        )
+    let lan_addr = {
+        let mut conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
+        apply_join_chain_db(
+            &mut conn,
+            &input,
+            role_override.as_deref(),
+            force_reset.unwrap_or(false),
+        )?
     };
-
-    {
-        let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-        conn.execute(
-            "UPDATE chain_config
-             SET seed_b64 = ?1, role = ?2, node_id = ?3, shop_name = ?4, is_linked = 1
-             WHERE id = 1",
-            params![seed_b64, role, node_id, shop_name],
-        )
-        .map_err(|e| format!("Update chain_config: {e}"))?;
-    }
 
     if let Some(addr) = lan_addr {
         let _ = sync_with_peer_ip(&state.db, &addr).await;
     }
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
     build_sync_status(&conn, &state.lan)
+}
+
+pub fn apply_join_chain_db(
+    conn: &mut Connection,
+    input: &str,
+    role_override: Option<&str>,
+    force_reset: bool,
+) -> Result<Option<String>, String> {
+    let trimmed = input.trim();
+    let (seed_b64, role, node_id, shop_name, lan_addr) = if trimmed.starts_with("kura://join?") {
+        let p = parse_pairing_uri(trimmed)?;
+        (p.seed_b64, p.role, p.node_id, p.shop_name, p.lan_addr)
+    } else {
+        let seed = phrase_to_seed(trimmed)?;
+        let role = role_override.unwrap_or("OWNER").to_uppercase();
+        if role != "OWNER" && role != "CASHIER" {
+            return Err("Role must be OWNER or CASHIER".to_string());
+        }
+        let node = if role == "CASHIER" { "K3" } else { "K2" };
+        (encode_seed_b64(&seed), role, node.to_string(), "Kura Synced Shop".to_string(), None)
+    };
+
+    let cfg = get_chain_config(conn)?;
+    if (cfg.is_linked || has_local_business_data(conn)?) && !force_reset {
+        return Err(
+            "CONFIRM_RESET: Local sales and stock will be erased before joining the new chain."
+                .to_string(),
+        );
+    }
+
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+    tx.execute_batch(
+        "DELETE FROM ledger_events;
+         DELETE FROM products;
+         DELETE FROM bills;
+         DELETE FROM customers;
+         DELETE FROM suppliers;
+         DELETE FROM expenses;
+         UPDATE chain_config SET last_hlc = '' WHERE id = 1;",
+    )
+    .map_err(|e| format!("Reset local ledger before join: {e}"))?;
+    tx.execute(
+        "UPDATE chain_config
+         SET seed_b64 = ?1, role = ?2, node_id = ?3, shop_name = ?4, is_linked = 1
+         WHERE id = 1",
+        params![seed_b64, role, node_id, shop_name],
+    )
+    .map_err(|e| format!("Update chain_config: {e}"))?;
+    tx.commit().map_err(|e| e.to_string())?;
+    Ok(lan_addr)
 }
 
 #[tauri::command]

@@ -114,6 +114,9 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
   }
   if (cmd === "get_sync_status") return { ...mockSync } as T;
   if (cmd === "join_sync_chain") {
+    if (mockSync.is_linked && !args?.forceReset) {
+      throw new Error("CONFIRM_RESET: Device is already linked. Confirm reset to continue.");
+    }
     const raw = String(args?.input ?? "");
     mockSync.is_linked = true;
     mockSync.role = raw.includes("role=CASHIER") || args?.roleOverride === "CASHIER" ? "CASHIER" : "OWNER";
