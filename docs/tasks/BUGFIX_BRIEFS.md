@@ -13,12 +13,34 @@ Do them in the order listed. After each, commit on its own branch `fix/<task-id>
 ## Ship every task (T3 onward)
 1. **Start from the latest GitHub main:**
    `git checkout main` → `git pull --no-rebase origin main` → `git checkout -b fix/<task-id>`.
-   If the previous task's PR is not merged yet (`gh pr list --repo thisissufian/kura-shop-sync --state open`), STOP and tell the owner; do not stack branches.
+   If the previous task's `fix/*` PR is not merged yet (`gh pr list --repo thisissufian/kura-shop-sync --state open`), STOP and tell the owner; do not stack branches. Open `docs/*` PRs do not block.
 2. **Commit** with the message `fix(<area>): <what> (<task-id>)`.
 3. **Push the branch:** `git push -u origin fix/<task-id>`.
 4. **Open a PR:** `gh pr create --repo thisissufian/kura-shop-sync --base main --head fix/<task-id> --title "<commit subject>" --body "<what was wrong, what changed, tests added, cargo test / tsc results>"`.
 5. **Never** merge the PR, push to `main`, force-push, or delete branches. The owner reviews and merges.
 6. Finish by reporting the PR URL and test counts, then stop.
+
+## Skills: use them, and create one when it pays off
+Skills live in `.agents/skills/<name>/SKILL.md`. Existing: `kura-rust-core`, `kura-ledger-crdt`, `kura-sync-chain`, `escpos-pdf-print`, `apple-hig-ui`, `camera-scanner-audio`.
+1. **Before coding**, read every existing skill whose description matches the files you will touch.
+2. **Create a new skill only if both are true:**
+   - the knowledge will help **at least two** upcoming tasks in this file (T-tasks or S-items), and
+   - it isn't already covered by an existing skill or `.agents/rules/kura-architecture.md`.
+   If an existing skill almost covers it, **add a short section to that skill** instead of creating a new one.
+   Good candidates: `kura-migrations` (the `ALTER TABLE` + `#[serde(default)]` pattern used by T3, T4, T6) and `kura-testing` (the in-memory DB test setup, the `make_ev` helper, fail-before/pass-after steps).
+   Not worth a skill: details of one bug, anything only this task needs.
+3. **Format:**
+   - Frontmatter has `name` (kebab-case) and `description` (what it does + "Use when …").
+   - The body is at most 80 lines.
+   - Write only concrete content: real file paths, exact commands, and code patterns copied from this repo, each citing its source file. No generic advice and nothing you didn't verify in the code.
+4. **Shipping:**
+   - Commit the skill separately as `docs(skills): add <name>` (or `update <name>`) on the same task branch.
+   - List it under a "Skills" heading in the PR body, with one line on which future tasks it helps.
+5. Never edit `.agents/rules/` or this briefs file unless the task says so.
+
+## Report honestly
+- If the brief is wrong (the bug doesn't reproduce, or the fix changes nothing), do **not** make the change. Say so in the PR body and in your final report, then stop.
+- Your final report must list every commit in `git log main..HEAD`. Don't describe files as excluded or untouched without checking `git status`.
 
 ---
 
