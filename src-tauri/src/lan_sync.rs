@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::net::{TcpListener, UdpSocket};
 
-use crate::lan_peer::{handle_tcp_peer, read_sync_snapshot, sync_with_peer_ip, SYNC_TCP_PORT};
+use crate::lan_peer::{handle_tcp_peer, read_beacon_info, sync_with_peer_ip, SYNC_TCP_PORT};
 
 pub const SYNC_UDP_PORT: u16 = 42851;
 
@@ -45,6 +45,9 @@ struct UdpBeacon {
     node_id: String,
     latest_hlc: String,
     tcp_port: u16,
+    /// Ledger fingerprint (S1); empty from older peers.
+    #[serde(default)]
+    state_fp: String,
 }
 
 pub fn detect_local_ip() -> String {
@@ -89,12 +92,13 @@ pub fn spawn_lan_sync(db: Arc<Mutex<Connection>>, lan_state: LanSyncState) {
         loop {
             tokio::select! {
                 _ = tick.tick() => {
-                    if let Ok((_, hash, node_id, latest_hlc, _)) = read_sync_snapshot(&db, "") {
+                    if let Ok((hash, node_id, latest_hlc, state_fp)) = read_beacon_info(&db) {
                         let beacon = UdpBeacon {
                             chain_id_hash: hash,
                             node_id,
                             latest_hlc,
                             tcp_port: lan_state.bound_port(),
+                            state_fp,
                         };
                         if let Ok(bytes) = serde_json::to_vec(&beacon) {
                             let _ = udp.send_to(&bytes, ("255.255.255.255", SYNC_UDP_PORT)).await;
@@ -103,12 +107,15 @@ pub fn spawn_lan_sync(db: Arc<Mutex<Connection>>, lan_state: LanSyncState) {
                 }
                 Ok((len, src)) = udp.recv_from(&mut buf) => {
                     if let Ok(b) = serde_json::from_slice::<UdpBeacon>(&buf[..len]) {
-                        if let Ok((_, my_hash, my_node, my_hlc, _)) = read_sync_snapshot(&db, "") {
+                        if let Ok((my_hash, my_node, my_hlc, my_fp)) = read_beacon_info(&db) {
                             if b.chain_id_hash == my_hash && b.node_id != my_node {
                                 if let Ok(mut map) = lan_state.peers.lock() {
                                     map.insert(b.node_id.clone(), Instant::now());
                                 }
-                                if b.latest_hlc != my_hlc {
+                                // Equal latest HLCs can still hide gaps, so compare whole-ledger
+                                // fingerprints when the peer sends one.
+                                let differs = if b.state_fp.is_empty() { b.latest_hlc != my_hlc } else { b.state_fp != my_fp };
+                                if differs {
                                     let addr = format!("{}:{}", src.ip(), b.tcp_port);
                                     let _ = sync_with_peer_ip(&db, &addr).await;
                                 }

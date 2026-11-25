@@ -40,6 +40,7 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            synced_relay INTEGER NOT NULL DEFAULT 0
          );
          CREATE INDEX IF NOT EXISTS idx_ledger_hlc ON ledger_events(hlc);
+         CREATE INDEX IF NOT EXISTS idx_ledger_node_hlc ON ledger_events(node_id, hlc);
          CREATE TABLE IF NOT EXISTS products (
            sku TEXT PRIMARY KEY,
            name TEXT NOT NULL,
