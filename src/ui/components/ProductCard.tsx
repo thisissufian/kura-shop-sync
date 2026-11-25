@@ -1,7 +1,8 @@
 import { useState } from "preact/hooks";
 import { formatMoney } from "../../state/ipcBridge";
 import type { Product } from "../../types/kura";
-import { IconCart, IconEdit, IconSliders } from "../primitives/KuraIcons";
+import { StockStatus } from "../primitives/Controls";
+import { IconEdit, IconSliders } from "../primitives/KuraIcons";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,9 @@ interface ProductCardProps {
   onRestock: (sku: string, delta: number) => void;
 }
 
+const NO_WARRANTY = "No Warranty (ওয়ারেন্টি নেই)";
+
+/** One product as a grouped-list row (rendered inside a .kura-group). */
 export function ProductCard({
   product: p,
   currencySymbol: sym,
@@ -22,128 +26,72 @@ export function ProductCard({
 }: ProductCardProps) {
   const [showAdjust, setShowAdjust] = useState(false);
   const isOut = p.stock_qty <= 0;
-  const isLow = !isOut && p.stock_qty <= p.low_stock_threshold;
   const marginMinor = p.sell_price_minor - p.cost_price_minor;
-
-  const stockBadgeClass = isOut
-    ? "bg-[#FF3B30]/12 text-[#FF3B30] border-[#FF3B30]/20"
-    : isLow
-      ? "bg-[#FF9500]/12 text-[#B25E00] dark:text-[#FF9500] border-[#FF9500]/25"
-      : "bg-[#34C759]/12 text-[#1E8E3E] dark:text-[#34C759] border-[#34C759]/25";
-
   const monogram = (p.brand || p.name).slice(0, 2).toUpperCase();
+  const meta = [p.brand, p.variant, p.category].filter(Boolean).join(" · ");
+  const warranty = p.warranty_label && p.warranty_label !== NO_WARRANTY ? p.warranty_label : "";
 
   return (
-    <div class="kura-card p-4 transition hover:shadow-md space-y-3">
-      {/* Top Row: Brand, Category micro-pill & Stock Status */}
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span class="text-[11px] font-bold text-[#007AFF] uppercase tracking-wide truncate">
-            {p.brand || "GENERIC"}
-          </span>
-          <span class="rounded-md kura-subtle px-1.5 py-0.5 text-[10px] kura-text-muted uppercase font-semibold">
-            {p.category}
-          </span>
-        </div>
-        <span class={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tabular-nums ${stockBadgeClass}`}>
-          {isOut ? "Out of Stock" : `${p.stock_qty} in stock`}
-        </span>
+    <div class="kura-row !items-start !py-3">
+      <div class="mt-0.5 w-10 h-10 rounded-[9px] bg-fill flex items-center justify-center text-caption font-semibold text-label-2 shrink-0">
+        {monogram}
       </div>
 
-      {/* Middle Row: Monogram Avatar & Product Details */}
-      <div class="flex items-start gap-3 min-w-0">
-        <div class="w-12 h-12 rounded-xl kura-subtle border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center font-bold text-[14px] kura-text-main shrink-0 tracking-wider">
-          {monogram}
-        </div>
-        <div class="min-w-0 flex-1">
-          <h4 class="text-[15px] font-semibold kura-text-main truncate leading-snug">
-            {p.name}
-          </h4>
-          <div class="text-[11px] kura-text-muted truncate mt-0.5">
-            {p.variant ? `${p.variant} · ` : ""}
-            {p.warranty_label && p.warranty_label !== "No Warranty (ওয়ারেন্টি নেই)" ? `🛡 ${p.warranty_label}` : "Standard Retail"}
+      <div class="min-w-0 flex-1 space-y-1.5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-body text-label truncate">{p.name}</div>
+            <div class="text-footnote text-label-2 truncate">{meta}</div>
           </div>
-          <div class="text-[10px] font-mono kura-text-muted mt-0.5">
-            SKU: {p.sku} {p.barcode ? `· ${p.barcode}` : ""}
+          <div class="text-right shrink-0">
+            <div class="text-body font-semibold tabular-nums text-label">{formatMoney(p.sell_price_minor, sym)}</div>
+            {isOwner && (
+              <div class="text-caption tabular-nums text-label-2">
+                cost {formatMoney(p.cost_price_minor, sym)}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Bottom Row: Price & Actions */}
-      <div class="pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-end justify-between gap-2">
-        <div class="min-w-0">
-          <div class="text-[19px] font-bold kura-text-main tabular-nums leading-none">
-            {formatMoney(p.sell_price_minor, sym)}
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0 text-footnote truncate">
+            <StockStatus p={p} />
+            {isOwner && <span class="hidden sm:inline text-label-2 tabular-nums"> · margin {formatMoney(marginMinor, sym)}</span>}
+            {warranty && <span class="text-label-2 hidden sm:inline"> · {warranty}</span>}
           </div>
-          {isOwner && (
-            <div class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums mt-1 truncate">
-              Cost: {formatMoney(p.cost_price_minor, sym)} · Margin: {formatMoney(marginMinor, sym)}
+          <div class="flex items-center gap-1.5 shrink-0">
+            {isOwner && (
+              <>
+                <button type="button" onClick={() => setShowAdjust(!showAdjust)} title="Adjust stock" aria-label="Adjust stock"
+                  aria-pressed={showAdjust} class={`kura-icon-btn !w-8 !h-8 ${showAdjust ? "!bg-tint !text-white" : ""}`}>
+                  <IconSliders class="w-4 h-4" />
+                </button>
+                <button type="button" onClick={() => onEdit(p)} title="Edit product" aria-label="Edit product"
+                  class="kura-icon-btn !w-8 !h-8">
+                  <IconEdit class="w-4 h-4" />
+                </button>
+              </>
+            )}
+            <button type="button" onClick={() => onSell(p.sku)} disabled={isOut} class="kura-btn kura-btn-gray kura-btn-sm">
+              Sell
+            </button>
+          </div>
+        </div>
+
+        {showAdjust && isOwner && (
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <span class="text-footnote text-label-2">Adjust stock</span>
+            <div class="flex items-center gap-1.5">
+              {[-1, 1, 10].map((d) => (
+                <button key={d} type="button" onClick={() => onRestock(p.sku, d)}
+                  class={`kura-btn kura-btn-sm !min-h-[30px] tabular-nums ${d < 0 ? "kura-btn-destructive" : "kura-btn-gray"}`}>
+                  {d > 0 ? `+${d}` : `−${Math.abs(d)}`}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-
-        <div class="flex items-center gap-1.5 shrink-0">
-          {isOwner && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowAdjust(!showAdjust)}
-                title="Quick Stock Adjust"
-                class="w-9 h-9 rounded-xl kura-subtle kura-text-main flex items-center justify-center hover:opacity-80 kura-btn-press"
-              >
-                <IconSliders class="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onEdit(p)}
-                title="Edit Product"
-                class="w-9 h-9 rounded-xl kura-subtle kura-text-main flex items-center justify-center hover:opacity-80 kura-btn-press"
-              >
-                <IconEdit class="w-4 h-4" />
-              </button>
-            </>
-          )}
-          <button
-            type="button"
-            onClick={() => onSell(p.sku)}
-            disabled={isOut}
-            class="bg-[#007AFF] hover:bg-[#0062CC] text-white font-semibold px-3.5 py-2 rounded-xl text-[12px] shadow-xs flex items-center gap-1.5 disabled:opacity-40 kura-btn-press"
-          >
-            <IconCart class="w-3.5 h-3.5 text-white" />
-            <span>Sell</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Quick stock stepper flyout (Owner only) */}
-      {showAdjust && isOwner && (
-        <div class="p-2 rounded-xl kura-subtle flex items-center justify-between text-[11px]">
-          <span class="kura-text-muted font-medium">Quick Adjust:</span>
-          <div class="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => onRestock(p.sku, -1)}
-              class="px-2 py-0.5 rounded-md kura-card font-bold text-[#FF3B30] kura-btn-press"
-            >
-              -1
-            </button>
-            <button
-              type="button"
-              onClick={() => onRestock(p.sku, 1)}
-              class="px-2 py-0.5 rounded-md kura-card font-bold text-[#34C759] kura-btn-press"
-            >
-              +1
-            </button>
-            <button
-              type="button"
-              onClick={() => onRestock(p.sku, 10)}
-              class="px-2.5 py-0.5 rounded-md kura-card font-bold text-[#007AFF] kura-btn-press"
-            >
-              +10
-            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

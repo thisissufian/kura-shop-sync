@@ -159,12 +159,12 @@ export function ScannerSheet() {
   return (
     <SpringSheet
       open={Boolean(mode)}
-      title={mode === "QR_PAIRING" ? "Scan Sync Chain QR" : "Scan Barcode"}
+      title={mode === "QR_PAIRING" ? "Scan pairing QR" : "Scan barcode"}
       subtitle={camStatus}
       onClose={close}
     >
-      <div class="space-y-3.5">
-        <div class="relative overflow-hidden rounded-[16px] bg-[#1D1D1F] aspect-[4/3] border border-black/10">
+      <div class="space-y-4">
+        <div class="relative overflow-hidden rounded-group bg-black aspect-[4/3]">
           <video
             ref={videoRef}
             playsInline
@@ -172,8 +172,8 @@ export function ScannerSheet() {
             class="h-full w-full object-cover"
           />
           <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div class="relative h-40 w-56 rounded-[16px] border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.38)] overflow-hidden">
-              <div class="kura-scan-line absolute inset-x-2 h-0.5 bg-[#007AFF] shadow-[0_0_8px_#007AFF]" />
+            <div class="relative h-40 w-56 rounded-[14px] border-[1.5px] border-white/85 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)] overflow-hidden">
+              <div class="kura-scan-line absolute inset-x-3 h-[1.5px] rounded-full bg-white/80" />
             </div>
           </div>
         </div>
@@ -190,16 +190,16 @@ export function ScannerSheet() {
             onInput={(e) => setManualCode((e.target as HTMLInputElement).value)}
             placeholder={
               mode === "QR_PAIRING"
-                ? "Paste or simulate kura://join?... URI"
-                : "Type/simulate barcode (e.g. 890101001010)"
+                ? "Or paste a kura://join link"
+                : "Or type the barcode"
             }
-            class="flex-1 rounded-xl kura-input px-3.5 py-2.5 text-[13px] tabular-nums"
+            class="kura-input flex-1 min-w-0 h-11 px-3.5 text-body tabular-nums"
           />
           <button
             type="submit"
-            class="rounded-xl bg-[#007AFF] px-4 py-2.5 text-[13px] font-semibold text-white active:scale-95 transition"
+            class="kura-btn kura-btn-filled"
           >
-            Match
+            Find
           </button>
         </form>
       </div>

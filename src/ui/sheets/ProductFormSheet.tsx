@@ -6,6 +6,8 @@ import {
   saveProduct,
 } from "../../state/kuraStore";
 import { scannedBarcodePrefill, scannerMode } from "../../state/uiSignals";
+import { FieldRow, Section } from "../primitives/Group";
+import { IconBarcodeScan } from "../primitives/KuraIcons";
 import { SpringSheet } from "../primitives/SpringSheet";
 
 const minorToInput = (m: number) => (m / 100).toFixed(2);
@@ -89,96 +91,72 @@ export function ProductFormSheet() {
     if (ok) close();
   };
 
-  const inputCls = "mt-1 w-full rounded-xl kura-input px-3 py-1.5 text-[13px]";
+  const set = (fn: (v: string) => void) => (e: Event) => fn((e.target as HTMLInputElement).value);
 
   return (
     <SpringSheet
       open={open}
-      title={existing ? `Edit ${existing.sku}` : "New Product"}
-      subtitle="Stored as integer minor units in CRDT ledger"
+      title={existing ? "Edit product" : "New product"}
+      subtitle={existing ? existing.name : undefined}
       onClose={close}
     >
-      <form onSubmit={handleSubmit} class="space-y-3 pb-4">
-        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2.5">
-          <div class="grid grid-cols-2 gap-2">
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">SKU</span>
-              <input required disabled={Boolean(existing)} value={sku} onInput={(e) => setSku((e.target as HTMLInputElement).value)} class={`${inputCls} disabled:opacity-60`} />
-            </label>
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Category</span>
-              <input value={category} onInput={(e) => setCategory((e.target as HTMLInputElement).value)} class={inputCls} />
-            </label>
-          </div>
+      <form onSubmit={handleSubmit} class="space-y-6">
+        <Section header="Product">
+          <FieldRow label="Name">
+            <input required placeholder="Rapid Charger 65W" value={name} onInput={set(setName)} class="kura-field" />
+          </FieldRow>
+          <FieldRow label="Brand">
+            <input placeholder="Optional" value={brand} onInput={set(setBrand)} class="kura-field" />
+          </FieldRow>
+          <FieldRow label="Variant">
+            <input placeholder="White · 128 GB" value={variant} onInput={set(setVariant)} class="kura-field" />
+          </FieldRow>
+          <FieldRow label="Category">
+            <input value={category} onInput={set(setCategory)} class="kura-field" />
+          </FieldRow>
+        </Section>
 
-          <label class="block">
-            <span class="text-[11px] font-medium kura-text-muted">Product Name</span>
-            <input required placeholder="e.g. Rapid Charger 65W GaN" value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} class={`${inputCls} py-2 text-[14px]`} />
-          </label>
+        <Section header="Price" footer="Stored as whole paisa, so totals never drift.">
+          <FieldRow label="Selling price">
+            <input required inputMode="decimal" placeholder="0.00" value={sellStr} onInput={set(setSellStr)} class="kura-field tabular-nums" />
+          </FieldRow>
+          <FieldRow label="Cost price">
+            <input required inputMode="decimal" placeholder="0.00" value={costStr} onInput={set(setCostStr)} class="kura-field tabular-nums" />
+          </FieldRow>
+        </Section>
 
-          <div class="grid grid-cols-2 gap-2">
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Brand</span>
-              <input placeholder="e.g. HOCO / Anker" value={brand} onInput={(e) => setBrand((e.target as HTMLInputElement).value)} class={inputCls} />
-            </label>
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Variant / Color</span>
-              <input placeholder="e.g. White · 128GB" value={variant} onInput={(e) => setVariant((e.target as HTMLInputElement).value)} class={inputCls} />
-            </label>
-          </div>
-
-          <label class="block">
-            <span class="text-[11px] font-medium kura-text-muted">Warranty Policy</span>
-            <select value={warranty} onChange={(e) => setWarranty((e.target as HTMLSelectElement).value)} class={`${inputCls} py-2`}>
+        <Section header="Stock">
+          <FieldRow label="In stock">
+            <input type="number" value={stockStr} onInput={set(setStockStr)} class="kura-field tabular-nums" />
+          </FieldRow>
+          <FieldRow label="Low-stock alert at">
+            <input type="number" value={threshStr} onInput={set(setThreshStr)} class="kura-field tabular-nums" />
+          </FieldRow>
+          <FieldRow label="Warranty">
+            <select value={warranty} onChange={(e) => setWarranty((e.target as HTMLSelectElement).value)} class="kura-field">
               {WARRANTY_PRESETS.map((p) => (<option key={p} value={p}>{p}</option>))}
             </select>
-          </label>
+          </FieldRow>
+        </Section>
 
-          <div class="block">
-            <span class="text-[11px] font-medium kura-text-muted">Barcode (Optional)</span>
-            <div class="mt-1 flex gap-2">
-              <input placeholder="Scan or type EAN / UPC" value={barcode} onInput={(e) => setBarcode((e.target as HTMLInputElement).value)} class={`flex-1 ${inputCls} mt-0 tabular-nums`} />
-              {!existing && (
-                <button
-                  type="button"
-                  onClick={() => { productSheetOpen.value = false; scannerMode.value = "BARCODE_PREFILL"; }}
-                  class="rounded-xl bg-[#007AFF]/10 text-[#007AFF] px-3 py-1.5 text-[12px] font-semibold active:scale-95"
-                >
-                  Cam
-                </button>
-              )}
-            </div>
-          </div>
+        <Section header="Identification">
+          <FieldRow label="SKU">
+            <input required disabled={Boolean(existing)} value={sku} onInput={set(setSku)} class="kura-field tabular-nums disabled:text-label-2" />
+          </FieldRow>
+          <FieldRow label="Barcode">
+            <input placeholder="EAN / UPC" value={barcode} onInput={set(setBarcode)} class="kura-field tabular-nums" />
+            {!existing && (
+              <button type="button" title="Scan barcode" aria-label="Scan barcode"
+                onClick={() => { productSheetOpen.value = false; scannerMode.value = "BARCODE_PREFILL"; }}
+                class="kura-icon-btn !w-8 !h-8">
+                <IconBarcodeScan class="w-[18px] h-[18px]" />
+              </button>
+            )}
+          </FieldRow>
+        </Section>
 
-          <div class="grid grid-cols-2 gap-2">
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Sell Price</span>
-              <input required inputMode="decimal" value={sellStr} onInput={(e) => setSellStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
-            </label>
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Cost Price</span>
-              <input required inputMode="decimal" value={costStr} onInput={(e) => setCostStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
-            </label>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Stock Qty</span>
-              <input type="number" value={stockStr} onInput={(e) => setStockStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
-            </label>
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Low Alert</span>
-              <input type="number" value={threshStr} onInput={(e) => setThreshStr((e.target as HTMLInputElement).value)} class={`${inputCls} tabular-nums`} />
-            </label>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={saving}
-          class="w-full rounded-2xl bg-[#007AFF] py-3 text-[14px] font-bold text-white shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 transition"
-        >
-          {saving ? "Saving…" : existing ? "Update Product" : "Add to Kura Vault"}
+        <button type="submit" disabled={saving} class="kura-btn kura-btn-filled kura-btn-lg w-full">
+          {saving ? "Saving…" : existing ? "Save changes" : "Add product"}
         </button>
       </form>
     </SpringSheet>

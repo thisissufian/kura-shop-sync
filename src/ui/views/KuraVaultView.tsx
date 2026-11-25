@@ -14,7 +14,9 @@ import {
 } from "../../state/kuraStore";
 import { csvSheetOpen, scannerMode } from "../../state/uiSignals";
 import { ProductCard } from "../components/ProductCard";
-import { IconBarcodeScan, IconPlus, IconSearch } from "../primitives/KuraIcons";
+import { ChipRow, SearchField } from "../primitives/Controls";
+import { PageHeader } from "../primitives/Group";
+import { IconPlus } from "../primitives/KuraIcons";
 
 const searchQuery = signal("");
 const selectedCategory = signal("All");
@@ -59,129 +61,70 @@ export function KuraVaultView() {
     const cur = cart.value[sku] ?? 0;
     setCartQty(sku, cur + 1);
     activeTab.value = "counter";
-    showToast("Added to cart · Jumped to Register");
+    showToast("Added to the sale");
   };
 
   return (
-    <div class="space-y-4 pb-4">
-      {/* Header & Primary Actions */}
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h2 class="text-[20px] font-bold tracking-tight kura-text-main">
-            Kura Vault
-          </h2>
-          <p class="text-[12px] kura-text-muted tabular-nums">
-            {list.length} SKUs · {stats.lowCount} low-stock alert(s)
-          </p>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => { csvSheetOpen.value = true; }}
-            class="kura-card px-3 py-2 text-[12px] font-semibold kura-text-main kura-btn-press"
-          >
-            CSV / Labels
+    <div class="space-y-5 pb-4">
+      <PageHeader title="Products" subtitle={`${list.length} products · ${stats.lowCount} low on stock`}>
+        <button type="button" onClick={() => { csvSheetOpen.value = true; }} class="kura-btn kura-btn-gray kura-btn-sm">
+          <span>Labels<span class="hidden sm:inline"> &amp; CSV</span></span>
+        </button>
+        {owner && (
+          <button type="button" title="New product" aria-label="New product"
+            onClick={() => { editingProduct.value = null; productSheetOpen.value = true; }}
+            class="kura-icon-btn !bg-tint !text-white !w-8 !h-8">
+            <IconPlus class="w-[18px] h-[18px] stroke-[2.2]" />
           </button>
-          {owner && (
-            <button
-              type="button"
-              onClick={() => { editingProduct.value = null; productSheetOpen.value = true; }}
-              class="rounded-xl bg-[#007AFF] hover:bg-[#0062CC] px-3.5 py-2 text-[12px] font-bold text-white shadow-xs flex items-center gap-1 kura-btn-press"
-            >
-              <IconPlus class="w-4 h-4" />
-              <span>New Product</span>
-            </button>
+        )}
+      </PageHeader>
+
+      {owner && (
+        <div class="kura-group grid grid-cols-3">
+          {[
+            { k: "Retail value", v: stats.retailMinor, c: "text-label" },
+            { k: "At cost", v: stats.costMinor, c: "text-label" },
+            { k: "Est. margin", v: stats.profitMinor, c: "text-positive" },
+          ].map((m, i) => (
+            <div key={m.k} class={`px-4 py-3 min-w-0 ${i > 0 ? "border-l-[0.5px] border-sep" : ""}`}>
+              <div class="text-caption text-label-2 truncate">{m.k}</div>
+              <div class={`text-subhead font-semibold tabular-nums truncate ${m.c}`}>{formatMoney(m.v, sym)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <SearchField
+        value={searchQuery.value}
+        placeholder="Name, SKU, barcode or brand"
+        onInput={(v) => { searchQuery.value = v; }}
+        onScan={() => { scannerMode.value = "BARCODE_PREFILL"; }}
+      />
+
+      <ChipRow items={categories} value={cat} onChange={(c) => { selectedCategory.value = c; }} />
+
+      <section>
+        <div class="kura-section-header flex justify-between tabular-nums">
+          <span>{filtered.length} {filtered.length === 1 ? "product" : "products"}</span>
+          <span>{stats.totalUnits} units in stock</span>
+        </div>
+        <div class="kura-group" style="--kura-sep-inset:68px">
+          {filtered.map((p) => (
+            <ProductCard
+              key={p.sku}
+              product={p}
+              currencySymbol={sym}
+              isOwner={owner}
+              onSell={handleSell}
+              onEdit={(prod) => { editingProduct.value = prod; productSheetOpen.value = true; }}
+              onRestock={(sku, delta) => adjustProductStock(sku, delta, "Quick Restock")}
+            />
+          ))}
+          {filtered.length === 0 && (
+            <div class="kura-row justify-center py-8 text-subhead text-label-2">No products match your search.</div>
           )}
         </div>
-      </div>
-
-      {/* Valuation Strip (Owner Only) */}
-      {owner && (
-        <div class="grid grid-cols-3 gap-2.5">
-          <div class="kura-card p-3 shadow-xs">
-            <div class="text-[11px] font-medium kura-text-muted">Retail Value</div>
-            <div class="mt-0.5 text-[16px] font-bold kura-text-main tabular-nums">
-              {formatMoney(stats.retailMinor, sym)}
-            </div>
-          </div>
-          <div class="kura-card p-3 shadow-xs">
-            <div class="text-[11px] font-medium kura-text-muted">Cost Basis</div>
-            <div class="mt-0.5 text-[16px] font-bold kura-text-main tabular-nums">
-              {formatMoney(stats.costMinor, sym)}
-            </div>
-          </div>
-          <div class="kura-card p-3 shadow-xs">
-            <div class="text-[11px] font-medium kura-text-muted">Est. Margin</div>
-            <div class="mt-0.5 text-[16px] font-bold text-[#34C759] tabular-nums">
-              {formatMoney(stats.profitMinor, sym)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Search Bar with Camera Scan Button */}
-      <div class="relative flex items-center">
-        <IconSearch class="absolute left-3.5 w-4 h-4 kura-text-muted pointer-events-none" />
-        <input
-          type="search"
-          placeholder="Search by name, SKU, barcode, brand..."
-          value={searchQuery.value}
-          onInput={(e) => { searchQuery.value = (e.target as HTMLInputElement).value; }}
-          class="w-full rounded-[14px] kura-input pl-10 pr-12 py-2.5 text-[13px] kura-text-main focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
-        />
-        <button
-          type="button"
-          onClick={() => { scannerMode.value = "BARCODE_PREFILL"; }}
-          title="Scan barcode with camera"
-          class="absolute right-2 p-1.5 rounded-lg kura-subtle text-[#007AFF] hover:bg-[#007AFF]/15 kura-btn-press"
-        >
-          <IconBarcodeScan class="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Horizontally Scrollable Category Pills */}
-      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-        {categories.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => { selectedCategory.value = c; }}
-            class={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition kura-btn-press ${
-              selectedCategory.value === c
-                ? "bg-[#007AFF] text-white shadow-xs"
-                : "kura-subtle kura-text-muted hover:kura-text-main"
-            }`}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
-
-      {/* Summary Bar */}
-      <div class="flex items-center justify-between text-[11px] kura-text-muted px-1">
-        <span>{filtered.length} Products Found</span>
-        <span class="tabular-nums">Total Stock: {stats.totalUnits} units</span>
-      </div>
-
-      {/* Product Cards Grid */}
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {filtered.map((p) => (
-          <ProductCard
-            key={p.sku}
-            product={p}
-            currencySymbol={sym}
-            isOwner={owner}
-            onSell={handleSell}
-            onEdit={(prod) => { editingProduct.value = prod; productSheetOpen.value = true; }}
-            onRestock={(sku, delta) => adjustProductStock(sku, delta, "Quick Restock")}
-          />
-        ))}
-      </div>
-      {filtered.length === 0 && (
-        <div class="text-center py-12 text-[#86868B] text-[13px]">
-          No products matched your search.
-        </div>
-      )}
+      </section>
     </div>
   );
 }
