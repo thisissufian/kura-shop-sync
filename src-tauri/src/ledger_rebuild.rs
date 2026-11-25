@@ -26,9 +26,9 @@ pub fn rebuild_projections(conn: &mut Connection) -> Result<usize, String> {
             // Keep a malformed event in the log rather than lose it or block startup.
             skipped += 1;
             tx.execute(
-                "INSERT OR IGNORE INTO ledger_events (event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                params![ev.event_id, ev.hlc, ev.node_id, ev.event_type, ev.payload_json, ev.synced_lan, ev.synced_relay],
+                "INSERT OR IGNORE INTO ledger_events (event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay, sig)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![ev.event_id, ev.hlc, ev.node_id, ev.event_type, ev.payload_json, ev.synced_lan, ev.synced_relay, ev.sig],
             )
             .map_err(|e| format!("Keep skipped event: {e}"))?;
         }

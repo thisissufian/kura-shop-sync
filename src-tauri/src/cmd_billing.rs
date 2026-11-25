@@ -3,7 +3,8 @@ use tauri::State;
 
 use crate::commands::AppState;
 use crate::hlc::{new_event_id, next_hlc, next_invoice_number};
-use crate::ledger::{apply_ledger_event, BillVoidPayload};
+use crate::owner_sig::apply_local_event;
+use crate::ledger::{BillVoidPayload};
 use crate::ledger_customers::get_customer_by_id;
 use crate::ledger_queries::{
     get_bill_by_no, get_chain_config, list_recent_bills, redact_bill_costs,
@@ -97,9 +98,10 @@ pub fn create_bill(conn: &mut Connection, input: IssueBillInput) -> Result<BillR
         payload_json: serde_json::to_string(&receipt).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev)?;
+    apply_local_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
     if cfg.role != "OWNER" {
         redact_bill_costs(&mut receipt);
@@ -130,9 +132,10 @@ pub fn void_bill(bill_no: String, state: State<'_, AppState>) -> Result<BillRece
         .map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev)?;
+    apply_local_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
     get_bill_by_no(&conn, &bill_no, false)
 }

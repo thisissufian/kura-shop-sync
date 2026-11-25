@@ -140,7 +140,7 @@ export function QrPairingCard() {
         <input
           value={joinInput}
           onInput={(e) => setJoinInput((e.target as HTMLInputElement).value)}
-          placeholder="Paste kura://join?... or 12-word phrase"
+          placeholder="Paste kura://join?... or 12- or 24-word phrase"
           class="flex-1 rounded-xl kura-input px-3 py-2 text-[12px]"
         />
         <button

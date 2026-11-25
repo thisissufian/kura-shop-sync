@@ -5,7 +5,8 @@ use crate::cmd_billing::{create_bill, find_bill_for_device, recent_bills_for_dev
 use crate::hlc::{format_iso_ms, new_event_id, next_hlc};
 use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
 use crate::ledger_analytics::compute_owner_analytics;
-use crate::ledger_init::init_db;
+// These tests inject unsigned owner events from simulated remote devices (pre-S4 chain).
+use crate::tests_s4::init_unsecured_db as init_db;
 use crate::ledger_suppliers::StockPurchasePayload;
 use crate::models::{BillItem, IssueBillInput, IssueBillItemInput, LedgerEvent};
 
@@ -37,6 +38,7 @@ fn seed_sku(conn: &mut Connection, sku: &str, sell: i64, cost: i64, qty: i64) {
         payload_json: serde_json::to_string(&up).unwrap(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let h2 = next_hlc(conn, "K1").unwrap();
     let adj = StockAdjustPayload { sku: sku.into(), delta: qty, reason: "Opening".into() };
@@ -48,6 +50,7 @@ fn seed_sku(conn: &mut Connection, sku: &str, sell: i64, cost: i64, qty: i64) {
         payload_json: serde_json::to_string(&adj).unwrap(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().unwrap();
     apply_ledger_event(&tx, &ev1).unwrap();
@@ -101,6 +104,7 @@ fn test_historical_cogs_unchanged_after_cost_increase() {
             payload_json: serde_json::to_string(&purchase).unwrap(),
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         },
     )
     .unwrap();
@@ -140,6 +144,7 @@ fn test_historical_cogs_unchanged_after_cost_increase() {
             payload_json: legacy_json,
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         },
     )
     .unwrap();

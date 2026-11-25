@@ -3,7 +3,8 @@ use tauri::State;
 
 use crate::commands::{build_sync_status, AppState};
 use crate::hlc::{new_event_id, next_hlc};
-use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
+use crate::owner_sig::apply_local_event;
+use crate::ledger::{ProductUpsertPayload, StockAdjustPayload};
 use crate::ledger_customers::list_customers;
 use crate::ledger_queries::{get_chain_config, list_products, list_recent_bills};
 use crate::models::{BootstrapState, LedgerEvent, Product, UpsertProductInput};
@@ -67,6 +68,7 @@ pub fn upsert_product(
         payload_json: serde_json::to_string(&upsert).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
 
     let delta = input.stock_qty - existed.unwrap_or(0);
@@ -90,15 +92,16 @@ pub fn upsert_product(
             payload_json: serde_json::to_string(&adj).map_err(|e| e.to_string())?,
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         })
     } else {
         None
     };
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev1)?;
+    apply_local_event(&tx, &ev1)?;
     if let Some(ref e2) = ev2 {
-        apply_ledger_event(&tx, e2)?;
+        apply_local_event(&tx, e2)?;
     }
     tx.commit().map_err(|e| e.to_string())?;
 
@@ -131,9 +134,10 @@ pub fn adjust_stock(
         .map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev)?;
+    apply_local_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
 
     list_products(&conn, cfg.role != "OWNER")?

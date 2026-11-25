@@ -2,11 +2,11 @@ use tauri::State;
 
 use crate::commands::AppState;
 use crate::hlc::{new_event_id, next_hlc};
-use crate::ledger::apply_ledger_event;
 use crate::ledger_queries::get_chain_config;
 use crate::ledger_suppliers::{
     get_supplier_by_id, list_suppliers, StockPurchasePayload, SupplierPaymentPayload,
 };
+use crate::owner_sig::apply_local_event;
 use crate::models::{LedgerEvent, StockPurchaseInput, SupplierAccount};
 
 #[tauri::command]
@@ -74,10 +74,11 @@ pub fn record_stock_purchase(
         payload_json: serde_json::to_string(&payload).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &event)?;
+    apply_local_event(&tx, &event)?;
     tx.commit().map_err(|e| e.to_string())?;
 
     get_supplier_by_id(&conn, &supplier_id)
@@ -125,10 +126,11 @@ pub fn record_supplier_payment(
         payload_json: serde_json::to_string(&payload).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &event)?;
+    apply_local_event(&tx, &event)?;
     tx.commit().map_err(|e| e.to_string())?;
 
     get_supplier_by_id(&conn, sid)

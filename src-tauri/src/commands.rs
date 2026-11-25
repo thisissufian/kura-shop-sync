@@ -5,7 +5,9 @@ use std::sync::{Arc, Mutex};
 use crate::crypto_chain::{build_pairing_uri, decode_seed_b64};
 use crate::lan_sync::{detect_local_ip, LanSyncState};
 use crate::ledger_queries::{count_pending_events, get_chain_config};
-use crate::mnemonic::seed_to_phrase;
+use crate::mnemonic::{owner_phrase, seed_to_phrase};
+use crate::owner_sig::decode_secret;
+use crate::pairing::with_owner_params;
 use crate::models::SyncChainStatus;
 
 pub struct AppState {
@@ -17,7 +19,9 @@ pub struct AppState {
 pub fn build_sync_status(conn: &Connection, lan: &LanSyncState) -> Result<SyncChainStatus, String> {
     let cfg = get_chain_config(conn)?;
     let seed = decode_seed_b64(&cfg.seed_b64)?;
-    let phrase = if cfg.role == "OWNER" {
+    let phrase = if cfg.role == "OWNER" && !cfg.owner_secret.is_empty() {
+        owner_phrase(&seed, &decode_secret(&cfg.owner_secret)?)
+    } else if cfg.role == "OWNER" {
         seed_to_phrase(&seed)
     } else {
         "Hidden (Cashier Role)".to_string()
@@ -26,18 +30,13 @@ pub fn build_sync_status(conn: &Connection, lan: &LanSyncState) -> Result<SyncCh
     let lan_addr = format!("{ip}:{}", lan.bound_port());
     let pending = count_pending_events(conn)?;
     let pairing_uri_owner = if cfg.role == "OWNER" {
-        build_pairing_uri(&seed, &cfg.seed_b64, "OWNER", "K2", &cfg.shop_name, &lan_addr)
+        let uri = build_pairing_uri(&seed, &cfg.seed_b64, "OWNER", "K2", &cfg.shop_name, &lan_addr);
+        with_owner_params(uri, "OWNER", &cfg.owner_pk, &cfg.owner_secret)
     } else {
         String::new()
     };
-    let pairing_uri_cashier = build_pairing_uri(
-        &seed,
-        &cfg.seed_b64,
-        "CASHIER",
-        "K3",
-        &cfg.shop_name,
-        &lan_addr,
-    );
+    let cashier_uri = build_pairing_uri(&seed, &cfg.seed_b64, "CASHIER", "K3", &cfg.shop_name, &lan_addr);
+    let pairing_uri_cashier = with_owner_params(cashier_uri, "CASHIER", &cfg.owner_pk, "");
 
     Ok(SyncChainStatus {
         is_linked: cfg.is_linked,

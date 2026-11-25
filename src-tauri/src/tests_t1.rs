@@ -138,6 +138,7 @@ fn test_vault_restore_valid_phrase_roundtrip_and_without_phrase() {
             payload_json: serde_json::to_string(&prod).unwrap(),
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         }).unwrap();
         apply_ledger_event(&tx, &LedgerEvent {
             event_id: "ev-t1-s".into(),
@@ -149,6 +150,7 @@ fn test_vault_restore_valid_phrase_roundtrip_and_without_phrase() {
             }).unwrap(),
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         }).unwrap();
         tx.commit().unwrap();
     }

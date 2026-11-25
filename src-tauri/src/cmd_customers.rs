@@ -3,11 +3,11 @@ use tauri::State;
 
 use crate::commands::AppState;
 use crate::hlc::{new_event_id, next_hlc};
-use crate::ledger::apply_ledger_event;
 use crate::ledger_customers::{
     get_customer_by_id, list_customers, CustomerPaymentPayload, CustomerUpsertPayload,
 };
 use crate::ledger_queries::get_chain_config;
+use crate::owner_sig::apply_local_event;
 use crate::models::{CustomerAccount, LedgerEvent};
 
 #[tauri::command]
@@ -54,9 +54,10 @@ pub fn upsert_customer(
         payload_json: serde_json::to_string(&payload).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev)?;
+    apply_local_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
     get_customer_by_id(&conn, &cid)
 }
@@ -90,9 +91,10 @@ pub fn record_customer_payment(
         payload_json: serde_json::to_string(&payload).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev)?;
+    apply_local_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
     get_customer_by_id(&conn, &customer_id)
 }
