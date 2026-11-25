@@ -1,6 +1,7 @@
 use rusqlite::{params, Connection};
 use tauri::State;
 
+use crate::chain_upgrade::{is_migration_from_here, migrate_join, secure_chain_db};
 use crate::commands::{build_sync_status, AppState};
 use crate::crypto_chain::{encode_seed_b64, generate_node_id, parse_pairing_uri};
 use crate::lan_peer::sync_with_peer_ip;
@@ -15,6 +16,14 @@ use crate::printer::pdf_gen::generate_receipt_pdf;
 #[tauri::command]
 pub fn get_sync_status(state: State<'_, AppState>) -> Result<SyncChainStatus, String> {
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
+    build_sync_status(&conn, &state.lan)
+}
+
+/// Owner-only upgrade of a pre-S4 chain; see `chain_upgrade.rs`.
+#[tauri::command]
+pub fn secure_sync_chain(state: State<'_, AppState>) -> Result<SyncChainStatus, String> {
+    let mut conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
+    secure_chain_db(&mut conn)?;
     build_sync_status(&conn, &state.lan)
 }
 
@@ -50,20 +59,24 @@ pub fn apply_join_chain_db(
 ) -> Result<Option<String>, String> {
     let trimmed = input.trim();
     // The URI `node` param is parsed for old invites but ignored: shared IDs made bills collide.
-    let (seed_b64, role, shop_name, lan_addr, osec, opk) = if trimmed.starts_with("kura://join?") {
+    let (seed_b64, role, shop_name, lan_addr, osec, opk, from) = if trimmed.starts_with("kura://join?") {
         let p = parse_pairing_uri(trimmed)?;
-        (p.seed_b64, p.role, p.shop_name, p.lan_addr, p.owner_secret, p.owner_pk)
+        (p.seed_b64, p.role, p.shop_name, p.lan_addr, p.owner_secret, p.owner_pk, p.migrate_from)
     } else {
         let (seed, owner) = phrase_to_secrets(trimmed)?;
         let role = role_override.unwrap_or("OWNER").to_uppercase();
         if role != "OWNER" && role != "CASHIER" {
             return Err("Role must be OWNER or CASHIER".to_string());
         }
-        (encode_seed_b64(&seed), role, "Kura Synced Shop".to_string(), None, owner.map(|o| encode_secret(&o)), None)
+        (encode_seed_b64(&seed), role, "Kura Synced Shop".to_string(), None, owner.map(|o| encode_secret(&o)), None, None)
     };
     // Always overwrite owner keys: keeping this device's own fresh-install key would
     // make it verify the new chain against the wrong owner (S4).
     let (owner_secret, owner_pk) = join_owner_fields(&role, osec.as_deref(), opk.as_deref())?;
+    if is_migration_from_here(conn, from.as_deref(), &seed_b64)? {
+        migrate_join(conn, &seed_b64, &role, &owner_secret, &owner_pk)?;
+        return Ok(lan_addr);
+    }
 
     let cfg = get_chain_config(conn)?;
     if (cfg.is_linked || has_local_business_data(conn)?) && !force_reset {

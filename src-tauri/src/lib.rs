@@ -1,3 +1,4 @@
+mod chain_upgrade;
 mod cmd_billing;
 mod cmd_catalog;
 mod cmd_catalog_csv;
@@ -58,6 +59,8 @@ mod tests_s1;
 mod tests_s4;
 #[cfg(test)]
 mod tests_s5;
+#[cfg(test)]
+mod tests_upgrade;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
@@ -107,6 +110,7 @@ pub fn run() {
             cmd_sync_print::trigger_peer_sync,
             cmd_sync_print::print_bill_thermal,
             cmd_sync_print::export_bill_pdf,
+            cmd_sync_print::secure_sync_chain,
             cmd_relay::relay_pending,
             cmd_relay::relay_mark_published,
             cmd_relay::relay_ingest,

@@ -82,4 +82,5 @@ export const mockSync: SyncChainStatus = {
   pairing_uri_owner: "kura://join?seed=AAECAwQFBgcICQoLDA0ODw&role=OWNER&node=K2&shop=Kura%20General%20Store&lan=127.0.0.1%3A42850",
   pairing_uri_cashier: "kura://join?seed=AAECAwQFBgcICQoLDA0ODw&role=CASHIER&node=K3&shop=Kura%20General%20Store&lan=127.0.0.1%3A42850",
   recovery_phrase: "kald mint bark fast lamp gold silk rest park wind bold sand",
+  is_secured: true,
 };

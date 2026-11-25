@@ -109,6 +109,7 @@ pub struct SyncChainStatus {
     pub pairing_uri_owner: String,
     pub pairing_uri_cashier: String,
     pub recovery_phrase: String,
+    pub is_secured: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -208,4 +209,6 @@ pub struct ChainConfig {
     pub utc_offset_minutes: i64,
     pub owner_secret: String,
     pub owner_pk: String,
+    /// Seed of the chain this one was upgraded from (secure_chain_db); invites carry a proof of it as `from`.
+    pub prev_seed_b64: String,
 }

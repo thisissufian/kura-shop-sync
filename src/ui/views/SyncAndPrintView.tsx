@@ -2,6 +2,7 @@ import { useState } from "preact/hooks";
 import { isOwner, syncStatus } from "../../state/kuraStore";
 import { PrinterHubCard } from "../components/PrinterHubCard";
 import { QrPairingCard } from "../components/QrPairingCard";
+import { SecureChainCard } from "../components/SecureChainCard";
 import { VaultBackupCard } from "../components/VaultBackupCard";
 
 export function SyncAndPrintView() {
@@ -59,6 +60,7 @@ export function SyncAndPrintView() {
         )}
       </div>
 
+      <SecureChainCard />
       <QrPairingCard />
       <VaultBackupCard />
       <PrinterHubCard />

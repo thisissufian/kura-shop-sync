@@ -78,6 +78,8 @@ export interface SyncChainStatus {
   pairing_uri_owner: string;
   pairing_uri_cashier: string;
   recovery_phrase: string;
+  /** Chain has an owner key (S4); false for chains made before owner signing. */
+  is_secured: boolean;
 }
 
 export interface ShopSettings {

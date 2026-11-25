@@ -30,7 +30,8 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            utc_offset_minutes INTEGER NOT NULL DEFAULT 360,
            settings_hlc TEXT NOT NULL DEFAULT '',
            owner_secret TEXT NOT NULL DEFAULT '',
-           owner_pk TEXT NOT NULL DEFAULT ''
+           owner_pk TEXT NOT NULL DEFAULT '',
+           prev_seed_b64 TEXT NOT NULL DEFAULT ''
          );
          CREATE TABLE IF NOT EXISTS ledger_events (
            event_id TEXT PRIMARY KEY,
@@ -124,7 +125,7 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN utc_offset_minutes INTEGER NOT NULL DEFAULT 360", []);
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN settings_hlc TEXT NOT NULL DEFAULT ''", []);
     let _ = conn.execute("ALTER TABLE products ADD COLUMN cost_hlc TEXT NOT NULL DEFAULT ''", []);
-    for col in ["chain_config ADD COLUMN owner_secret", "chain_config ADD COLUMN owner_pk", "ledger_events ADD COLUMN sig"] {
+    for col in ["chain_config ADD COLUMN owner_secret", "chain_config ADD COLUMN owner_pk", "chain_config ADD COLUMN prev_seed_b64", "ledger_events ADD COLUMN sig"] {
         let _ = conn.execute(&format!("ALTER TABLE {col} TEXT NOT NULL DEFAULT ''"), []);
     }
 

@@ -7,7 +7,7 @@ use crate::lan_sync::{detect_local_ip, LanSyncState};
 use crate::ledger_queries::{count_pending_events, get_chain_config};
 use crate::mnemonic::{owner_phrase, seed_to_phrase};
 use crate::owner_sig::decode_secret;
-use crate::pairing::with_owner_params;
+use crate::pairing::{with_owner_params, with_upgrade_from};
 use crate::models::SyncChainStatus;
 
 pub struct AppState {
@@ -31,12 +31,13 @@ pub fn build_sync_status(conn: &Connection, lan: &LanSyncState) -> Result<SyncCh
     let pending = count_pending_events(conn)?;
     let pairing_uri_owner = if cfg.role == "OWNER" {
         let uri = build_pairing_uri(&seed, &cfg.seed_b64, "OWNER", "K2", &cfg.shop_name, &lan_addr);
-        with_owner_params(uri, "OWNER", &cfg.owner_pk, &cfg.owner_secret)
+        with_upgrade_from(with_owner_params(uri, "OWNER", &cfg.owner_pk, &cfg.owner_secret), &cfg.prev_seed_b64, &cfg.seed_b64)
     } else {
         String::new()
     };
     let cashier_uri = build_pairing_uri(&seed, &cfg.seed_b64, "CASHIER", "K3", &cfg.shop_name, &lan_addr);
-    let pairing_uri_cashier = with_owner_params(cashier_uri, "CASHIER", &cfg.owner_pk, "");
+    let pairing_uri_cashier = with_upgrade_from(with_owner_params(cashier_uri, "CASHIER", &cfg.owner_pk, ""), &cfg.prev_seed_b64, &cfg.seed_b64);
+    let is_secured = !cfg.owner_pk.is_empty();
 
     Ok(SyncChainStatus {
         is_linked: cfg.is_linked,
@@ -53,5 +54,6 @@ pub fn build_sync_status(conn: &Connection, lan: &LanSyncState) -> Result<SyncCh
         pairing_uri_owner,
         pairing_uri_cashier,
         recovery_phrase: phrase,
+        is_secured,
     })
 }
