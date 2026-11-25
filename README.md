@@ -8,14 +8,21 @@
 
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2.2-24C8D8?style=flat-square&logo=tauri&logoColor=white)](https://v2.tauri.app/)
 [![Rust 2021](https://img.shields.io/badge/Rust-2021-DEA584?style=flat-square&logo=rust&logoColor=black)](https://www.rust-lang.org/)
-[![Preact + Signals](https://img.shields.io/badge/Preact%20%2B%20Signals-57.23%20KB%20gzip-673AB8?style=flat-square&logo=preact&logoColor=white)](https://preactjs.com/)
+[![Preact + Signals](https://img.shields.io/badge/Preact%20%2B%20Signals-58.14%20KB%20gzip-673AB8?style=flat-square&logo=preact&logoColor=white)](https://preactjs.com/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![SQLite WAL](https://img.shields.io/badge/SQLite-WAL%20Mode-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://www.sqlite.org/wal.html)
 [![Encryption](https://img.shields.io/badge/Sync-AES--256--GCM-34C759?style=flat-square)](#5-mathematical--data-integrity-guarantees)
-[![Bundle Size](https://img.shields.io/badge/dist%2F%20Total%20Gzip-57.23%20KB-007AFF?style=flat-square)](#11-developer-setup-testing--build-instructions)
+[![Bundle Size](https://img.shields.io/badge/dist%2F%20Total%20Gzip-58.14%20KB-007AFF?style=flat-square)](#9-developer-setup-testing--build-instructions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![Live Showcase](https://img.shields.io/badge/Live%20Showcase-GitHub%20Pages-black?style=flat-square&logo=github)](https://thisissufian.github.io/kura-shop-sync/)
 [![AI Architecture Ledger](https://img.shields.io/badge/Architecture%20Bible-AI%20Decisions%20Ledger-blueviolet?style=flat-square)](docs/AI_CONTEXT_AND_DECISIONS.md)
+
+<br/>
+
+<img src="docs/screenshots/home-light-phone.png" alt="Home in light mode" width="200" />&nbsp;
+<img src="docs/screenshots/register-light-phone.png" alt="Register with checkout bar" width="200" />&nbsp;
+<img src="docs/screenshots/receipt-dark-phone.png" alt="Receipt sheet in dark mode" width="200" />&nbsp;
+<img src="docs/screenshots/reports-dark-phone.png" alt="Reports in dark mode" width="200" />
 
 </div>
 
@@ -33,7 +40,7 @@ The name **Kura** is inspired by the traditional Japanese merchant storehouse (*
 **Kura** applies that exact philosophy to modern neighborhood commerce across Android phones and Windows counters:
 - Your inventory counts, bills, profit margins, supplier payables, and customer due ledgers live inside a fast, ACID-compliant **SQLite WAL** vault on your own devices.
 - All business logic, CRDT merging, cryptography, LAN networking, ESC/POS encoding, and vector PDF rendering execute in native **Rust**.
-- The user interface is an Apple Cupertino HIG **Preact + Signals + Tailwind CSS v4** layer (supporting both **Cupertino Light** and **True OLED Dark Mode** plus mobile safe-area insets) delivering the entire production frontend in **`57.23 KB` gzipped** (`0.44 KB` HTML + `8.56 KB` CSS + `48.23 KB` JS), strictly enforcing a **220-line per-file ceiling** across every `.rs`, `.ts`, and `.tsx` source file.
+- The user interface is a **Preact + Signals + Tailwind CSS v4** layer built on Apple's Human Interface Guidelines. It is calm, uses grouped lists and a single tint color, and has a designed light mode and a true-black dark mode with elevated sheets. It respects mobile safe areas. The whole production frontend is **`58.14 KB` gzipped** (`0.43 KB` HTML + `9.05 KB` CSS + `48.66 KB` JS). Every `.rs`, `.ts`, `.tsx` and `.css` source file stays under a **220-line ceiling**.
 - Experience the live interactive web demo and product showcase at **[https://thisissufian.github.io/kura-shop-sync/](https://thisissufian.github.io/kura-shop-sync/)**.
 
 ---
@@ -51,18 +58,18 @@ The name **Kura** is inspired by the traditional Japanese merchant storehouse (*
 | **Cashier Permission Safety** | Often exposes wholesale cost & profits | **Cryptographic `OWNER` vs `CASHIER` roles** redact COGS & lock voids/reports |
 | **Money Arithmetic** | Floating-point (`0.1 + 0.2`) rounding bugs | **Strict `i64` minor units** across Rust, SQLite & TypeScript |
 | **Thermal & PDF Printing** | Heavy PDF rasterizers / proprietary SDKs | **Pure-Rust TCP `9100` ESC/POS + Zero-Dependency Vector PDF 1.4** |
-| **Frontend Footprint** | 1.5 MB – 12 MB Electron/React bloat | **`54.72 KB` gzipped** (`dist/` total) |
+| **Frontend Footprint** | 1.5 MB – 12 MB Electron/React bloat | **`58.14 KB` gzipped** (`dist/` total) |
 
 ---
 
 ## 3. Complete Feature Breakdown (Milestones 1–6)
 
 ### Executive Home Dashboard & P&L Analytics (Milestone 5 & 6)
-- **Executive Home Dashboard (`HomeDashboardView.tsx`)**:
-  - **Today's Net Turnover Hero Card**: Prominent gross revenue, net profit, operating expenses, and total stock units.
-  - **4-Card Non-Redundant Bento Grid**: Gross Profit (Today) with margin %, Inventory Cost Value vs Projected Retail Value, Customer Dues (Khata receivables), and Vendor Payables.
-  - **4-Button Quick Actions Row**: 1-tap buttons for `⚡ POS Sale`, `📦 + Product`, `🚚 + Purchase`, and `💸 + Expense`.
-  - **7-Day Performance Trend**: Animated SVG bar chart illustrating daily turnover and transaction volume.
+- **Home (`HomeDashboardView.tsx`)**:
+  - **Today**: A Wallet-style sales figure for the day, with net profit, expenses and units in stock underneath.
+  - **Quick actions**: 1-tap Sell, Add product, Purchase and Expense, all in the one tint color.
+  - **Balances**: A grouped list of gross profit and margin, stock at cost vs retail, customer dues, and supplier payables. Dues and payables open their ledgers.
+  - **Last 7 days**: Neutral bars with today highlighted in the tint, linking to Reports.
 - **Full Profit & Loss (P&L) Statement (`ReportsAnalyticsView.tsx`, `ledger_analytics.rs`)**:
   - Period filtering (`TODAY`, `7D`, `30D`, `YEARLY`, `ALL`).
   - Strict integer minor unit calculation: $\text{Gross Revenue} - \text{COGS} = \text{Gross Profit}$; $\text{Gross Profit} - \text{Operating Expenses} = \text{Net Operating Profit}$.
@@ -82,23 +89,28 @@ The name **Kura** is inspired by the traditional Japanese merchant storehouse (*
   - Line items display italicized per-item warranty policies.
   - Formal warranty terms disclaimer: `* Warranty claims require this invoice & intact serial tag.`
 
-### 5-Tab Apple Navigation Dock & Role Preview
-- **Frosted 5-Tab Dock (`BottomNavDock.tsx`)**:
-  - `Home`: Executive turnover, quick actions, bento cards & 7-day trend.
-  - `Products`: CRDT inventory catalog with inline restock and 1-tap `Sell`.
-  - `Register`: Center elevated action button with live item counter badge.
-  - `Reports`: Full P&L Statement, Balance Sheet, and terminal sales split.
-  - `Sync & More`: Brave Sync Chain QR pairing, network diagnostics, and backups.
-- **1-Tap Role Preview Toggle**: Switch between `Owner (K1)` and `Cashier (K2)` preview directly in the header.
+### Navigation & Role Preview
+- **Standard iOS tab bar on phones (`BottomNavDock.tsx`)**: Five equal, monochrome tabs on a translucent material: `Home`, `Products`, `Register`, `Reports` and `Sync`. The selected tab uses the tint, and a red badge shows the cart count.
+- **iPadOS-style sidebar at ≥ 1024 px (`SidebarNav.tsx`)**: The same five sections plus the shop name. It replaces the tab bar on desktop and Windows counters.
+- **Navigation bar (`TopBar.tsx`)**: Shop name and sync status, plus round toolbar buttons for customer dues, the cash drawer, sound, appearance, and the 1-tap `Owner` / `Cashier` role preview.
+
+### Apple HIG Design System
+- **Tokens (`src/styles/tokens.css`)**: Apple's system grouped backgrounds, label/secondary/tertiary text, separators, fills, one tint (`#007AFF` / `#0A84FF`) and three semantic colors: positive (money in), warning (owed, low stock) and danger (destructive, out of stock). They are bridged to Tailwind as `bg-surface`, `text-label-2`, `text-tint` and so on. The iOS type scale is available as `text-large-title` … `text-caption2`.
+- **Dark mode is designed, not inverted**: The base is pure black, grouped rows are `#1C1C1E`, and sheets are elevated (`#2C2C2E` groups). Receipt paper stays paper-white. Tailwind's `dark:` variant follows the in-app appearance setting.
+- **Primitives (`src/ui/primitives/`)**: Inset grouped `Section` / `Row` / `FieldRow` lists, `PageHeader` large titles, `SegmentedControl`, `Toggle` switch, `QtyStepper`, `SearchField`, `ChipRow` and `SpringSheet` bottom sheets (grabber, centered title, × close). All icons are SVG, never emoji.
+- Before/after comparison of the redesign: [`docs/screenshots/before-after-phone.png`](docs/screenshots/before-after-phone.png).
+- The rules for extending the UI live in [`.agents/skills/apple-hig-ui/SKILL.md`](.agents/skills/apple-hig-ui/SKILL.md).
+
+<p align="center"><img src="docs/screenshots/register-dark-desktop.png" alt="Register on desktop in dark mode with the sidebar and current-sale panel" width="760" /></p>
 
 ### Counter, Checkout & Cashier Speed
-- **1-Handed Apple HIG Counter (`CounterView.tsx`)**: Sticky glass search bar, category pills, live `tabular-nums` stock pills, instant quantity adjusters, and thumb-reachable checkout dock.
+- **1-Handed Register (`CounterView.tsx`, `CheckoutPanel.tsx`)**: A search field with a camera-scan button, filter chips, and products as a grouped list. Each row has an App Store-style `Add` capsule that turns into a − / + stepper. On phones the checkout floats above the tab bar: Cash / Wallet / Due segmented control, discount, `Hold`, and one `Charge ৳total` button. On desktop it is a sticky "Current sale" panel.
 - **Hold / Park Cart Queue (`F6`) (`parkedCarts.ts`, `ParkedCartsBar.tsx`)**: Park up to 5 simultaneous customer carts.
-- **Instant Receipt Barcode Lookup**: Scan or type bill codes (`K1-YYMMDD-0001`) to inspect, reprint, void, or share receipts in under 1 second.
+- **Instant Receipt Barcode Lookup**: Scan or type bill codes (`K1-YYMMDD-0001`) to inspect, reprint, export, share or void receipts in under 1 second. Voiding asks for confirmation inline before it restores stock.
 - **Zero-KB POS Audio Synthesizer (`posAudio.ts`)**: Web Audio API `OscillatorNode` produces 1200Hz scan beeps, Apple Pay-style checkout chimes, and warning tones with 0 audio files.
 
 ### Inventory Vault, CSV & Vector Barcode Labels
-- **CRDT Inventory Vault (`KuraVaultView.tsx`)**: Product cards with brand, variant, warranty, profit margin %, quick restock (+1/+10), and direct `Sell` shortcuts.
+- **Products (`KuraVaultView.tsx`)**: A grouped product list with brand, variant and warranty. Stock shows as words ("Low · 3 left"). Owners see cost and margin, quick stock adjust (−1 / +1 / +10) and edit. Every row has a direct `Sell` shortcut.
 - **Bulk CSV Import & Export (`cmd_catalog_csv.rs`, `CsvCatalogSheet.tsx`)**: RFC-4180 parser converts decimal currency strings to integer minor units with zero floating-point math.
 - **Printable A4 3×8 Vector Code-39 Sticker PDFs (`barcode_pdf.rs`)**: Generates 24 labels per A4 page with crisp vector lines.
 
@@ -119,8 +131,8 @@ The name **Kura** is inspired by the traditional Japanese merchant storehouse (*
 
 ```mermaid
 flowchart TB
-    subgraph FE["Frontend View Layer (54.72 KB gzipped · Strict <=220-line modules)"]
-        UI["Preact 5-Tab Dock & SpringSheets"]
+    subgraph FE["Frontend View Layer (58.14 KB gzipped · Strict <=220-line modules)"]
+        UI["Preact HIG shell: tab bar / sidebar & sheets"]
         SIG["@preact/signals Reactive Store (kuraStore.ts)"]
         HOT["POS Hotkeys & <35ms HID Gun Listener (posHotkeys.ts)"]
         CAM["Native BarcodeDetector & WebAudio Synth"]
@@ -272,9 +284,10 @@ Kura - Shop Stock & Bill Sync/
 │   ├── build-showcase.mjs                  # Assembles dist-site/ (Apple showcase + live app)
 │   └── configure-android.mjs               # Android manifest LAN & camera configurator
 ├── website/                                # Apple-grade minimalist product showcase site
-├── src/                                    # Preact 5-tab frontend (54.72 KB gzipped)
-│   ├── main.tsx & App.tsx                  # 5-Tab dock, header, toast & SpringSheet mounts
-│   ├── index.css                           # Tailwind CSS v4 + OLED dark mode variables
+├── src/                                    # Preact frontend (58.14 KB gzipped)
+│   ├── main.tsx & App.tsx                  # Shell: sidebar / tab bar, nav bar, toast & sheet mounts
+│   ├── index.css                           # Tailwind CSS v4 entry
+│   ├── styles/                             # HIG tokens (light/dark) & component classes
 │   ├── types/kura.ts                       # Shared TypeScript models
 │   ├── state/                              # Reactive signals (store, actions, preview IPC)
 │   └── ui/                                 # Apple HIG views, sheets, components & primitives
@@ -311,7 +324,7 @@ npm run dev
 
 ### Verification, Unit Tests & Production Builds
 ```bash
-# 1. TypeScript typecheck & production Vite bundle (< 58 KB gzipped)
+# 1. TypeScript typecheck & production Vite bundle (~58 KB gzipped)
 npm run build
 
 # 2. Build Apple Showcase website & interactive live app for GitHub Pages
@@ -333,4 +346,4 @@ npm run tauri build
 
 - **E2EE Cryptography**: LAN packets, `.kura` archives, and WebSocket relay frames use **AES-256-GCM** with **HKDF-SHA256** keys derived from the shop's 128-bit seed.
 - **100% Offline & Private**: Zero accounts, zero analytics trackers, and zero telemetry.
-- **License**: **MIT License** — Copyright © 2026 Abu Sufian. Open-source retail software designed with Apple Cupertino HIG.
+- **License**: **MIT License** — Copyright © 2026 Abu Sufian. Open-source retail software designed with the Apple Human Interface Guidelines.
