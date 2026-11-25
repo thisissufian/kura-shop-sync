@@ -182,10 +182,11 @@ jobs:
           mkdir -p dist-apk
           find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -exec cp {} dist-apk/ \;
           cd dist-apk
+          tag="${{ github.event.inputs.release_tag }}"
+          if [ -z "$tag" ]; then tag="${GITHUB_REF_NAME}"; fi
+          case "$tag" in v*) ;; *) tag="v1.0.0" ;; esac
           for f in *.apk; do
-            if [[ ! "$f" =~ ^kura-v1\.0\.0- ]]; then
-              cp "$f" "kura-v1.0.0-$f" 2>/dev/null || true
-            fi
+            case "$f" in kura-v*) ;; *) cp "$f" "kura-$tag-$f" ;; esac
           done
           ls -lah .
 
