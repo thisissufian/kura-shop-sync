@@ -80,8 +80,9 @@ Test: two joins with the same cashier URI produce different node IDs; bills from
 
 ---
 
-## Not for Antigravity yet — design work (do with Claude Code, review first)
-These need one coherent design; do not hand them out piecemeal:
+## Design work (done with Claude Code)
+Status: all five shipped. S2+S3 in PR #8, S1 in #9, S4 in #10, S5 in #11. Details are in each PR and in the `kura-ledger-crdt` / `kura-sync-chain` skills.
+Open follow-ups: upgrading chains created before S4 (needs re-pairing every device); cashiers can still read all synced data, costs included, because they hold the seed.
 - **S1 Sync sends only events newer than the peer's clock** (`lan_peer.rs`, `remoteRelay.ts`): offline bills older than the peer's latest HLC never sync. Needs a per-node version vector exchange.
 - **S2 Out-of-order events lost** (`ledger.rs`, `ledger_customers.rs`, `ledger_suppliers.rs`): void before bill, payment before customer → silently dropped.
 - **S3 Product/customer "last write wins" corrupted** by stock/bill events bumping `updated_hlc`.

@@ -1,12 +1,35 @@
-import type { RelayEnvelope } from "../types/kura";
 import { callBackend } from "./ipcBridge";
 import { refreshBootstrap, showToast } from "./kuraStore";
 import { remoteRelayConnected, remoteRelayEnabled, remoteRelayUrl } from "./uiSignals";
 
+// Remote sync over a Nostr relay (S5). The backend builds signed NIP-01 events
+// (kind 30078, one encrypted chunk of the ledger each) and verifies incoming ones;
+// this file only moves them over the WebSocket. A chunk counts as published only
+// after the relay answers ["OK", id, true], so failed sends are retried next time.
+
+/** Signed NIP-01 event built by the backend (S5). */
+interface NostrEvent {
+  id: string;
+  pubkey: string;
+  created_at: number;
+  kind: number;
+  tags: string[][];
+  content: string;
+  sig: string;
+}
+
+interface RelayBatch {
+  chain_tag: string;
+  since: number;
+  events: { d: string; digest: string; event: NostrEvent }[];
+}
+
 const RELAY_CFG_KEY = "kura_remote_relay_v1";
+const REPUBLISH_MS = 60_000;
 let socket: WebSocket | null = null;
-let lastSentHlc = "";
-let activeChainHash = "";
+let timer: ReturnType<typeof setInterval> | null = null;
+let subId = "";
+const awaitingOk = new Map<string, { d: string; digest: string }>();
 
 function persistRelayCfg(enabled: boolean, url: string): void {
   try {
@@ -31,16 +54,22 @@ export function initRelaySettings(): void {
   }
 }
 
-function extractRelayCipher(data: unknown): string {
-  if (Array.isArray(data) && data[0] === "EVENT" && data[2]?.content) {
-    const p = JSON.parse(String(data[2].content)) as { chain_id_hash?: string; cipher_b64?: string };
-    return p.chain_id_hash === activeChainHash ? p.cipher_b64 ?? "" : "";
+async function handleRelayMessage(raw: string): Promise<void> {
+  const msg = JSON.parse(raw) as unknown[];
+  if (!Array.isArray(msg)) return;
+  if (msg[0] === "EVENT" && msg[1] === subId && msg[2]) {
+    const applied = await callBackend<number>("relay_ingest", { event: msg[2] as NostrEvent });
+    if (applied > 0) {
+      await refreshBootstrap();
+      showToast(`Remote Live synced ${applied} event(s)`);
+    }
+  } else if (msg[0] === "OK" && typeof msg[1] === "string") {
+    const pending = awaitingOk.get(msg[1]);
+    awaitingOk.delete(msg[1]);
+    if (pending && msg[2] === true) {
+      await callBackend<void>("relay_mark_published", pending);
+    }
   }
-  if (data && typeof data === "object" && (data as { type?: string }).type === "kura_relay") {
-    const o = data as { chain_id_hash?: string; cipher_b64?: string };
-    return o.chain_id_hash === activeChainHash ? o.cipher_b64 ?? "" : "";
-  }
-  return "";
 }
 
 export async function connectRemoteRelay(url: string): Promise<void> {
@@ -50,9 +79,9 @@ export async function connectRemoteRelay(url: string): Promise<void> {
   remoteRelayEnabled.value = true;
   persistRelayCfg(true, cleanUrl);
 
+  let batch: RelayBatch;
   try {
-    const env = await callBackend<RelayEnvelope>("prepare_relay_envelope", { sinceHlc: "" });
-    activeChainHash = env.chain_id_hash;
+    batch = await callBackend<RelayBatch>("relay_pending");
   } catch (err) {
     showToast(String(err), "err");
     return;
@@ -61,23 +90,17 @@ export async function connectRemoteRelay(url: string): Promise<void> {
   try {
     const ws = new WebSocket(cleanUrl);
     socket = ws;
+    subId = `kura-${batch.chain_tag}`;
     ws.onopen = () => {
       remoteRelayConnected.value = true;
-      ws.send(JSON.stringify(["REQ", `kura-${activeChainHash}`, { kinds: [29850], "#t": [activeChainHash], limit: 25 }]));
+      ws.send(JSON.stringify(["REQ", subId, { kinds: [30078], "#t": [batch.chain_tag], since: batch.since }]));
       void publishRelayDelta();
+      timer = setInterval(() => void publishRelayDelta(), REPUBLISH_MS);
     };
-    ws.onmessage = async (msg) => {
-      try {
-        const cipherB64 = extractRelayCipher(JSON.parse(String(msg.data)));
-        if (!cipherB64) return;
-        const applied = await callBackend<number>("ingest_relay_envelope", { cipherB64 });
-        if (applied > 0) {
-          await refreshBootstrap();
-          showToast(`Remote Live synced ${applied} event(s)`);
-        }
-      } catch {
-        // ignore unrelated relay traffic
-      }
+    ws.onmessage = (msg) => {
+      void handleRelayMessage(String(msg.data)).catch(() => {
+        // ignore unrelated or malformed relay traffic
+      });
     };
     ws.onclose = () => {
       if (socket === ws) {
@@ -95,10 +118,15 @@ export async function connectRemoteRelay(url: string): Promise<void> {
 }
 
 export function disconnectRemoteRelay(saveDisabled = true): void {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
   if (socket) {
     socket.close();
     socket = null;
   }
+  awaitingOk.clear();
   remoteRelayConnected.value = false;
   if (saveDisabled) {
     remoteRelayEnabled.value = false;
@@ -109,10 +137,12 @@ export function disconnectRemoteRelay(saveDisabled = true): void {
 export async function publishRelayDelta(): Promise<void> {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
   try {
-    const env = await callBackend<RelayEnvelope>("prepare_relay_envelope", { sinceHlc: lastSentHlc });
-    if (!env.cipher_b64) return;
-    lastSentHlc = env.latest_hlc;
-    socket.send(JSON.stringify({ type: "kura_relay", chain_id_hash: env.chain_id_hash, cipher_b64: env.cipher_b64 }));
+    const batch = await callBackend<RelayBatch>("relay_pending");
+    for (const out of batch.events) {
+      if ([...awaitingOk.values()].some((p) => p.d === out.d && p.digest === out.digest)) continue;
+      awaitingOk.set(out.event.id, { d: out.d, digest: out.digest });
+      socket.send(JSON.stringify(["EVENT", out.event]));
+    }
   } catch {
     // ignore background publish errors
   }

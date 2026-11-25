@@ -3,6 +3,7 @@ mod cmd_catalog;
 mod cmd_catalog_csv;
 mod cmd_config_vault;
 mod cmd_customers;
+mod cmd_relay;
 mod cmd_expenses;
 mod cmd_suppliers;
 mod cmd_sync_print;
@@ -29,6 +30,7 @@ mod models;
 mod models_analytics;
 mod models_supplier;
 mod printer;
+mod relay_nostr;
 mod sync_digest;
 #[cfg(test)]
 mod tests;
@@ -54,6 +56,8 @@ mod tests_s2_s3;
 mod tests_s1;
 #[cfg(test)]
 mod tests_s4;
+#[cfg(test)]
+mod tests_s5;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
@@ -103,8 +107,9 @@ pub fn run() {
             cmd_sync_print::trigger_peer_sync,
             cmd_sync_print::print_bill_thermal,
             cmd_sync_print::export_bill_pdf,
-            cmd_sync_print::prepare_relay_envelope,
-            cmd_sync_print::ingest_relay_envelope,
+            cmd_relay::relay_pending,
+            cmd_relay::relay_mark_published,
+            cmd_relay::relay_ingest,
             cmd_config_vault::get_shop_settings,
             cmd_config_vault::update_shop_settings,
             cmd_config_vault::get_owner_analytics,

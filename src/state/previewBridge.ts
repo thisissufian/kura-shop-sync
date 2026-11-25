@@ -157,10 +157,9 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     return { file_path: "KuraReceipts/kura-vault-261113.kura", payload_b64: "S3VyYVZhdWx0", events_count: mockProducts.length + mockBills.length, size_bytes: 512 } as T;
   }
   if (cmd === "import_encrypted_vault") return 0 as T;
-  if (cmd === "prepare_relay_envelope") {
-    return { chain_id_hash: "preview01", latest_hlc: nowHlc(99), cipher_b64: "" } as T;
-  }
-  if (cmd === "ingest_relay_envelope") return 0 as T;
+  if (cmd === "relay_pending") return { chain_tag: "preview01", since: 0, events: [] } as T;
+  if (cmd === "relay_mark_published") return undefined as T;
+  if (cmd === "relay_ingest") return 0 as T;
   if (cmd === "export_bill_pdf") {
     const res: PdfExportResult = {
       file_path: `KuraReceipts/${args?.billNo}.pdf`,
