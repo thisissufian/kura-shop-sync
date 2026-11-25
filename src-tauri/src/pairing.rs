@@ -14,6 +14,8 @@ pub struct ParsedPairing {
     /// Secured chains (S4): owner public key, and the owner secret on owner invites.
     pub owner_pk: Option<String>,
     pub owner_secret: Option<String>,
+    /// Upgrade proof (`upgrade_proof`): devices on the old chain re-pair without a wipe.
+    pub migrate_from: Option<String>,
 }
 
 pub fn build_pairing_uri(
@@ -50,7 +52,7 @@ pub fn parse_pairing_uri(uri: &str) -> Result<ParsedPairing, String> {
     let mut shop_name = "Kura Shop".to_string();
     let mut lan_addr = None;
     let mut auth_hex: Option<String> = None;
-    let (mut owner_pk, mut owner_secret) = (None, None);
+    let (mut owner_pk, mut owner_secret, mut migrate_from) = (None, None, None);
 
     for pair in query.split('&') {
         if let Some((k, v)) = pair.split_once('=') {
@@ -64,6 +66,7 @@ pub fn parse_pairing_uri(uri: &str) -> Result<ParsedPairing, String> {
                 "auth" if !val.trim().is_empty() => auth_hex = Some(val),
                 "opk" if !val.trim().is_empty() => owner_pk = Some(val),
                 "osec" if !val.trim().is_empty() => owner_secret = Some(val),
+                "from" if !val.trim().is_empty() => migrate_from = Some(val),
                 _ => {}
             }
         }
@@ -87,6 +90,7 @@ pub fn parse_pairing_uri(uri: &str) -> Result<ParsedPairing, String> {
         lan_addr,
         owner_pk,
         owner_secret,
+        migrate_from,
     })
 }
 
@@ -100,4 +104,23 @@ pub fn with_owner_params(uri: String, role: &str, owner_pk: &str, owner_secret: 
         out.push_str(&format!("&osec={owner_secret}"));
     }
     out
+}
+
+/// Upgrade invites carry `from` = proof of the OLD chain key bound to the new one.
+/// Chain ids are public (beacons, relay tags), so a bare id would let a stranger's QR
+/// pull a device's whole history onto their chain without the usual wipe.
+pub fn upgrade_proof(old_seed: &[u8; 16], new_seed_b64: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(b"kura-upgrade-v1");
+    h.update(old_seed);
+    h.update(new_seed_b64.as_bytes());
+    h.finalize()[..16].iter().map(|b| format!("{b:02x}")).collect()
+}
+
+pub fn with_upgrade_from(uri: String, prev_seed_b64: &str, new_seed_b64: &str) -> String {
+    match decode_seed_b64(prev_seed_b64) {
+        Ok(old) if !prev_seed_b64.is_empty() => format!("{uri}&from={}", upgrade_proof(&old, new_seed_b64)),
+        _ => uri,
+    }
 }

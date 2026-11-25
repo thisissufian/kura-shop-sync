@@ -113,6 +113,10 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
     return exp as T;
   }
   if (cmd === "get_sync_status") return { ...mockSync } as T;
+  if (cmd === "secure_sync_chain") {
+    mockSync.is_secured = true;
+    return mockSync as T;
+  }
   if (cmd === "join_sync_chain") {
     if (mockSync.is_linked && !args?.forceReset) {
       throw new Error("CONFIRM_RESET: Device is already linked. Confirm reset to continue.");

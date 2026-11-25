@@ -5,7 +5,7 @@ use crate::models::{BillReceipt, ChainConfig, LedgerEvent, Product};
 
 pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
     conn.query_row(
-        "SELECT node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked, utc_offset_minutes, owner_secret, owner_pk
+        "SELECT node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked, utc_offset_minutes, owner_secret, owner_pk, prev_seed_b64
          FROM chain_config WHERE id = 1",
         [],
         |r| {
@@ -23,6 +23,7 @@ pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
                 utc_offset_minutes: r.get(9)?,
                 owner_secret: r.get(10)?,
                 owner_pk: r.get(11)?,
+                prev_seed_b64: r.get(12)?,
             })
         },
     )
