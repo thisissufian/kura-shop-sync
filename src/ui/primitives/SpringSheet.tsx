@@ -1,5 +1,6 @@
 import type { ComponentChildren } from "preact";
 import { useEffect } from "preact/hooks";
+import { IconXmark } from "./KuraIcons";
 
 interface SpringSheetProps {
   open: boolean;
@@ -29,39 +30,28 @@ export function SpringSheet({
 
   return (
     <div
-      class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
+      class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
+      aria-label={title}
     >
-      <div
-        class="fixed inset-0 bg-black/30 backdrop-blur-[2px] transition-opacity"
-        onClick={onClose}
-      />
-      <div
-        class="spring-sheet-panel relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[22px] kura-canvas shadow-2xl sm:rounded-2xl border border-black/[0.08] dark:border-white/[0.1]"
-        style={{ transform: "translateY(0)" }}
-      >
-        <div class="flex flex-col items-center kura-glass-bar px-5 pt-2.5 pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
-          <div class="mb-2.5 h-1 w-10 rounded-full bg-black/15 dark:bg-white/20 sm:hidden" />
-          <div class="flex w-full items-center justify-between gap-3">
-            <div>
-              <h2 class="text-[17px] font-semibold tracking-tight kura-text-main">
-                {title}
-              </h2>
-              {subtitle && (
-                <p class="text-[12px] kura-text-muted">{subtitle}</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              class="rounded-full kura-subtle px-3 py-1.5 text-[13px] font-medium kura-text-main hover:brightness-110 active:scale-95 transition"
-            >
-              Done
-            </button>
-          </div>
+      <div class="spring-sheet-scrim fixed inset-0 bg-black/40" onClick={onClose} />
+      <div class="spring-sheet-panel kura-elevated relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-sheet bg-sheet text-label shadow-2xl sm:rounded-sheet">
+        <div class="relative shrink-0 px-14 pt-2 pb-3 text-center">
+          <div class="mx-auto mb-2 h-[5px] w-9 rounded-full bg-label-3 sm:hidden" />
+          <h2 class="text-headline font-semibold text-label truncate sm:pt-2">{title}</h2>
+          {subtitle && <p class="text-footnote text-label-2 truncate">{subtitle}</p>}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            title="Close (Esc)"
+            class="kura-icon-btn absolute right-4 top-4 !w-[30px] !h-[30px] !text-label-2"
+          >
+            <IconXmark class="w-4 h-4 stroke-[2.4]" />
+          </button>
         </div>
-        <div class="overflow-y-auto px-4 pt-4 sm:px-5 sm:pt-5 kura-safe-bottom">{children}</div>
+        <div class="overflow-y-auto px-4 pt-1 pb-6 kura-safe-bottom">{children}</div>
       </div>
     </div>
   );

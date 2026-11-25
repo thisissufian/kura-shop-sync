@@ -1,0 +1,209 @@
+@layer base {
+  html, body {
+    font-family: var(--font-sans);
+    background-color: var(--kura-bg-canvas);
+    color: var(--kura-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: -0.01em;
+  }
+  button, a, select, input, textarea { touch-action: manipulation; }
+  button:not(:disabled), [role="button"] { cursor: pointer; }
+  input::placeholder, textarea::placeholder { color: var(--kura-text-muted); }
+  :focus-visible { outline: 2px solid var(--kura-tint); outline-offset: 2px; }
+  ::selection { background: color-mix(in srgb, var(--kura-tint) 22%, transparent); }
+}
+
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+
+body, #app, .kura-canvas { background-color: var(--kura-bg-canvas); color: var(--kura-text-primary); }
+
+/* ── Inset grouped list (Settings) ─────────────────────────────────────── */
+.kura-group {
+  background-color: var(--kura-bg-card);
+  border-radius: var(--radius-group);
+  overflow: hidden;
+}
+.kura-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 16px;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+/* hairline separator, inset to the text like UITableView */
+.kura-group > .kura-row + .kura-row::before,
+.kura-group > * + .kura-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--kura-sep-inset, 16px);
+  border-top: 0.5px solid var(--kura-border);
+}
+button.kura-row { transition: background-color 0.15s ease; }
+button.kura-row:active, .kura-row-tap:active { background-color: var(--kura-bg-subtle); }
+.kura-section-header {
+  padding: 0 16px 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--kura-text-secondary);
+}
+.kura-section-footer {
+  padding: 6px 16px 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--kura-text-secondary);
+}
+
+/* Field that sits inside a row: no chrome, right-aligned value */
+.kura-field {
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--kura-text-primary);
+  text-align: right;
+}
+.kura-field:focus-visible { outline: none; }
+.kura-field-left { text-align: left; }
+select.kura-field { appearance: none; color: var(--kura-text-secondary); direction: rtl; }
+select.kura-field option { direction: ltr; color: initial; }
+
+/* Free-standing text field (search, notes) */
+.kura-input {
+  background-color: var(--kura-bg-input);
+  color: var(--kura-text-primary);
+  border: 0;
+  border-radius: var(--radius-control);
+  outline: none;
+}
+.kura-input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--kura-tint) 28%, transparent); }
+
+/* ── Buttons (filled / gray / tinted / plain / destructive) ────────────── */
+.kura-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.12s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.kura-btn:active:not(:disabled) { opacity: 0.72; }
+.kura-btn:disabled { opacity: 0.38; cursor: default; }
+.kura-btn-sm { min-height: 32px; padding: 0 14px; border-radius: 999px; font-size: 15px; line-height: 20px; }
+.kura-btn-lg { min-height: 50px; border-radius: 14px; }
+.kura-btn-filled { background-color: var(--kura-tint); color: #FFFFFF; }
+.kura-btn-gray { background-color: var(--kura-bg-subtle); color: var(--kura-tint); }
+.kura-btn-tinted { background-color: color-mix(in srgb, var(--kura-tint) 15%, transparent); color: var(--kura-tint); }
+.kura-btn-plain { background: transparent; color: var(--kura-tint); padding: 0 8px; }
+.kura-btn-destructive { background-color: color-mix(in srgb, var(--kura-danger-fill) 14%, transparent); color: var(--kura-danger); }
+.kura-btn-danger-filled { background-color: var(--kura-danger-fill); color: #FFFFFF; }
+
+/* Round icon button used in bars and toolbars */
+.kura-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--kura-tint);
+  background-color: var(--kura-bg-subtle);
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+.kura-icon-btn:active { opacity: 0.6; }
+
+/* Filter chip */
+.kura-chip {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  background-color: var(--kura-bg-subtle);
+  color: var(--kura-text-primary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.kura-chip[aria-pressed="true"] { background-color: var(--kura-tint); color: #FFFFFF; }
+
+/* Status text with a small dot, used instead of colored pills */
+.kura-dot { display: inline-block; width: 6px; height: 6px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+
+/* ── Bars & materials ───────────────────────────────────────────────────── */
+.kura-glass-bar {
+  background-color: var(--kura-bg-glass);
+  color: var(--kura-text-primary);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-color: var(--kura-border);
+}
+.kura-hairline-b { box-shadow: inset 0 -0.5px 0 var(--kura-border); }
+.kura-hairline-t { box-shadow: inset 0 0.5px 0 var(--kura-border); }
+.kura-hairline-r { box-shadow: inset -0.5px 0 0 var(--kura-border); }
+
+/* ── Legacy aliases (kept so older markup keeps rendering on-token) ────── */
+.kura-card {
+  background-color: var(--kura-bg-card);
+  color: var(--kura-text-primary);
+  border-radius: var(--radius-group);
+}
+.kura-subtle { background-color: var(--kura-bg-subtle); color: var(--kura-text-primary); }
+.kura-text-main { color: var(--kura-text-primary); }
+.kura-text-sub { color: var(--kura-text-secondary); }
+.kura-text-muted { color: var(--kura-text-secondary); }
+.kura-chart-idle { background-color: var(--kura-chart-empty); }
+.kura-icon-squircle { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.kura-btn-press { transition: transform 0.14s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.14s ease; }
+.kura-btn-press:active { opacity: 0.7; }
+
+.kura-receipt-paper {
+  background-color: #FFFFFF;
+  color: #1C1C1E;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+[data-theme="dark"] .kura-receipt-paper {
+  background-color: #EBEBF0;  /* paper stays paper, dimmed for night use */
+  box-shadow: none;
+}
+.kura-dashed-divider { border-top: 1px dashed rgba(60, 60, 67, 0.3); }
+
+.kura-safe-top { padding-top: env(safe-area-inset-top); }
+.kura-safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.spring-sheet-panel { animation: kuraSheetIn 0.38s cubic-bezier(0.32, 0.72, 0, 1); }
+.spring-sheet-scrim { animation: kuraFade 0.25s ease; }
+@keyframes kuraSheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes kuraFade { from { opacity: 0; } to { opacity: 1; } }
+@media (min-width: 640px) {
+  .spring-sheet-panel { animation: kuraSheetPop 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+  @keyframes kuraSheetPop { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spring-sheet-panel, .spring-sheet-scrim { animation: none; }
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes kuraScanSweep { 0%, 100% { top: 12%; } 50% { top: 84%; } }
+.kura-scan-line { animation: kuraScanSweep 2.1s ease-in-out infinite; }
