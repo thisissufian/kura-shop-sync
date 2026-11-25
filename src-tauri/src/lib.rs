@@ -26,6 +26,7 @@ mod models;
 mod models_analytics;
 mod models_supplier;
 mod printer;
+mod sync_digest;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
@@ -46,6 +47,8 @@ mod tests_t5;
 mod tests_t6;
 #[cfg(test)]
 mod tests_s2_s3;
+#[cfg(test)]
+mod tests_s1;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
