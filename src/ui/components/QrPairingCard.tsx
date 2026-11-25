@@ -7,7 +7,7 @@ import {
   syncStatus,
   syncWithPeer,
 } from "../../state/kuraStore";
-import { scannerMode } from "../../state/uiSignals";
+import { pendingChainJoin, scannerMode } from "../../state/uiSignals";
 
 export function QrPairingCard() {
   const status = syncStatus.value;
@@ -48,10 +48,20 @@ export function QrPairingCard() {
 
   const handleJoin = async (e: Event) => {
     e.preventDefault();
-    if (!joinInput.trim()) return;
+    const trimmed = joinInput.trim();
+    if (!trimmed) return;
     setBusy(true);
-    await joinChain(joinInput.trim());
-    setJoinInput("");
+    const ok = await joinChain(trimmed);
+    if (ok) setJoinInput("");
+    setBusy(false);
+  };
+
+  const handleConfirmReset = async () => {
+    const pending = pendingChainJoin.value;
+    if (!pending) return;
+    setBusy(true);
+    const ok = await joinChain(pending, undefined, true);
+    if (ok) setJoinInput("");
     setBusy(false);
   };
 
@@ -141,6 +151,34 @@ export function QrPairingCard() {
           Join
         </button>
       </form>
+
+      {pendingChainJoin.value && (
+        <div class="rounded-xl border border-[#FF9500]/30 bg-[#FF9500]/10 p-3 space-y-2">
+          <p class="text-[11px] font-medium kura-text-main">
+            This device is already linked. Joining a new chain clears local stock, bills & ledger before syncing.
+          </p>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                pendingChainJoin.value = null;
+              }}
+              class="rounded-lg kura-subtle px-3 py-1.5 text-[11px] font-semibold kura-text-muted active:scale-95"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleConfirmReset}
+              class="rounded-lg bg-[#FF3B30] px-3 py-1.5 text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50"
+            >
+              Reset & Join
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSyncPeer} class="flex gap-2">
         <input

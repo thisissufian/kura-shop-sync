@@ -113,13 +113,16 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
         .map_err(|e| format!("Seed chain_config: {e}"))?;
     }
 
+    let is_linked: i64 = conn
+        .query_row("SELECT is_linked FROM chain_config WHERE id = 1", [], |r| r.get(0))
+        .unwrap_or(0);
     let prod_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM products", [], |r| r.get(0))
         .unwrap_or(0);
     let ev_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM ledger_events", [], |r| r.get(0))
         .unwrap_or(0);
-    if prod_count == 0 && ev_count == 0 {
+    if is_linked == 0 && prod_count == 0 && ev_count == 0 {
         seed_starter_inventory(&mut conn)?;
     }
     Ok(conn)

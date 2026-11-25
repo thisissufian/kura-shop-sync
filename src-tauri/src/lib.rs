@@ -38,6 +38,8 @@ mod tests_t1;
 mod tests_t3;
 #[cfg(test)]
 mod tests_t4;
+#[cfg(test)]
+mod tests_t5;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
