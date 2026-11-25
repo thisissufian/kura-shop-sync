@@ -1,6 +1,7 @@
 use rusqlite::{params, Connection, Transaction};
 use serde::{Deserialize, Serialize};
 
+use crate::ledger_products::{add_stock, set_cost_lww};
 use crate::models::{LedgerEvent, SupplierAccount};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,48 +30,51 @@ pub struct SupplierPaymentPayload {
     pub hlc: String,
 }
 
+/// Moves the payable balance without touching the profile clock (S3); creates a
+/// placeholder supplier if the payment arrives before any purchase (S2).
+fn add_supplier_payable(tx: &Transaction, supplier_id: &str, delta: i64) -> Result<(), String> {
+    tx.execute(
+        "INSERT INTO suppliers (supplier_id, name, phone, payable_balance_minor, updated_hlc)
+         VALUES (?1, ?1, '', ?2, '')
+         ON CONFLICT(supplier_id) DO UPDATE SET payable_balance_minor = payable_balance_minor + excluded.payable_balance_minor",
+        params![supplier_id, delta],
+    )
+    .map_err(|e| format!("Update supplier payable {supplier_id}: {e}"))?;
+    Ok(())
+}
+
 pub fn apply_supplier_event(tx: &Transaction, ev: &LedgerEvent) -> Result<(), String> {
     match ev.event_type.as_str() {
         "STOCK_PURCHASED" => {
             let p: StockPurchasePayload = serde_json::from_str(&ev.payload_json)
                 .map_err(|e| format!("STOCK_PURCHASED payload error: {e}"))?;
 
-            // 1. Atomically upsert supplier and increment payable balance
+            add_supplier_payable(tx, &p.supplier_id, p.due_minor)?;
+            // Name/phone are last-writer-wins on updated_hlc; only purchases carry them.
             tx.execute(
-                "INSERT INTO suppliers (supplier_id, name, phone, payable_balance_minor, updated_hlc)
-                 VALUES (?1, ?2, ?3, ?4, ?5)
-                 ON CONFLICT(supplier_id) DO UPDATE SET
-                   name = CASE WHEN excluded.name != '' THEN excluded.name ELSE suppliers.name END,
-                   payable_balance_minor = suppliers.payable_balance_minor + excluded.payable_balance_minor,
-                   updated_hlc = excluded.updated_hlc",
-                params![p.supplier_id, p.supplier_name, p.supplier_phone, p.due_minor, ev.hlc],
+                "UPDATE suppliers SET
+                   name = CASE WHEN ?2 != '' THEN ?2 ELSE name END,
+                   phone = CASE WHEN ?3 != '' THEN ?3 ELSE phone END,
+                   updated_hlc = ?4
+                 WHERE supplier_id = ?1 AND updated_hlc <= ?4",
+                params![p.supplier_id, p.supplier_name, p.supplier_phone, ev.hlc],
             )
-            .map_err(|e| format!("Upsert supplier purchase: {e}"))?;
-
-            // 2. Increment product stock and update unit cost price
+            .map_err(|e| format!("Update supplier profile: {e}"))?;
             tx.execute(
-                "INSERT INTO products (sku, name, barcode, category, brand, variant, warranty_label, sell_price_minor, cost_price_minor, stock_qty, low_stock_threshold, updated_hlc)
-                 VALUES (?1, ?1, NULL, 'General', '', '', 'No Warranty (ওয়ারেন্টি নেই)', ?2, ?2, ?3, 5, ?4)
-                 ON CONFLICT(sku) DO UPDATE SET
-                   stock_qty = stock_qty + excluded.stock_qty,
-                   cost_price_minor = excluded.cost_price_minor,
-                   updated_hlc = excluded.updated_hlc",
-                params![p.sku, p.unit_cost_minor, p.qty, ev.hlc],
+                "INSERT INTO products (sku, name, barcode, category, brand, variant, warranty_label, sell_price_minor, cost_price_minor, stock_qty, low_stock_threshold, updated_hlc, cost_hlc)
+                 VALUES (?1, ?1, NULL, 'General', '', '', 'No Warranty (ওয়ারেন্টি নেই)', ?2, ?2, 0, 5, '', '')
+                 ON CONFLICT(sku) DO NOTHING",
+                params![p.sku, p.unit_cost_minor],
             )
-            .map_err(|e| format!("Restock product on purchase: {e}"))?;
+            .map_err(|e| format!("Placeholder product on purchase: {e}"))?;
+            add_stock(tx, &p.sku, p.qty)?;
+            set_cost_lww(tx, &p.sku, p.unit_cost_minor, &ev.hlc)?;
         }
         "SUPPLIER_PAYMENT" => {
             let pay: SupplierPaymentPayload = serde_json::from_str(&ev.payload_json)
                 .map_err(|e| format!("SUPPLIER_PAYMENT payload error: {e}"))?;
 
-            tx.execute(
-                "UPDATE suppliers
-                 SET payable_balance_minor = payable_balance_minor - ?1,
-                     updated_hlc = ?2
-                 WHERE supplier_id = ?3",
-                params![pay.amount_minor, ev.hlc, pay.supplier_id],
-            )
-            .map_err(|e| format!("Deduct supplier payable: {e}"))?;
+            add_supplier_payable(tx, &pay.supplier_id, -pay.amount_minor)?;
         }
         _ => {}
     }
