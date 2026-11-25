@@ -26,3 +26,10 @@ Whenever a `PRODUCT_UPSERT`, `STOCK_ADJUST`, `BILL_ISSUED`, or `BILL_VOIDED` eve
 Existing user `.db` files and historical `ledger_events` JSON payloads must always continue to open and replay:
 - **SQLite columns** (`src-tauri/src/ledger_init.rs`): add new columns both to `CREATE TABLE IF NOT EXISTS` and as an idempotent `let _ = conn.execute("ALTER TABLE <table> ADD COLUMN <col> <type> NOT NULL DEFAULT <val>", []);` migration, then update `get_chain_config` / queries in `src-tauri/src/ledger_queries.rs`.
 - **Event & DTO fields** (`src-tauri/src/models.rs`, `src-tauri/src/ledger.rs`): annotate every newly added serde field with `#[serde(default)]` or `#[serde(default = "def_fn")]` so legacy `payload_json` records lacking the field deserialize cleanly.
+
+## 5. Projection Rules: Order-Independent Results (S2/S3)
+Events can arrive in any order, so every projection must give the same result whatever order they're applied in (`src-tauri/src/tests_s2_s3.rs` applies one history in three orders):
+- **Counters commute**: stock, customer due and supplier payable only ever change through `add_stock` (`ledger_products.rs`), `add_customer_due` (`ledger_customers.rs`) and `add_supplier_payable` (`ledger_suppliers.rs`). They never touch `updated_hlc`. If the parent row is missing, they create a placeholder whose clock is `''`.
+- **Profiles are last-writer-wins**: only the event that owns a field may bump its clock (`products.updated_hlc` ← PRODUCT_UPSERT, `products.cost_hlc` ← PRODUCT_UPSERT/STOCK_PURCHASED via `set_cost_lww`, `customers.updated_hlc` ← CUSTOMER_UPSERT, `suppliers.updated_hlc` ← STOCK_PURCHASED, `chain_config.settings_hlc` ← SHOP_SETTINGS_UPDATED). Guard each write with `WHERE <clock> <= ?hlc`.
+- **Tombstones first**: BILL_VOIDED always records itself in `bill_voids`, and BILL_ISSUED checks that table before deducting stock.
+- **Changing a rule?** Bump `PROJECTION_VERSION` in `ledger_rebuild.rs`. On next start, `init_db` replays the whole ledger in HLC order.

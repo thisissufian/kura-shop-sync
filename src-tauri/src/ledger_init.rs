@@ -4,6 +4,7 @@ use std::path::Path;
 use crate::crypto_chain::{encode_seed_b64, generate_node_id, generate_seed};
 use crate::hlc::{new_event_id, next_hlc};
 use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
+use crate::ledger_rebuild::migrate_projections;
 use crate::models::LedgerEvent;
 
 pub fn init_db(db_path: &Path) -> Result<Connection, String> {
@@ -26,7 +27,8 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            seed_b64 TEXT NOT NULL,
            last_hlc TEXT NOT NULL,
            is_linked INTEGER NOT NULL DEFAULT 0,
-           utc_offset_minutes INTEGER NOT NULL DEFAULT 360
+           utc_offset_minutes INTEGER NOT NULL DEFAULT 360,
+           settings_hlc TEXT NOT NULL DEFAULT ''
          );
          CREATE TABLE IF NOT EXISTS ledger_events (
            event_id TEXT PRIMARY KEY,
@@ -50,7 +52,12 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            cost_price_minor INTEGER NOT NULL,
            stock_qty INTEGER NOT NULL DEFAULT 0,
            low_stock_threshold INTEGER NOT NULL DEFAULT 5,
-           updated_hlc TEXT NOT NULL
+           updated_hlc TEXT NOT NULL,
+           cost_hlc TEXT NOT NULL DEFAULT ''
+         );
+         CREATE TABLE IF NOT EXISTS bill_voids (
+           bill_no TEXT PRIMARY KEY,
+           hlc TEXT NOT NULL
          );
          CREATE TABLE IF NOT EXISTS bills (
            bill_no TEXT PRIMARY KEY,
@@ -99,6 +106,8 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN shop_subtitle TEXT NOT NULL DEFAULT ''", []);
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN receipt_footer TEXT NOT NULL DEFAULT 'Thank you for shopping!'", []);
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN utc_offset_minutes INTEGER NOT NULL DEFAULT 360", []);
+    let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN settings_hlc TEXT NOT NULL DEFAULT ''", []);
+    let _ = conn.execute("ALTER TABLE products ADD COLUMN cost_hlc TEXT NOT NULL DEFAULT ''", []);
 
     let cfg_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM chain_config", [], |r| r.get(0))
@@ -125,6 +134,7 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     let ev_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM ledger_events", [], |r| r.get(0))
         .unwrap_or(0);
+    migrate_projections(&mut conn);
     if is_linked == 0 && prod_count == 0 && ev_count == 0 {
         seed_starter_inventory(&mut conn)?;
     }

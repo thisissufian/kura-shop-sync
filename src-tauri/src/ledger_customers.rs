@@ -18,6 +18,19 @@ pub struct CustomerPaymentPayload {
     pub note: String,
 }
 
+/// Moves a customer's due balance without touching the profile clock (S3). If the
+/// CUSTOMER_UPSERT has not arrived yet (S2), a placeholder named by ID holds the balance.
+pub fn add_customer_due(tx: &Transaction, customer_id: &str, delta: i64) -> Result<(), String> {
+    tx.execute(
+        "INSERT INTO customers (customer_id, name, phone, balance_due_minor, updated_hlc)
+         VALUES (?1, ?1, '', ?2, '')
+         ON CONFLICT(customer_id) DO UPDATE SET balance_due_minor = balance_due_minor + excluded.balance_due_minor",
+        params![customer_id, delta],
+    )
+    .map_err(|e| format!("Update customer due {customer_id}: {e}"))?;
+    Ok(())
+}
+
 pub fn apply_customer_event(tx: &Transaction, ev: &LedgerEvent) -> Result<(), String> {
     match ev.event_type.as_str() {
         "CUSTOMER_UPSERT" => {
@@ -38,13 +51,7 @@ pub fn apply_customer_event(tx: &Transaction, ev: &LedgerEvent) -> Result<(), St
         "CUSTOMER_PAYMENT" => {
             let p: CustomerPaymentPayload = serde_json::from_str(&ev.payload_json)
                 .map_err(|e| format!("CUSTOMER_PAYMENT: {e}"))?;
-            tx.execute(
-                "UPDATE customers
-                 SET balance_due_minor = balance_due_minor - ?1, updated_hlc = ?2
-                 WHERE customer_id = ?3",
-                params![p.amount_minor, ev.hlc, p.customer_id],
-            )
-            .map_err(|e| format!("Project CUSTOMER_PAYMENT: {e}"))?;
+            add_customer_due(tx, &p.customer_id, -p.amount_minor)?;
         }
         _ => {}
     }
