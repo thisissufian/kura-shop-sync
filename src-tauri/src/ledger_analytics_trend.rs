@@ -1,12 +1,13 @@
 use rusqlite::Connection;
 use std::collections::HashMap;
 
-use crate::hlc::format_iso_ms;
+use crate::hlc::{hlc_local_date, local_date_str};
 use crate::models::{BillItem, DailySalesPoint};
 
 pub fn compute_7day_trend(
     conn: &Connection,
     now_ms: u128,
+    offset_minutes: i64,
     cost_map: &HashMap<String, i64>,
 ) -> Result<Vec<DailySalesPoint>, String> {
     let mut days_map: HashMap<String, (i64, i64, i64)> = HashMap::new();
@@ -14,25 +15,24 @@ pub fn compute_7day_trend(
 
     for i in (0..7).rev() {
         let day_ms = now_ms.saturating_sub(i as u128 * 86_400_000);
-        let iso = format_iso_ms(day_ms);
-        let date_str = iso[..10].to_string();
+        let date_str = local_date_str(day_ms, offset_minutes);
         day_labels.push(date_str.clone());
         days_map.insert(date_str, (0, 0, 0));
     }
 
-    let oldest_date = day_labels.first().cloned().unwrap_or_default();
     let mut stmt = conn
-        .prepare("SELECT items_json, total_minor, hlc FROM bills WHERE voided = 0 AND substr(hlc, 1, 10) >= ?1")
+        .prepare("SELECT items_json, total_minor, hlc FROM bills WHERE voided = 0")
         .map_err(|e| format!("Prepare trend: {e}"))?;
     let rows = stmt
-        .query_map([&oldest_date], |r| {
+        .query_map([], |r| {
             Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, String>(2)?))
         })
         .map_err(|e| format!("Query trend: {e}"))?;
 
     for r in rows {
         let (items_json, total, hlc) = r.map_err(|e| e.to_string())?;
-        let date = hlc.get(..10).unwrap_or("").to_string();
+        let date = hlc_local_date(&hlc, offset_minutes)
+            .unwrap_or_else(|| hlc.get(..10).unwrap_or("").to_string());
         if let Some(entry) = days_map.get_mut(&date) {
             entry.0 = entry.0.saturating_add(total);
             entry.2 += 1;

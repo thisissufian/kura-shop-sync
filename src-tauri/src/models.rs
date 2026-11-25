@@ -15,6 +15,10 @@ fn default_cashier() -> String {
     "Owner · K1".to_string()
 }
 
+fn default_utc_offset() -> i64 {
+    360
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Product {
     pub sku: String,
@@ -95,6 +99,7 @@ pub struct SyncChainStatus {
     pub shop_subtitle: String,
     pub currency_symbol: String,
     pub receipt_footer: String,
+    pub utc_offset_minutes: i64,
     pub peer_count: usize,
     pub pending_events: i64,
     pub lan_ip: String,
@@ -178,6 +183,7 @@ pub struct ShopSettings {
     pub shop_subtitle: String,
     pub currency_symbol: String,
     pub receipt_footer: String,
+    pub utc_offset_minutes: i64,
     pub node_id: String,
     pub role: String,
 }
@@ -188,6 +194,8 @@ pub struct ShopSettingsInput {
     pub shop_subtitle: String,
     pub currency_symbol: String,
     pub receipt_footer: String,
+    #[serde(default = "default_utc_offset")]
+    pub utc_offset_minutes: i64,
 }
 
 #[derive(Debug, Clone)]
@@ -201,4 +209,5 @@ pub struct ChainConfig {
     pub seed_b64: String,
     pub last_hlc: String,
     pub is_linked: bool,
+    pub utc_offset_minutes: i64,
 }

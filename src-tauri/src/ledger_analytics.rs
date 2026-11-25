@@ -2,7 +2,7 @@ use rusqlite::Connection;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::hlc::format_iso_ms;
+use crate::hlc::{hlc_local_date, local_date_str};
 use crate::ledger_analytics_trend::compute_7day_trend;
 use crate::models::{BillItem, OwnerAnalytics, TerminalSalesSummary};
 
@@ -11,6 +11,14 @@ pub fn compute_owner_analytics(conn: &Connection, period: &str) -> Result<OwnerA
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis())
         .unwrap_or(0);
+    compute_owner_analytics_at(conn, period, now_ms)
+}
+
+pub fn compute_owner_analytics_at(
+    conn: &Connection,
+    period: &str,
+    now_ms: u128,
+) -> Result<OwnerAnalytics, String> {
 
     let norm_period = match period.to_uppercase().as_str() {
         "TODAY" => "TODAY",
@@ -20,14 +28,15 @@ pub fn compute_owner_analytics(conn: &Connection, period: &str) -> Result<OwnerA
         _ => "ALL",
     };
 
-    let cutoff_iso = match norm_period {
-        "TODAY" => {
-            let today_start_ms = (now_ms / 86_400_000) * 86_400_000;
-            format_iso_ms(today_start_ms)[..10].to_string()
-        }
-        "7D" => format_iso_ms(now_ms.saturating_sub(7 * 86_400_000))[..10].to_string(),
-        "30D" => format_iso_ms(now_ms.saturating_sub(30 * 86_400_000))[..10].to_string(),
-        "YEARLY" => format_iso_ms(now_ms.saturating_sub(365 * 86_400_000))[..10].to_string(),
+    let offset_minutes: i64 = conn
+        .query_row("SELECT utc_offset_minutes FROM chain_config WHERE id = 1", [], |r| r.get(0))
+        .unwrap_or(360);
+
+    let cutoff_date = match norm_period {
+        "TODAY" => local_date_str(now_ms, offset_minutes),
+        "7D" => local_date_str(now_ms.saturating_sub(7 * 86_400_000), offset_minutes),
+        "30D" => local_date_str(now_ms.saturating_sub(30 * 86_400_000), offset_minutes),
+        "YEARLY" => local_date_str(now_ms.saturating_sub(365 * 86_400_000), offset_minutes),
         _ => String::new(),
     };
 
@@ -79,21 +88,23 @@ pub fn compute_owner_analytics(conn: &Connection, period: &str) -> Result<OwnerA
         )
         .unwrap_or(0);
 
-    let operating_expenses_minor: i64 = if cutoff_iso.is_empty() {
-        conn.query_row(
-            "SELECT COALESCE(SUM(amount_minor), 0) FROM expenses",
-            [],
-            |r| r.get(0),
-        )
-        .unwrap_or(0)
-    } else {
-        conn.query_row(
-            "SELECT COALESCE(SUM(amount_minor), 0) FROM expenses WHERE substr(hlc, 1, 10) >= ?1",
-            [&cutoff_iso],
-            |r| r.get(0),
-        )
-        .unwrap_or(0)
-    };
+    let mut operating_expenses_minor: i64 = 0;
+    {
+        let mut stmt = conn
+            .prepare("SELECT amount_minor, hlc FROM expenses")
+            .map_err(|e| format!("Prepare expenses: {e}"))?;
+        let rows = stmt
+            .query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?)))
+            .map_err(|e| format!("Query expenses: {e}"))?;
+        for r in rows {
+            let (amt, hlc) = r.map_err(|e| e.to_string())?;
+            let date_str = hlc_local_date(&hlc, offset_minutes)
+                .unwrap_or_else(|| hlc.get(..10).unwrap_or("").to_string());
+            if cutoff_date.is_empty() || date_str.as_str() >= cutoff_date.as_str() {
+                operating_expenses_minor = operating_expenses_minor.saturating_add(amt);
+            }
+        }
+    }
 
     let mut gross_revenue_minor: i64 = 0;
     let mut estimated_cogs_minor: i64 = 0;
@@ -119,8 +130,9 @@ pub fn compute_owner_analytics(conn: &Connection, period: &str) -> Result<OwnerA
 
         for r in rows {
             let (node_id, items_json, total_minor, voided, hlc) = r.map_err(|e| e.to_string())?;
-            let date_str = hlc.get(..10).unwrap_or("");
-            if !cutoff_iso.is_empty() && date_str < cutoff_iso.as_str() {
+            let date_str = hlc_local_date(&hlc, offset_minutes)
+                .unwrap_or_else(|| hlc.get(..10).unwrap_or("").to_string());
+            if !cutoff_date.is_empty() && date_str.as_str() < cutoff_date.as_str() {
                 continue;
             }
             if voided != 0 {
@@ -163,7 +175,7 @@ pub fn compute_owner_analytics(conn: &Connection, period: &str) -> Result<OwnerA
         .collect();
     terminal_breakdown.sort_by(|a, b| a.node_id.cmp(&b.node_id));
 
-    let daily_trend = compute_7day_trend(conn, now_ms, &cost_map)?;
+    let daily_trend = compute_7day_trend(conn, now_ms, offset_minutes, &cost_map)?;
 
     Ok(OwnerAnalytics {
         period: norm_period.to_string(),

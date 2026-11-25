@@ -25,7 +25,8 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            role TEXT NOT NULL,
            seed_b64 TEXT NOT NULL,
            last_hlc TEXT NOT NULL,
-           is_linked INTEGER NOT NULL DEFAULT 0
+           is_linked INTEGER NOT NULL DEFAULT 0,
+           utc_offset_minutes INTEGER NOT NULL DEFAULT 360
          );
          CREATE TABLE IF NOT EXISTS ledger_events (
            event_id TEXT PRIMARY KEY,
@@ -97,6 +98,7 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     let _ = conn.execute("ALTER TABLE products ADD COLUMN warranty_label TEXT NOT NULL DEFAULT 'No Warranty (ওয়ারেন্টি নেই)'", []);
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN shop_subtitle TEXT NOT NULL DEFAULT ''", []);
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN receipt_footer TEXT NOT NULL DEFAULT 'Thank you for shopping!'", []);
+    let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN utc_offset_minutes INTEGER NOT NULL DEFAULT 360", []);
 
     let cfg_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM chain_config", [], |r| r.get(0))

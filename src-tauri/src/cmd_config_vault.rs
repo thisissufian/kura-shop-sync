@@ -12,8 +12,20 @@ use crate::ledger_analytics::compute_owner_analytics;
 use crate::ledger_queries::{all_ledger_events, get_chain_config};
 use crate::mnemonic::phrase_to_seed;
 use crate::models::{
-    LedgerEvent, OwnerAnalytics, ShopSettings, ShopSettingsInput, VaultExportResult,
+    ChainConfig, LedgerEvent, OwnerAnalytics, ShopSettings, ShopSettingsInput, VaultExportResult,
 };
+
+fn default_utc_offset() -> i64 {
+    360
+}
+
+fn to_shop_settings(cfg: ChainConfig) -> ShopSettings {
+    ShopSettings {
+        shop_name: cfg.shop_name, shop_subtitle: cfg.shop_subtitle, currency_symbol: cfg.currency_symbol,
+        receipt_footer: cfg.receipt_footer, utc_offset_minutes: cfg.utc_offset_minutes,
+        node_id: cfg.node_id, role: cfg.role,
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 struct VaultSnapshot {
@@ -22,21 +34,15 @@ struct VaultSnapshot {
     shop_subtitle: String,
     currency_symbol: String,
     receipt_footer: String,
+    #[serde(default = "default_utc_offset")]
+    utc_offset_minutes: i64,
     events: Vec<LedgerEvent>,
 }
 
 #[tauri::command]
 pub fn get_shop_settings(state: State<'_, AppState>) -> Result<ShopSettings, String> {
     let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-    let cfg = get_chain_config(&conn)?;
-    Ok(ShopSettings {
-        shop_name: cfg.shop_name,
-        shop_subtitle: cfg.shop_subtitle,
-        currency_symbol: cfg.currency_symbol,
-        receipt_footer: cfg.receipt_footer,
-        node_id: cfg.node_id,
-        role: cfg.role,
-    })
+    Ok(to_shop_settings(get_chain_config(&conn)?))
 }
 
 #[tauri::command]
@@ -45,7 +51,14 @@ pub fn update_shop_settings(
     state: State<'_, AppState>,
 ) -> Result<ShopSettings, String> {
     let mut conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-    let cfg = get_chain_config(&conn)?;
+    save_shop_settings_conn(&mut conn, input)
+}
+
+pub fn save_shop_settings_conn(
+    conn: &mut Connection,
+    input: ShopSettingsInput,
+) -> Result<ShopSettings, String> {
+    let cfg = get_chain_config(conn)?;
     if cfg.role != "OWNER" {
         return Err("Only OWNER devices can update shop profile".to_string());
     }
@@ -53,23 +66,16 @@ pub fn update_shop_settings(
     if shop_name.is_empty() {
         return Err("Shop name cannot be empty".to_string());
     }
-    let currency = if input.currency_symbol.trim().is_empty() {
-        "$".to_string()
-    } else {
-        input.currency_symbol.trim().to_string()
-    };
-    let footer = if input.receipt_footer.trim().is_empty() {
-        "Thank you for shopping!".to_string()
-    } else {
-        input.receipt_footer.trim().to_string()
-    };
+    let currency = if input.currency_symbol.trim().is_empty() { "$".to_string() } else { input.currency_symbol.trim().to_string() };
+    let footer = if input.receipt_footer.trim().is_empty() { "Thank you for shopping!".to_string() } else { input.receipt_footer.trim().to_string() };
 
-    let hlc = next_hlc(&conn, &cfg.node_id)?;
+    let hlc = next_hlc(conn, &cfg.node_id)?;
     let payload = ShopSettingsPayload {
         shop_name: shop_name.to_string(),
         shop_subtitle: input.shop_subtitle.trim().to_string(),
         currency_symbol: currency,
         receipt_footer: footer,
+        utc_offset_minutes: input.utc_offset_minutes.clamp(-720, 840),
     };
     let ev = LedgerEvent {
         event_id: new_event_id(&hlc),
@@ -83,16 +89,7 @@ pub fn update_shop_settings(
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     apply_ledger_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
-
-    let updated = get_chain_config(&conn)?;
-    Ok(ShopSettings {
-        shop_name: updated.shop_name,
-        shop_subtitle: updated.shop_subtitle,
-        currency_symbol: updated.currency_symbol,
-        receipt_footer: updated.receipt_footer,
-        node_id: updated.node_id,
-        role: updated.role,
-    })
+    Ok(to_shop_settings(get_chain_config(conn)?))
 }
 
 #[tauri::command]
@@ -118,7 +115,8 @@ pub fn build_encrypted_vault(conn: &Connection) -> Result<(String, usize), Strin
     let count = events.len();
     let snapshot = VaultSnapshot {
         version: 1, shop_name: cfg.shop_name, shop_subtitle: cfg.shop_subtitle,
-        currency_symbol: cfg.currency_symbol, receipt_footer: cfg.receipt_footer, events,
+        currency_symbol: cfg.currency_symbol, receipt_footer: cfg.receipt_footer,
+        utc_offset_minutes: cfg.utc_offset_minutes, events,
     };
     let plaintext = serde_json::to_vec(&snapshot).map_err(|e| e.to_string())?;
     let encrypted = encrypt_bytes(&seed, &plaintext)?;
@@ -186,8 +184,8 @@ pub fn restore_encrypted_vault(
     let mut max_hlc = String::new();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     tx.execute(
-        "UPDATE chain_config SET seed_b64 = ?1, role = ?2, is_linked = ?3, shop_name = ?4, shop_subtitle = ?5, currency_symbol = ?6, receipt_footer = ?7 WHERE id = 1",
-        params![next_seed, next_role, next_linked, snapshot.shop_name, snapshot.shop_subtitle, snapshot.currency_symbol, snapshot.receipt_footer],
+        "UPDATE chain_config SET seed_b64 = ?1, role = ?2, is_linked = ?3, shop_name = ?4, shop_subtitle = ?5, currency_symbol = ?6, receipt_footer = ?7, utc_offset_minutes = ?8 WHERE id = 1",
+        params![next_seed, next_role, next_linked, snapshot.shop_name, snapshot.shop_subtitle, snapshot.currency_symbol, snapshot.receipt_footer, snapshot.utc_offset_minutes],
     )
     .map_err(|e| format!("Restore shop profile: {e}"))?;
 

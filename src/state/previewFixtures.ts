@@ -75,6 +75,7 @@ export const mockSync: SyncChainStatus = {
   shop_subtitle: "Local Retail · Offline POS",
   currency_symbol: "৳",
   receipt_footer: "Thank you for shopping!",
+  utc_offset_minutes: 360,
   peer_count: 0,
   pending_events: 0,
   lan_ip: "127.0.0.1:42850",
