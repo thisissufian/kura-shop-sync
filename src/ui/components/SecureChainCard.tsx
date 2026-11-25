@@ -1,6 +1,7 @@
 import { useState } from "preact/hooks";
 import { callBackend } from "../../state/ipcBridge";
 import { isOwner, refreshBootstrap, showToast, syncStatus } from "../../state/kuraStore";
+import { IconLock } from "../primitives/KuraIcons";
 
 // Shown only on OWNER devices of a chain created before owner signing (S4).
 // Securing moves the shop to a new chain key. Other phones must scan the new
@@ -26,37 +27,39 @@ export function SecureChainCard() {
   };
 
   return (
-    <div class="rounded-2xl border border-[#FF9500]/30 bg-[#FF9500]/10 p-4 space-y-2">
-      <p class="text-[13px] font-semibold kura-text-main">Secure this Sync Chain</p>
-      <p class="text-[11px] kura-text-muted">
-        This chain was created before owner signing, so a cashier phone could make itself an owner. Securing it gives owner
-        actions a key only owner phones hold.
-      </p>
-      {confirming ? (
-        <div class="space-y-2">
-          <p class="text-[11px] font-medium kura-text-main">
-            Sync every phone first. Afterwards each phone must scan the new QR (it keeps its sales), and your recovery phrase
-            becomes a new 24-word phrase. Continue?
-          </p>
-          <div class="flex justify-end gap-2">
-            <button type="button" disabled={busy} onClick={() => setConfirming(false)}
-              class="rounded-lg kura-subtle px-3 py-1.5 text-[11px] font-semibold kura-text-muted active:scale-95">
-              Cancel
-            </button>
-            <button type="button" disabled={busy} onClick={secure}
-              class="rounded-lg bg-[#FF9500] px-3 py-1.5 text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50">
-              Secure Chain
-            </button>
+    <section>
+      <div class="kura-group p-4 space-y-3">
+        <div class="flex gap-3">
+          <span class="mt-0.5 w-8 h-8 rounded-[8px] bg-warning-fill/15 text-warning flex items-center justify-center shrink-0">
+            <IconLock class="w-[18px] h-[18px]" />
+          </span>
+          <div class="min-w-0 space-y-1">
+            <p class="text-headline font-semibold text-label">Secure this sync chain</p>
+            <p class="text-subhead text-label-2">
+              This chain was created before owner signing, so a cashier phone could make itself an owner. Securing it gives
+              owner actions a key that only owner phones hold.
+            </p>
           </div>
         </div>
-      ) : (
-        <div class="flex justify-end">
-          <button type="button" onClick={() => setConfirming(true)}
-            class="rounded-lg bg-[#FF9500] px-3 py-1.5 text-[11px] font-semibold text-white active:scale-95">
-            Secure…
+        {confirming ? (
+          <div class="space-y-3 pt-1">
+            <p class="text-subhead text-label">
+              Sync every phone first. Afterwards each phone must scan the new QR (it keeps its sales), and your recovery
+              phrase becomes a new 24-word phrase.
+            </p>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" disabled={busy} onClick={() => setConfirming(false)} class="kura-btn kura-btn-gray">Cancel</button>
+              <button type="button" disabled={busy} onClick={secure} class="kura-btn kura-btn-filled">
+                {busy ? "Securing…" : "Secure chain"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setConfirming(true)} class="kura-btn kura-btn-tinted w-full">
+            Secure chain…
           </button>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </section>
   );
 }

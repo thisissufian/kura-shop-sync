@@ -9,6 +9,8 @@ import {
   suppliers,
 } from "../../state/supplierActions";
 import { supplierSheetOpen } from "../../state/uiSignals";
+import { FieldRow, Section } from "../primitives/Group";
+import { SegmentedControl } from "../primitives/SegmentedControl";
 import { SpringSheet } from "../primitives/SpringSheet";
 
 export function SupplierPayablesSheet() {
@@ -77,92 +79,88 @@ export function SupplierPayablesSheet() {
     }
   };
 
-  const inp = "mt-1 w-full rounded-xl kura-input px-3 py-1.5 text-[13px]";
+  const v = (fn: (x: string) => void) => (e: Event) => fn((e.target as HTMLInputElement).value);
+  const totalOwed = suppList.reduce((acc, x) => acc + x.payable_balance_minor, 0);
 
   return (
-    <SpringSheet open={open} title="Supplier Payables & Purchase" subtitle="Vendor Dues & Inventory Restock Ledger" onClose={close}>
-      <div class="space-y-3 pb-6">
-        <div class="flex rounded-xl kura-subtle p-1">
-          <button type="button" onClick={() => setTab("LIST")} class={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${tab === "LIST" ? "kura-card kura-text-main shadow-xs" : "kura-text-muted"}`}>
-            Vendors & Dues ({suppList.length})
-          </button>
-          <button type="button" onClick={() => setTab("PURCHASE")} class={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${tab === "PURCHASE" ? "kura-card kura-text-main shadow-xs" : "kura-text-muted"}`}>
-            + Stock Purchase
-          </button>
-        </div>
+    <SpringSheet open={open} title="Suppliers" subtitle={`${formatMoney(totalOwed, sym)} owed to vendors`} onClose={close}>
+      <div class="space-y-6">
+        <SegmentedControl
+          options={[{ id: "LIST" as const, label: "Payables", badge: suppList.length }, { id: "PURCHASE" as const, label: "Record purchase" }]}
+          value={tab}
+          onChange={setTab}
+        />
 
         {tab === "LIST" ? (
-          <div class="space-y-2.5">
-            {suppList.map((s) => (
-              <div key={s.supplier_id} class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2 shadow-xs">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <h4 class="font-bold text-[14px] kura-text-main">{s.name}</h4>
-                    <p class="text-[11px] kura-text-muted">{s.phone || "No phone"} · {s.supplier_id}</p>
+          <div class="kura-group">
+            {suppList.map((s) => {
+              const paying = payTargetId === s.supplier_id;
+              return (
+                <div key={s.supplier_id} class="kura-row !block">
+                  <div class="flex items-center gap-3">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-body text-label truncate">{s.name}</div>
+                      <div class="text-footnote text-label-2 tabular-nums truncate">{s.phone || "No phone"}</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-body font-semibold tabular-nums text-label">{formatMoney(s.payable_balance_minor, sym)}</div>
+                      <div class="text-caption text-label-2">you owe</div>
+                    </div>
+                    {!paying && (
+                      <button type="button" class="kura-btn kura-btn-tinted kura-btn-sm"
+                        onClick={() => { setPayTargetId(s.supplier_id); setPayAmountStr(""); }}>
+                        Pay
+                      </button>
+                    )}
                   </div>
-                  <div class="text-right">
-                    <span class="text-[10px] kura-text-muted uppercase font-semibold">Payable Due</span>
-                    <div class="text-[16px] font-bold text-[#FF3B30] tabular-nums">{formatMoney(s.payable_balance_minor, sym)}</div>
-                  </div>
+                  {paying && (
+                    <form onSubmit={handlePay} class="flex flex-wrap items-center gap-2 pt-3">
+                      <input required inputMode="decimal" placeholder="Amount" value={payAmountStr} onInput={v(setPayAmountStr)}
+                        class="kura-input w-28 h-9 px-3 text-body tabular-nums" />
+                      <input placeholder="Note" value={payNote} onInput={v(setPayNote)} class="kura-input flex-1 min-w-24 h-9 px-3 text-body" />
+                      <button type="button" onClick={() => setPayTargetId(null)} class="text-subhead text-tint px-1">Cancel</button>
+                      <button type="submit" class="kura-btn kura-btn-filled kura-btn-sm">Pay</button>
+                    </form>
+                  )}
                 </div>
-                {payTargetId === s.supplier_id ? (
-                  <form onSubmit={handlePay} class="pt-2 border-t border-black/[0.06] dark:border-white/[0.08] space-y-2">
-                    <div class="flex gap-2">
-                      <input required inputMode="decimal" placeholder="Amount" value={payAmountStr} onInput={(e) => setPayAmountStr((e.target as HTMLInputElement).value)} class={`flex-1 ${inp} mt-0 tabular-nums`} />
-                      <input placeholder="Note / Ref" value={payNote} onInput={(e) => setPayNote((e.target as HTMLInputElement).value)} class={`flex-1 ${inp} mt-0`} />
-                    </div>
-                    <div class="flex gap-2">
-                      <button type="button" onClick={() => setPayTargetId(null)} class="flex-1 py-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-subtle kura-text-main text-[12px] font-medium">Cancel</button>
-                      <button type="submit" class="flex-1 py-1.5 rounded-lg bg-[#34C759] text-white text-[12px] font-bold">Confirm Payment</button>
-                    </div>
-                  </form>
-                ) : (
-                  <button type="button" onClick={() => { setPayTargetId(s.supplier_id); setPayAmountStr(""); }} class="w-full py-1.5 rounded-lg bg-[#007AFF]/10 text-[#007AFF] text-[12px] font-semibold active:scale-98 transition">
-                    Pay Supplier
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {suppList.length === 0 && !loading && (
-              <div class="text-center py-8 kura-text-muted text-[13px]">
-                No supplier records yet. Switch to "+ Stock Purchase" to record your first vendor purchase.
+              <div class="kura-row justify-center text-center py-8 text-subhead text-label-2">
+                No suppliers yet. Record a purchase to add your first one.
               </div>
             )}
           </div>
         ) : (
-          <form onSubmit={handlePurchase} class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2.5 shadow-xs">
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Supplier Name</span>
-              <input required placeholder="e.g. Anker BD Official" value={supplierName} onInput={(e) => setSupplierName((e.target as HTMLInputElement).value)} class={inp} />
-            </label>
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Phone</span>
-              <input placeholder="e.g. 01700-112233" value={supplierPhone} onInput={(e) => setSupplierPhone((e.target as HTMLInputElement).value)} class={inp} />
-            </label>
-            <label class="block">
-              <span class="text-[11px] font-medium kura-text-muted">Product SKU</span>
-              <select value={sku} onChange={(e) => setSku((e.target as HTMLSelectElement).value)} class={`${inp} py-2`}>
-                {prodList.map((p) => (
-                  <option key={p.sku} value={p.sku}>{p.name} ({p.sku}) · Stock: {p.stock_qty}</option>
-                ))}
-              </select>
-            </label>
-            <div class="grid grid-cols-3 gap-2">
-              <label class="block">
-                <span class="text-[11px] font-medium kura-text-muted">Qty</span>
-                <input required type="number" value={qtyStr} onInput={(e) => setQtyStr((e.target as HTMLInputElement).value)} class={`${inp} px-2 tabular-nums`} />
-              </label>
-              <label class="block">
-                <span class="text-[11px] font-medium kura-text-muted">Unit Cost</span>
-                <input required inputMode="decimal" value={costStr} onInput={(e) => setCostStr((e.target as HTMLInputElement).value)} class={`${inp} px-2 tabular-nums`} />
-              </label>
-              <label class="block">
-                <span class="text-[11px] font-medium kura-text-muted">Amount Paid</span>
-                <input required inputMode="decimal" value={paidStr} onInput={(e) => setPaidStr((e.target as HTMLInputElement).value)} class={`${inp} px-2 tabular-nums`} />
-              </label>
-            </div>
-            <button type="submit" disabled={saving} class="w-full mt-2 py-2.5 rounded-xl bg-[#007AFF] text-white font-bold text-[13px] shadow-sm active:scale-98 transition disabled:opacity-50">
-              {saving ? "Recording Purchase…" : "Record Purchase & Restock"}
+          <form onSubmit={handlePurchase} class="space-y-6">
+            <Section header="Supplier">
+              <FieldRow label="Name">
+                <input required placeholder="Anker BD Official" value={supplierName} onInput={v(setSupplierName)} class="kura-field" />
+              </FieldRow>
+              <FieldRow label="Phone">
+                <input inputMode="tel" placeholder="Optional" value={supplierPhone} onInput={v(setSupplierPhone)} class="kura-field tabular-nums" />
+              </FieldRow>
+            </Section>
+            <Section header="Stock received" footer="Any amount not paid now is added to what you owe this supplier.">
+              <FieldRow label="Product">
+                <select value={sku} onChange={(e) => setSku((e.target as HTMLSelectElement).value)} class="kura-field">
+                  {prodList.map((p) => (
+                    <option key={p.sku} value={p.sku}>{p.name} · {p.stock_qty} in stock</option>
+                  ))}
+                </select>
+              </FieldRow>
+              <FieldRow label="Quantity">
+                <input required type="number" value={qtyStr} onInput={v(setQtyStr)} class="kura-field tabular-nums" />
+              </FieldRow>
+              <FieldRow label="Unit cost">
+                <input required inputMode="decimal" value={costStr} onInput={v(setCostStr)} class="kura-field tabular-nums" />
+              </FieldRow>
+              <FieldRow label="Paid now">
+                <input required inputMode="decimal" value={paidStr} onInput={v(setPaidStr)} class="kura-field tabular-nums" />
+              </FieldRow>
+            </Section>
+            <button type="submit" disabled={saving} class="kura-btn kura-btn-filled kura-btn-lg w-full">
+              {saving ? "Recording…" : "Record purchase"}
             </button>
           </form>
         )}

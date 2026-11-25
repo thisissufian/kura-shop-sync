@@ -11,6 +11,8 @@
   button, a, select, input, textarea { touch-action: manipulation; }
   button:not(:disabled), [role="button"] { cursor: pointer; }
   input::placeholder, textarea::placeholder { color: var(--kura-text-muted); }
+  input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
   :focus-visible { outline: 2px solid var(--kura-tint); outline-offset: 2px; }
   ::selection { background: color-mix(in srgb, var(--kura-tint) 22%, transparent); }
 }

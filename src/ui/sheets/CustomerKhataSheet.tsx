@@ -11,6 +11,8 @@ import {
   parseMoneyInput,
 } from "../../state/kuraStore";
 import { khataSheetOpen } from "../../state/uiSignals";
+import { SearchField } from "../primitives/Controls";
+import { FieldRow, Section } from "../primitives/Group";
 import { SpringSheet } from "../primitives/SpringSheet";
 
 export function CustomerKhataSheet() {
@@ -59,120 +61,73 @@ export function CustomerKhataSheet() {
   return (
     <SpringSheet
       open={open}
-      title="Customer Due (Khata)"
-      subtitle={`Total Receivables: ${formatMoney(totalDueMinor.value, sym)}`}
+      title="Customer dues"
+      subtitle={`Khata · ${formatMoney(totalDueMinor.value, sym)} to collect`}
       onClose={() => {
         khataSheetOpen.value = false;
       }}
     >
-      <div class="space-y-3.5">
-        <input
-          type="search"
-          value={query}
-          onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-          placeholder="Search customer by name or phone…"
-          class="w-full rounded-xl kura-input px-3.5 py-2.5 text-[13px]"
-        />
+      <div class="space-y-6">
+        <SearchField value={query} onInput={setQuery} placeholder="Name or phone" />
 
-        <form
-          onSubmit={handleAdd}
-          class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3 flex gap-2"
-        >
-          <input
-            required
-            placeholder="Customer Name"
-            value={name}
-            onInput={(e) => setName((e.target as HTMLInputElement).value)}
-            class="flex-1 min-w-0 rounded-lg kura-input px-2.5 py-1.5 text-[12px]"
-          />
-          <input
-            required
-            placeholder="Phone"
-            value={phone}
-            onInput={(e) => setPhone((e.target as HTMLInputElement).value)}
-            class="w-28 rounded-lg kura-input px-2.5 py-1.5 text-[12px] tabular-nums"
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            class="rounded-lg bg-[#007AFF] px-3 py-1.5 text-[12px] font-semibold text-white active:scale-95"
-          >
-            Add
-          </button>
-        </form>
-
-        <div class="space-y-2">
-          {filtered.length === 0 ? (
-            <div class="rounded-2xl kura-card p-6 text-center text-[13px] kura-text-muted">
-              No matching customer accounts.
-            </div>
-          ) : (
-            filtered.map((c) => (
-              <div
-                key={c.customer_id}
-                class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-2.5"
-              >
-                <div class="flex items-center justify-between gap-2">
-                  <div class="min-w-0">
-                    <div class="truncate text-[14px] font-semibold kura-text-main">
-                      {c.name}
+        <section>
+          <div class="kura-section-header">{filtered.length} {filtered.length === 1 ? "customer" : "customers"}</div>
+          <div class="kura-group">
+            {filtered.length === 0 && (
+              <div class="kura-row justify-center py-6 text-subhead text-label-2">No matching customers.</div>
+            )}
+            {filtered.map((c) => {
+              const owes = c.balance_due_minor > 0;
+              const paying = payingId === c.customer_id;
+              return (
+                <div key={c.customer_id} class="kura-row !block">
+                  <div class="flex items-center gap-3">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-body text-label truncate">{c.name}</div>
+                      <div class="text-footnote text-label-2 tabular-nums truncate">{c.phone}</div>
                     </div>
-                    <div class="text-[11px] kura-text-muted tabular-nums">
-                      {c.phone} · {c.customer_id}
+                    <div class="text-right">
+                      <div class={`text-body font-semibold tabular-nums ${owes ? "text-warning" : "text-label-2"}`}>
+                        {formatMoney(c.balance_due_minor, sym)}
+                      </div>
+                      <div class="text-caption text-label-2">{owes ? "owes you" : "settled"}</div>
                     </div>
-                  </div>
-                  <div class="text-right">
-                    <div
-                      class={`text-[15px] font-bold tabular-nums ${
-                        c.balance_due_minor > 0 ? "text-[#FF3B30]" : "text-[#34C759]"
-                      }`}
-                    >
-                      {formatMoney(c.balance_due_minor, sym)}
-                    </div>
-                    {c.balance_due_minor > 0 && payingId !== c.customer_id && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPayingId(c.customer_id);
-                          setPayAmount((c.balance_due_minor / 100).toFixed(2));
-                        }}
-                        class="mt-1 rounded-full bg-[#34C759]/12 px-2.5 py-0.5 text-[11px] font-semibold text-[#1E8E3E]"
-                      >
-                        Settle
+                    {owes && !paying && (
+                      <button type="button" class="kura-btn kura-btn-tinted kura-btn-sm"
+                        onClick={() => { setPayingId(c.customer_id); setPayAmount((c.balance_due_minor / 100).toFixed(2)); }}>
+                        Receive
                       </button>
                     )}
                   </div>
+                  {paying && (
+                    <div class="flex items-center gap-2 pt-3">
+                      <input inputMode="decimal" aria-label="Amount received" value={payAmount}
+                        onInput={(e) => setPayAmount((e.target as HTMLInputElement).value)}
+                        class="kura-input flex-1 min-w-0 h-9 px-3 text-body tabular-nums" />
+                      <button type="button" onClick={() => setPayingId(null)} class="text-subhead text-tint px-1">Cancel</button>
+                      <button type="button" disabled={busy} onClick={() => void handleSettle(c.customer_id)}
+                        class="kura-btn kura-btn-filled kura-btn-sm">
+                        Receive
+                      </button>
+                    </div>
+                  )}
                 </div>
+              );
+            })}
+          </div>
+        </section>
 
-                {payingId === c.customer_id && (
-                  <div class="flex gap-2 pt-1 border-t border-black/[0.06] dark:border-white/[0.08]">
-                    <input
-                      inputMode="decimal"
-                      value={payAmount}
-                      onInput={(e) => setPayAmount((e.target as HTMLInputElement).value)}
-                      class="flex-1 rounded-lg kura-input px-2.5 py-1.5 text-[13px] tabular-nums"
-                    />
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void handleSettle(c.customer_id)}
-                      class="rounded-lg bg-[#34C759] px-3 py-1.5 text-[12px] font-semibold text-white"
-                    >
-                      Receive
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPayingId(null)}
-                      class="px-2 text-[12px] kura-text-muted"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+        <form onSubmit={handleAdd}>
+          <Section header="New customer">
+            <FieldRow label="Name">
+              <input required placeholder="Required" value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} class="kura-field" />
+            </FieldRow>
+            <FieldRow label="Phone">
+              <input required inputMode="tel" placeholder="Required" value={phone} onInput={(e) => setPhone((e.target as HTMLInputElement).value)} class="kura-field tabular-nums" />
+            </FieldRow>
+            <button type="submit" disabled={busy} class="kura-row text-body text-tint disabled:opacity-40">Add customer</button>
+          </Section>
+        </form>
       </div>
     </SpringSheet>
   );

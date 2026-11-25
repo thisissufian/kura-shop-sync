@@ -43,7 +43,7 @@ Only these meanings are allowed. No purple, teal or WhatsApp green, and never us
 
 ## Controls
 - Buttons: `.kura-btn` plus one of `-filled` (one or two per view: Charge, Save), `-gray` / `-tinted` (secondary), `-plain` (text), `-destructive` (red on red tint) or `-danger-filled` (the confirm step only). Sizes: `-sm` (32 px capsule), default (44 px), `-lg` (50 px, full-width primary in sheets).
-- `.kura-icon-btn` is a 36 px round gray button with a tint glyph. `.kura-chip` + `aria-pressed` is a filter capsule. `SegmentedControl` has a fill track and a raised thumb.
+- `.kura-icon-btn` is a 36 px round gray button with a tint glyph. `.kura-chip` + `aria-pressed` is a filter capsule. `SegmentedControl` has a fill track and a raised thumb. `Toggle` (Controls.tsx) is the iOS switch for on/off settings; never use an Enable/Disable button pair. Tappable actions inside a group are a `button.kura-row` with tint text (Settings style), not a full-width filled button.
 - Status is shown as text, or as `.kura-dot` + text. Do not use colored pill badges.
 - Icons come from `KuraIcons.tsx` only (1.8 px stroke SVG). **No emoji or unicode arrows (➔ ✕ ▲ ● ⇄) as icons.**
 
@@ -58,3 +58,8 @@ Only these meanings are allowed. No purple, teal or WhatsApp green, and never us
 
 ## Ergonomics
 - On phones, the register checkout sits above the tab bar as a material bar: total plus a large Charge button within thumb reach. Steppers are − / + in a gray capsule. The "Add" button is a gray capsule with a tint label (App Store "Get" style).
+
+## Gotchas learned
+- Component classes live in `@layer components`. If you add CSS outside a layer, it beats every Tailwind utility, and overrides such as `px-5` on a `.kura-btn` silently stop working.
+- Some files come from git with CRLF line endings. Normalise them (`\r\n` → `\n`) before doing a string-index rewrite of a file.
+- For visual checks without a browser pane, drive headless Chrome over CDP and import `/src/state/kuraStore.ts` from the page. Vite serves the same module instance, so setting `activeTab`, the sheet signals and the cart reproduces any screen.

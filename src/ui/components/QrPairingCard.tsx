@@ -8,6 +8,8 @@ import {
   syncWithPeer,
 } from "../../state/kuraStore";
 import { pendingChainJoin, scannerMode } from "../../state/uiSignals";
+import { Section } from "../primitives/Group";
+import { SegmentedControl } from "../primitives/SegmentedControl";
 
 export function QrPairingCard() {
   const status = syncStatus.value;
@@ -31,7 +33,7 @@ export function QrPairingCard() {
     QRCode.toString(activeUri, {
       type: "svg",
       margin: 1,
-      color: { dark: "#1D1D1F", light: "#FFFFFF" },
+      color: { dark: "#000000", light: "#FFFFFF" },
     })
       .then(setQrSvg)
       .catch(() => setQrSvg(""));
@@ -73,128 +75,55 @@ export function QrPairingCard() {
   };
 
   return (
-    <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-4 shadow-xs space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-[15px] font-semibold kura-text-main">Link Another Device</h3>
-        <div class="inline-flex rounded-xl kura-subtle p-0.5">
-          <button
-            type="button"
-            onClick={() => setQrMode("CASHIER")}
-            class={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-              qrMode === "CASHIER" ? "kura-card kura-text-main shadow-xs" : "kura-text-muted"
-            }`}
-          >
-            Cashier QR
-          </button>
+    <div class="space-y-6">
+      <Section header="Link another phone"
+        footer={qrMode === "OWNER" ? "Owner phones see costs and profit, and can void bills." : "Cashier phones can sell and print, nothing more."}>
+        <div class="flex flex-col items-center gap-4 px-4 py-5">
           {owner && (
-            <button
-              type="button"
-              onClick={() => setQrMode("OWNER")}
-              class={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-                qrMode === "OWNER" ? "kura-card kura-text-main shadow-xs" : "kura-text-muted"
-              }`}
-            >
-              Owner QR
-            </button>
+            <SegmentedControl
+              class="max-w-xs"
+              options={[{ id: "CASHIER" as const, label: "Cashier" }, { id: "OWNER" as const, label: "Owner" }]}
+              value={qrMode}
+              onChange={setQrMode}
+            />
           )}
+          {qrSvg ? (
+            <div class="h-48 w-48 rounded-[14px] bg-white p-2.5 ring-[0.5px] ring-sep [&>svg]:h-full [&>svg]:w-full"
+              dangerouslySetInnerHTML={{ __html: qrSvg }} />
+          ) : (
+            <div class="h-48 w-48 rounded-[14px] bg-fill flex items-center justify-center text-footnote text-label-2">Making QR…</div>
+          )}
+          <p class="text-footnote text-label-2 text-center">On the other phone, open Kura and scan this code.</p>
+          <div class="flex gap-2.5">
+            <button type="button" onClick={() => copyText(activeUri, "pairing link")} class="kura-btn kura-btn-gray kura-btn-sm">Copy link</button>
+            <button type="button" onClick={() => { scannerMode.value = "QR_PAIRING"; }} class="kura-btn kura-btn-filled kura-btn-sm">Scan a QR</button>
+          </div>
         </div>
-      </div>
+      </Section>
 
-      <div class="flex flex-col items-center rounded-xl kura-subtle p-4">
-        {qrSvg ? (
-          <div
-            class="h-44 w-44 rounded-xl bg-white p-2 shadow-xs [&>svg]:h-full [&>svg]:w-full"
-            dangerouslySetInnerHTML={{ __html: qrSvg }}
-          />
-        ) : (
-          <div class="h-44 w-44 flex items-center justify-center text-[12px] kura-text-muted">
-            Generating QR…
+      <Section header="Join or sync by hand" footer="Leave the address empty to sync with every phone on this Wi-Fi.">
+        <form onSubmit={handleJoin} class="kura-row !py-2">
+          <input value={joinInput} onInput={(e) => setJoinInput((e.target as HTMLInputElement).value)}
+            placeholder="kura://join link or recovery phrase" class="kura-field kura-field-left text-subhead" />
+          <button type="submit" disabled={busy || !joinInput.trim()} class="kura-btn kura-btn-tinted kura-btn-sm">Join</button>
+        </form>
+        {pendingChainJoin.value && (
+          <div class="kura-row !block space-y-3 !py-3">
+            <p class="text-subhead text-label">
+              Joining erases every sale and all stock stored on this phone, then copies the new chain. This can't be undone.
+            </p>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" disabled={busy} onClick={() => { pendingChainJoin.value = null; }} class="kura-btn kura-btn-gray">Cancel</button>
+              <button type="button" disabled={busy} onClick={handleConfirmReset} class="kura-btn kura-btn-danger-filled">Erase and join</button>
+            </div>
           </div>
         )}
-        <p class="mt-2.5 text-center text-[11px] kura-text-muted">
-          {qrMode === "OWNER"
-            ? "Owner Phone: Full inventory, cost prices & void access"
-            : "Cashier Phone: POS checkout & thermal print only"}
-        </p>
-        <div class="mt-2 flex gap-2">
-          <button
-            type="button"
-            onClick={() => copyText(activeUri, `${qrMode} Pairing URI`)}
-            class="rounded-full kura-card border border-black/[0.08] dark:border-white/[0.08] px-3 py-1 text-[11px] font-semibold text-[#007AFF] active:scale-95"
-          >
-            Copy Pairing URI
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              scannerMode.value = "QR_PAIRING";
-            }}
-            class="rounded-full bg-[#007AFF] px-3 py-1 text-[11px] font-semibold text-white active:scale-95"
-          >
-            Scan QR
-          </button>
-        </div>
-      </div>
-
-      <form onSubmit={handleJoin} class="flex gap-2">
-        <input
-          value={joinInput}
-          onInput={(e) => setJoinInput((e.target as HTMLInputElement).value)}
-          placeholder="Paste kura://join?... or 12- or 24-word phrase"
-          class="flex-1 rounded-xl kura-input px-3 py-2 text-[12px]"
-        />
-        <button
-          type="submit"
-          disabled={busy}
-          class="rounded-xl bg-[#007AFF] px-3.5 py-2 text-[12px] font-semibold text-white active:scale-95 disabled:opacity-50"
-        >
-          Join
-        </button>
-      </form>
-
-      {pendingChainJoin.value && (
-        <div class="rounded-xl border border-[#FF9500]/30 bg-[#FF9500]/10 p-3 space-y-2">
-          <p class="text-[11px] font-medium kura-text-main">
-            All local sales and stock on this device will be erased before joining the new Sync Chain. Continue?
-          </p>
-          <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                pendingChainJoin.value = null;
-              }}
-              class="rounded-lg kura-subtle px-3 py-1.5 text-[11px] font-semibold kura-text-muted active:scale-95"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleConfirmReset}
-              class="rounded-lg bg-[#FF3B30] px-3 py-1.5 text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50"
-            >
-              Reset & Join
-            </button>
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={handleSyncPeer} class="flex gap-2">
-        <input
-          value={peerIp}
-          onInput={(e) => setPeerIp((e.target as HTMLInputElement).value)}
-          placeholder="Peer LAN IP (optional, e.g. 192.168.1.42)"
-          class="flex-1 rounded-xl kura-input px-3 py-2 text-[12px] tabular-nums"
-        />
-        <button
-          type="submit"
-          disabled={busy}
-          class="rounded-xl border border-black/[0.08] dark:border-white/[0.08] kura-subtle px-3.5 py-2 text-[12px] font-semibold kura-text-main active:scale-95 disabled:opacity-50"
-        >
-          Sync Now
-        </button>
-      </form>
+        <form onSubmit={handleSyncPeer} class="kura-row !py-2">
+          <input value={peerIp} onInput={(e) => setPeerIp((e.target as HTMLInputElement).value)}
+            placeholder="Phone address, e.g. 192.168.1.42" class="kura-field kura-field-left text-subhead tabular-nums" />
+          <button type="submit" disabled={busy} class="kura-btn kura-btn-tinted kura-btn-sm">Sync now</button>
+        </form>
+      </Section>
     </div>
   );
 }

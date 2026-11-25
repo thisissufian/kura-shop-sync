@@ -3,6 +3,8 @@ import { syncStatus } from "../../state/kuraStore";
 import { setThemeMode, themeMode, type ThemeMode } from "../../state/themeStore";
 import { shopSettingsSheetOpen } from "../../state/uiSignals";
 import { saveShopSettings } from "../../state/vaultConfigActions";
+import { FieldRow, Section } from "../primitives/Group";
+import { SegmentedControl } from "../primitives/SegmentedControl";
 import { SpringSheet } from "../primitives/SpringSheet";
 
 const CURRENCIES = [
@@ -71,127 +73,55 @@ export function ShopSettingsSheet() {
     if (ok) close();
   };
 
+  const v = (fn: (x: string) => void) => (e: Event) => fn((e.target as HTMLInputElement).value);
+  const hm = (o: number) => `${String(Math.floor(Math.abs(o) / 60)).padStart(2, "0")}:${String(Math.abs(o) % 60).padStart(2, "0")}`;
+
   return (
-    <SpringSheet
-      open={open}
-      title="Shop Profile & Receipts"
-      subtitle="Synced automatically across all linked phones"
-      onClose={close}
-    >
-      <form onSubmit={handleSubmit} class="space-y-3.5">
-        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-3">
-          <label class="block">
-            <span class="text-[11px] font-medium kura-text-muted">Shop Name</span>
-            <input
-              required
-              value={shopName}
-              onInput={(e) => setShopName((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[14px]"
-            />
-          </label>
+    <SpringSheet open={open} title="Shop settings" subtitle="Synced to every linked phone" onClose={close}>
+      <form onSubmit={handleSubmit} class="space-y-6">
+        <Section header="Shop">
+          <FieldRow label="Name">
+            <input required value={shopName} onInput={v(setShopName)} class="kura-field" />
+          </FieldRow>
+          <FieldRow label="Address line">
+            <input placeholder="42 Main Rd · 01700-000000" value={subtitle} onInput={v(setSubtitle)} class="kura-field" />
+          </FieldRow>
+        </Section>
 
-          <label class="block">
-            <span class="text-[11px] font-medium kura-text-muted">
-              Address / Phone Subtitle (Receipts)
-            </span>
-            <input
-              placeholder="e.g. 42 Main Rd · +880 1700-000000"
-              value={subtitle}
-              onInput={(e) => setSubtitle((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px]"
-            />
-          </label>
-
-          <div>
-            <span class="text-[11px] font-medium kura-text-muted">Currency Symbol</span>
-            <div class="mt-1.5 flex flex-wrap gap-1.5">
-              {CURRENCIES.map((c) => {
-                const active = currency === c.symbol;
-                return (
-                  <button
-                    key={c.symbol}
-                    type="button"
-                    onClick={() => setCurrency(c.symbol)}
-                    class={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
-                      active
-                        ? "bg-[#007AFF] text-white"
-                        : "kura-subtle kura-text-muted"
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <label class="block">
-            <span class="text-[11px] font-medium kura-text-muted">Receipt Footer</span>
-            <input
-              placeholder="Thank you for shopping!"
-              value={footer}
-              onInput={(e) => setFooter((e.target as HTMLInputElement).value)}
-              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px]"
-            />
-          </label>
-
-          <label class="block">
-            <span class="text-[11px] font-medium kura-text-muted">
-              Shop Timezone (Day Rollover)
-            </span>
-            <select
-              value={utcOffset}
-              onChange={(e) => setUtcOffset(Number((e.target as HTMLSelectElement).value))}
-              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px] tabular-nums"
-            >
-              {!TIMEZONE_OPTIONS.some((o) => o.offset === utcOffset) && (
-                <option value={utcOffset}>
-                  UTC{utcOffset >= 0 ? "+" : "−"}
-                  {String(Math.floor(Math.abs(utcOffset) / 60)).padStart(2, "0")}:
-                  {String(Math.abs(utcOffset) % 60).padStart(2, "0")}
-                </option>
-              )}
-              {TIMEZONE_OPTIONS.map((o) => (
-                <option key={o.offset} value={o.offset}>
-                  {o.label}
-                </option>
-              ))}
+        <Section header="Receipts" footer="The address line and footer print on every receipt.">
+          <FieldRow label="Currency">
+            <select value={currency} onChange={(e) => setCurrency((e.target as HTMLSelectElement).value)} class="kura-field">
+              {CURRENCIES.map((c) => (<option key={c.symbol} value={c.symbol}>{c.label}</option>))}
             </select>
-          </label>
+          </FieldRow>
+          <FieldRow label="Footer">
+            <input placeholder="Thank you for shopping!" value={footer} onInput={v(setFooter)} class="kura-field" />
+          </FieldRow>
+          <FieldRow label="Time zone">
+            <select value={utcOffset} onChange={(e) => setUtcOffset(Number((e.target as HTMLSelectElement).value))} class="kura-field tabular-nums">
+              {!TIMEZONE_OPTIONS.some((o) => o.offset === utcOffset) && (
+                <option value={utcOffset}>UTC{utcOffset >= 0 ? "+" : "−"}{hm(utcOffset)}</option>
+              )}
+              {TIMEZONE_OPTIONS.map((o) => (<option key={o.offset} value={o.offset}>{o.label}</option>))}
+            </select>
+          </FieldRow>
+        </Section>
 
-          <div>
-            <span class="text-[11px] font-medium kura-text-muted">Display Appearance</span>
-            <div class="mt-1.5 flex gap-1.5">
-              {(
-                [
-                  { id: "LIGHT", label: "Light" },
-                  { id: "DARK", label: "OLED Dark" },
-                  { id: "SYSTEM", label: "Auto" },
-                ] as { id: ThemeMode; label: string }[]
-              ).map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setThemeMode(m.id)}
-                  class={`flex-1 rounded-full py-1.5 text-[12px] font-semibold transition ${
-                    themeMode.value === m.id
-                      ? "bg-[#007AFF] text-white"
-                      : "kura-subtle kura-text-muted"
-                  }`}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <section>
+          <div class="kura-section-header">Appearance on this phone</div>
+          <SegmentedControl
+            options={[
+              { id: "SYSTEM" as ThemeMode, label: "Automatic" },
+              { id: "LIGHT" as ThemeMode, label: "Light" },
+              { id: "DARK" as ThemeMode, label: "Dark" },
+            ]}
+            value={themeMode.value}
+            onChange={setThemeMode}
+          />
+        </section>
 
-        <button
-          type="submit"
-          disabled={saving}
-          class="w-full rounded-2xl bg-[#007AFF] py-3.5 text-[15px] font-semibold text-white shadow-sm hover:brightness-105 active:scale-[0.99] disabled:opacity-50 transition"
-        >
-          {saving ? "Saving…" : "Save & Sync Shop Profile"}
+        <button type="submit" disabled={saving} class="kura-btn kura-btn-filled kura-btn-lg w-full">
+          {saving ? "Saving…" : "Save"}
         </button>
       </form>
     </SpringSheet>
