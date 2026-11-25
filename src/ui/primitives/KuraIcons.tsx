@@ -114,3 +114,39 @@ export const IconMoon = (p: IconProps) => (
 export const IconShieldOwner = (p: IconProps) => (
   <Svg class={p.class}><path d="M12 3s8 3.5 8 9.5c0 5-4.5 8.5-8 9.5-3.5-1-8-4.5-8-9.5C4 6.5 12 3 12 3zM9 12l2 2 4-4" /></Svg>
 );
+
+export const IconChevronRight = (p: IconProps) => (
+  <Svg class={p.class}><path d="M9 5l7 7-7 7" /></Svg>
+);
+
+export const IconChevronDown = (p: IconProps) => (
+  <Svg class={p.class}><path d="M5 9l7 7 7-7" /></Svg>
+);
+
+export const IconXmark = (p: IconProps) => (
+  <Svg class={p.class}><path d="M6 6l12 12M18 6L6 18" /></Svg>
+);
+
+export const IconMinus = (p: IconProps) => (
+  <Svg class={p.class}><path d="M5 12h14" /></Svg>
+);
+
+export const IconBell = (p: IconProps) => (
+  <Svg class={p.class}><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 004 0" /></Svg>
+);
+
+export const IconBellSlash = (p: IconProps) => (
+  <Svg class={p.class}><path d="M6 16V11a6 6 0 019.7-4.7M18 11v5l1.5 2H8M10 20.5a2 2 0 004 0M3 3l18 18" /></Svg>
+);
+
+export const IconLock = (p: IconProps) => (
+  <Svg class={p.class}><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 018 0v3" /></Svg>
+);
+
+export const IconCashDrawer = (p: IconProps) => (
+  <Svg class={p.class}><rect x="2.5" y="6" width="19" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 9.5v5M18 9.5v5" /></Svg>
+);
+
+export const IconPerson = (p: IconProps) => (
+  <Svg class={p.class}><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6" /></Svg>
+);

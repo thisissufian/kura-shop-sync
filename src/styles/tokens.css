@@ -1,0 +1,115 @@
+
+/* `dark:` follows the app theme (data-theme), not only the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Semantic tokens (Apple HIG system colors) ───────────────────────── */
+:root, [data-theme="light"] {
+  --kura-bg-canvas: #F2F2F7;          /* systemGroupedBackground */
+  --kura-bg-card: #FFFFFF;            /* secondarySystemGroupedBackground */
+  --kura-bg-raised: #FFFFFF;          /* groups inside sheets */
+  --kura-bg-sheet: #F2F2F7;
+  --kura-bg-subtle: rgba(118, 118, 128, 0.12);  /* tertiarySystemFill */
+  --kura-bg-input: rgba(118, 118, 128, 0.12);
+  --kura-bg-glass: rgba(249, 249, 249, 0.82);   /* regular material */
+  --kura-thumb: #FFFFFF;
+  --kura-text-primary: #000000;
+  --kura-text-secondary: rgba(60, 60, 67, 0.62);
+  --kura-text-muted: rgba(60, 60, 67, 0.36);
+  --kura-border: rgba(60, 60, 67, 0.18);        /* separator */
+  --kura-chart-empty: rgba(118, 118, 128, 0.16);
+  --kura-tint: #007AFF;
+  --kura-tint-pressed: #0062CC;
+  --kura-positive: #248A3D;           /* accessible green for text */
+  --kura-positive-fill: #34C759;
+  --kura-warning: #C93400;            /* accessible orange for text */
+  --kura-warning-fill: #FF9500;
+  --kura-danger: #D70015;
+  --kura-danger-fill: #FF3B30;
+  --kura-shadow-card: none;
+  --kura-shadow-raised: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.04);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --kura-bg-canvas: #000000;
+  --kura-bg-card: #1C1C1E;
+  --kura-bg-raised: #2C2C2E;          /* elevated: groups inside sheets */
+  --kura-bg-sheet: #1C1C1E;
+  --kura-bg-subtle: rgba(118, 118, 128, 0.24);
+  --kura-bg-input: rgba(118, 118, 128, 0.24);
+  --kura-bg-glass: rgba(22, 22, 24, 0.78);
+  --kura-thumb: #636366;
+  --kura-text-primary: #FFFFFF;
+  --kura-text-secondary: rgba(235, 235, 245, 0.62);
+  --kura-text-muted: rgba(235, 235, 245, 0.32);
+  --kura-border: rgba(84, 84, 88, 0.62);
+  --kura-chart-empty: rgba(118, 118, 128, 0.32);
+  --kura-tint: #0A84FF;
+  --kura-tint-pressed: #409CFF;
+  --kura-positive: #30D158;
+  --kura-positive-fill: #30D158;
+  --kura-warning: #FF9F0A;
+  --kura-warning-fill: #FF9F0A;
+  --kura-danger: #FF453A;
+  --kura-danger-fill: #FF453A;
+  --kura-shadow-card: none;
+  --kura-shadow-raised: 0 1px 3px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* Sheets are elevated: groups inside them use the raised surface. */
+.kura-elevated { --kura-bg-card: var(--kura-bg-raised); }
+
+/* ── Tailwind bridge: bg-surface, text-label-2, text-title2, rounded-group … ── */
+@theme inline {
+  --color-canvas: var(--kura-bg-canvas);
+  --color-surface: var(--kura-bg-card);
+  --color-sheet: var(--kura-bg-sheet);
+  --color-fill: var(--kura-bg-subtle);
+  --color-thumb: var(--kura-thumb);
+  --color-label: var(--kura-text-primary);
+  --color-label-2: var(--kura-text-secondary);
+  --color-label-3: var(--kura-text-muted);
+  --color-sep: var(--kura-border);
+  --color-tint: var(--kura-tint);
+  --color-positive: var(--kura-positive);
+  --color-positive-fill: var(--kura-positive-fill);
+  --color-warning: var(--kura-warning);
+  --color-warning-fill: var(--kura-warning-fill);
+  --color-danger: var(--kura-danger);
+  --color-danger-fill: var(--kura-danger-fill);
+
+  --radius-group: 12px;
+  --radius-control: 10px;
+  --radius-sheet: 16px;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+@theme {
+  --text-large-title: 34px;
+  --text-large-title--line-height: 41px;
+  --text-large-title--letter-spacing: 0.01em;
+  --text-title1: 28px;
+  --text-title1--line-height: 34px;
+  --text-title2: 22px;
+  --text-title2--line-height: 28px;
+  --text-title3: 20px;
+  --text-title3--line-height: 25px;
+  --text-headline: 17px;
+  --text-headline--line-height: 22px;
+  --text-body: 17px;
+  --text-body--line-height: 22px;
+  --text-callout: 16px;
+  --text-callout--line-height: 21px;
+  --text-subhead: 15px;
+  --text-subhead--line-height: 20px;
+  --text-footnote: 13px;
+  --text-footnote--line-height: 18px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption2: 11px;
+  --text-caption2--line-height: 13px;
+}
+

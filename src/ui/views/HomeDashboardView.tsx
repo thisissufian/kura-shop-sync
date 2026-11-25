@@ -11,16 +11,11 @@ import {
 import { drawerSheetOpen, khataSheetOpen, supplierSheetOpen } from "../../state/uiSignals";
 import type { OwnerAnalytics } from "../../types/kura";
 import { HomeTrendChart } from "../components/HomeTrendChart";
-import {
-  IconBox,
-  IconCart,
-  IconPlus,
-  IconRegister,
-  IconTrendUp,
-  IconTruckSupplier,
-  IconUsersDue,
-  IconWallet,
-} from "../primitives/KuraIcons";
+import { PageHeader, Row, Section } from "../primitives/Group";
+import { IconPlus, IconRegister, IconTruckSupplier, IconWallet } from "../primitives/KuraIcons";
+
+const todayLabel = () =>
+  new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
 export function HomeDashboardView() {
   const sym = currencySymbol.value;
@@ -28,177 +23,86 @@ export function HomeDashboardView() {
   const prodList = products.value;
   const [analytics, setAnalytics] = useState<OwnerAnalytics | null>(null);
 
-  const fetchAnalytics = async () => {
-    if (!owner) return;
-    try {
-      const data = await callBackend<OwnerAnalytics>("get_owner_analytics", { period: "TODAY" });
-      setAnalytics(data);
-    } catch {
-      // ignore
-    }
-  };
-
   useEffect(() => {
-    void fetchAnalytics();
+    if (!owner) return;
+    callBackend<OwnerAnalytics>("get_owner_analytics", { period: "TODAY" })
+      .then(setAnalytics)
+      .catch(() => undefined);
   }, [owner, prodList.length]);
 
-  const rev = analytics?.gross_revenue_minor ?? 0;
-  const profit = analytics?.net_operating_profit_minor ?? 0;
-  const exp = analytics?.operating_expenses_minor ?? 0;
-  const costVal = analytics?.inventory_cost_value_minor ?? 0;
-  const retVal = analytics?.retail_market_value_minor ?? 0;
-  const custDue = analytics?.customer_receivables_minor ?? 0;
-  const suppDue = analytics?.supplier_payables_minor ?? 0;
-  const trend = analytics?.daily_trend ?? [];
+  const a = analytics;
+  const profit = a?.net_operating_profit_minor ?? 0;
+  const trend = a?.daily_trend ?? [];
   const maxTrendRev = Math.max(1, ...trend.map((t) => t.revenue_minor));
-  const profitColor = profit < 0 ? "text-[#FB7185]" : "text-[#4ADE80]";
+
+  const actions = [
+    { label: "Sell", icon: <IconRegister class="w-6 h-6" />, act: () => { activeTab.value = "counter"; } },
+    { label: "Add product", icon: <IconPlus class="w-6 h-6" />, act: () => { editingProduct.value = null; productSheetOpen.value = true; } },
+    { label: "Purchase", icon: <IconTruckSupplier class="w-6 h-6" />, act: () => { supplierSheetOpen.value = true; } },
+    { label: "Expense", icon: <IconWallet class="w-6 h-6" />, act: () => { drawerSheetOpen.value = true; } },
+  ];
 
   return (
-    <div class="space-y-4 pb-4">
-      {/* 1. Hero Card: Today's Turnover */}
-      <div class="kura-hero-card p-5 sm:p-6 overflow-hidden">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-white/70">
-              Today's Net Turnover
-            </span>
-            <div class="text-3xl sm:text-4xl font-bold tracking-tight text-white tabular-nums mt-1 leading-none">
-              {formatMoney(rev, sym)}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => { activeTab.value = "counter"; }}
-            class="kura-hero-cta rounded-full px-4 py-2 text-[12px] kura-btn-press flex items-center gap-1.5"
-          >
-            <IconCart class="w-4 h-4 text-[#0F172A]" />
-            <span>New Sale</span>
-          </button>
-        </div>
-
-        {owner && (
-          <div class="mt-4 pt-3.5 border-t border-white/15 grid grid-cols-3 gap-2 text-left">
-            <div>
-              <div class="text-[10px] text-white/70 uppercase font-medium">Est. Net Profit</div>
-              <div class={`text-[14px] sm:text-[15px] font-bold ${profitColor} tabular-nums`}>
-                {formatMoney(profit, sym)}
-              </div>
-            </div>
-            <div>
-              <div class="text-[10px] text-white/70 uppercase font-medium">Today's Expenses</div>
-              <div class="text-[14px] sm:text-[15px] font-bold text-[#FDBA74] tabular-nums">
-                {formatMoney(exp, sym)}
-              </div>
-            </div>
-            <div>
-              <div class="text-[10px] text-white/70 uppercase font-medium">Inventory Units</div>
-              <div class="text-[14px] sm:text-[15px] font-bold text-white tabular-nums">
-                {analytics?.total_inventory_units ?? 0} items
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 2. 4-Column Quick Actions Strip */}
-      <div class="grid grid-cols-4 gap-2.5">
-        {[
-          { label: "POS Sale", icon: <IconRegister class="w-5 h-5 text-[#007AFF]" />, bg: "bg-[#007AFF]/12", act: () => { activeTab.value = "counter"; } },
-          { label: "+ Product", icon: <IconPlus class="w-5 h-5 text-[#34C759]" />, bg: "bg-[#34C759]/12", act: () => { editingProduct.value = null; productSheetOpen.value = true; } },
-          { label: "Purchase", icon: <IconTruckSupplier class="w-5 h-5 text-[#AF52DE]" />, bg: "bg-[#AF52DE]/12", act: () => { supplierSheetOpen.value = true; } },
-          { label: "+ Expense", icon: <IconWallet class="w-5 h-5 text-[#FF9500]" />, bg: "bg-[#FF9500]/12", act: () => { drawerSheetOpen.value = true; } },
-        ].map((btn) => (
-          <button
-            key={btn.label}
-            type="button"
-            onClick={btn.act}
-            class="kura-card p-3 flex flex-col items-center justify-center gap-1.5 kura-btn-press transition"
-          >
-            <div class={`w-10 h-10 rounded-xl ${btn.bg} flex items-center justify-center`}>
-              {btn.icon}
-            </div>
-            <span class="kura-text-main font-semibold text-xs tracking-tight">{btn.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* 3. 4-Card Bento Grid */}
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-        <div class="kura-card p-3.5 flex flex-col justify-between">
-          <div class="flex items-start justify-between">
-            <span class="text-[11px] font-semibold kura-text-muted">Gross Profit</span>
-            <div class="kura-icon-squircle bg-[#34C759]/12 text-[#34C759]">
-              <IconTrendUp class="w-4 h-4" />
-            </div>
-          </div>
-          <div class="mt-2">
-            <div class="text-[19px] font-bold text-[#34C759] tabular-nums">
-              {formatMoney(analytics?.gross_profit_minor ?? 0, sym)}
-            </div>
-            <div class="text-[11px] kura-text-muted tabular-nums">
-              Margin: {((analytics?.margin_bps ?? 0) / 100).toFixed(1)}%
-            </div>
-          </div>
-        </div>
-
-        <div class="kura-card p-3.5 flex flex-col justify-between">
-          <div class="flex items-start justify-between">
-            <span class="text-[11px] font-semibold kura-text-muted">Stock Value</span>
-            <div class="kura-icon-squircle bg-[#007AFF]/12 text-[#007AFF]">
-              <IconBox class="w-4 h-4" />
-            </div>
-          </div>
-          <div class="mt-2">
-            <div class="text-[19px] font-bold kura-text-main tabular-nums">
-              {formatMoney(costVal, sym)}
-            </div>
-            <div class="text-[11px] kura-text-muted tabular-nums truncate">
-              Retail: {formatMoney(retVal, sym)}
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => { khataSheetOpen.value = true; }}
-          class="kura-card p-3.5 text-left flex flex-col justify-between hover:border-[#FF9500]/40 transition kura-btn-press"
-        >
-          <div class="flex items-start justify-between">
-            <span class="text-[11px] font-semibold kura-text-muted">Customer Dues</span>
-            <div class="kura-icon-squircle bg-[#FF9500]/12 text-[#FF9500]">
-              <IconUsersDue class="w-4 h-4" />
-            </div>
-          </div>
-          <div class="mt-2">
-            <div class="text-[19px] font-bold text-[#FF9500] tabular-nums">
-              {formatMoney(custDue, sym)}
-            </div>
-            <div class="text-[11px] kura-text-muted">Khata ledger ➔</div>
-          </div>
+    <div class="space-y-7 pb-4">
+      <PageHeader title="Today" subtitle={todayLabel()}>
+        <button type="button" onClick={() => { activeTab.value = "counter"; }} class="kura-btn kura-btn-filled kura-btn-sm">
+          New sale
         </button>
+      </PageHeader>
 
-        <button
-          type="button"
-          onClick={() => { supplierSheetOpen.value = true; }}
-          class="kura-card p-3.5 text-left flex flex-col justify-between hover:border-[#AF52DE]/40 transition kura-btn-press"
-        >
-          <div class="flex items-start justify-between">
-            <span class="text-[11px] font-semibold kura-text-muted">Supplier Payables</span>
-            <div class="kura-icon-squircle bg-[#AF52DE]/12 text-[#AF52DE]">
-              <IconTruckSupplier class="w-4 h-4" />
+      <div class="grid gap-7 lg:grid-cols-2 lg:items-start">
+        <div class="space-y-7">
+          <div class="kura-group p-4 pb-0">
+            <div class="text-subhead text-label-2">Sales</div>
+            <div class="text-[40px] leading-[48px] font-bold tracking-tight tabular-nums text-label">
+              {formatMoney(a?.gross_revenue_minor ?? 0, sym)}
             </div>
-          </div>
-          <div class="mt-2">
-            <div class="text-[19px] font-bold text-[#AF52DE] tabular-nums">
-              {formatMoney(suppDue, sym)}
+            <div class="text-footnote text-label-2 tabular-nums pb-4">
+              {a ? `${a.total_bills_count} ${a.total_bills_count === 1 ? "bill" : "bills"}` : owner ? "Loading…" : "Owner figures are hidden on cashier phones"}
             </div>
-            <div class="text-[11px] kura-text-muted">Vendor dues ➔</div>
+            {owner && (
+              <div class="grid grid-cols-3 -mx-4 kura-hairline-t">
+                {[
+                  { k: "Net profit", v: formatMoney(profit, sym), c: profit < 0 ? "text-danger" : "text-positive" },
+                  { k: "Expenses", v: formatMoney(a?.operating_expenses_minor ?? 0, sym), c: "text-label" },
+                  { k: "Units in stock", v: String(a?.total_inventory_units ?? 0), c: "text-label" },
+                ].map((m, i) => (
+                  <div key={m.k} class={`px-4 py-3 ${i > 0 ? "border-l-[0.5px] border-sep" : ""}`}>
+                    <div class="text-caption text-label-2 truncate">{m.k}</div>
+                    <div class={`text-subhead font-semibold tabular-nums truncate ${m.c}`}>{m.v}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </button>
+
+          <div class="grid grid-cols-4 gap-2.5">
+            {actions.map((btn) => (
+              <button key={btn.label} type="button" onClick={btn.act}
+                class="kura-group kura-btn-press flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 text-tint">
+                {btn.icon}
+                <span class="text-caption font-medium text-label text-center leading-tight">{btn.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div class="space-y-7">
+          {owner && (
+            <Section header="Balances">
+              <Row label="Gross profit" detail={`Margin ${((a?.margin_bps ?? 0) / 100).toFixed(1)}%`}
+                value={formatMoney(a?.gross_profit_minor ?? 0, sym)} valueClass="text-positive font-semibold" />
+              <Row label="Stock at cost" detail={`Retail value ${formatMoney(a?.retail_market_value_minor ?? 0, sym)}`}
+                value={formatMoney(a?.inventory_cost_value_minor ?? 0, sym)} valueClass="text-label font-semibold" />
+              <Row label="Customer dues" detail="Khata ledger" onClick={() => { khataSheetOpen.value = true; }}
+                value={formatMoney(a?.customer_receivables_minor ?? 0, sym)} valueClass="text-warning font-semibold" />
+              <Row label="Supplier payables" detail="Money you owe vendors" onClick={() => { supplierSheetOpen.value = true; }}
+                value={formatMoney(a?.supplier_payables_minor ?? 0, sym)} valueClass="text-label font-semibold" />
+            </Section>
+          )}
+          <HomeTrendChart trend={trend} maxTrendRev={maxTrendRev} sym={sym} />
+        </div>
       </div>
-
-      {/* 4. Sales Trend (Last 7 Days) Card */}
-      <HomeTrendChart trend={trend} maxTrendRev={maxTrendRev} sym={sym} />
     </div>
   );
 }
