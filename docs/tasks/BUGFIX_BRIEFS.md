@@ -10,6 +10,16 @@ Do them in the order listed. After each, commit on its own branch `fix/<task-id>
 - Done = new test fails before the fix, passes after; full `cargo test` and `tsc` green; no unrelated edits.
 - Old databases must still open: add columns with the existing `let _ = conn.execute("ALTER TABLE ...")` pattern in `ledger_init.rs`; new serde fields need `#[serde(default)]` so old events still parse.
 
+## Ship every task (T3 onward)
+1. **Start from the latest GitHub main:**
+   `git checkout main` → `git pull --no-rebase origin main` → `git checkout -b fix/<task-id>`.
+   If the previous task's PR is not merged yet (`gh pr list --repo thisissufian/kura-shop-sync --state open`), STOP and tell the owner; do not stack branches.
+2. **Commit** with the message `fix(<area>): <what> (<task-id>)`.
+3. **Push the branch:** `git push -u origin fix/<task-id>`.
+4. **Open a PR:** `gh pr create --repo thisissufian/kura-shop-sync --base main --head fix/<task-id> --title "<commit subject>" --body "<what was wrong, what changed, tests added, cargo test / tsc results>"`.
+5. **Never** merge the PR, push to `main`, force-push, or delete branches. The owner reviews and merges.
+6. Finish by reporting the PR URL and test counts, then stop.
+
 ---
 
 ## T1 — Vault restore wipes the key on failure  · model: Gemini (Medium)
