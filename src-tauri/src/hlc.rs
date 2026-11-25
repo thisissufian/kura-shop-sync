@@ -29,6 +29,40 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
     (y + if m <= 2 { 1 } else { 0 }, m, d)
 }
 
+/// Howard Hinnant's days-from-civil algorithm (inverse of `civil_from_days`).
+fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
+    let y = y - if m <= 2 { 1 } else { 0 };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let doy = (153 * (m + if m > 2 { -3 } else { 9 }) + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
+}
+
+fn parse_iso_ms(iso: &str) -> Option<u128> {
+    let b = iso.as_bytes();
+    if b.len() != 24 || b[4] != b'-' || b[7] != b'-' || b[10] != b'T'
+        || b[13] != b':' || b[16] != b':' || b[19] != b'.' || b[23] != b'Z'
+    {
+        return None;
+    }
+    let y: i64 = iso[0..4].parse().ok()?;
+    let m: i64 = iso[5..7].parse().ok()?;
+    let d: i64 = iso[8..10].parse().ok()?;
+    let hh: i64 = iso[11..13].parse().ok()?;
+    let mm: i64 = iso[14..16].parse().ok()?;
+    let ss: i64 = iso[17..19].parse().ok()?;
+    let ms: u128 = iso[20..23].parse().ok()?;
+    if !(1..=12).contains(&m) || !(1..=31).contains(&d) || hh > 23 || mm > 59 || ss > 59 || ms > 999 {
+        return None;
+    }
+    let days = days_from_civil(y, m, d);
+    if days < 0 {
+        return None;
+    }
+    Some(((days * 86_400 + hh * 3600 + mm * 60 + ss) as u128) * 1000 + ms)
+}
+
 fn current_epoch_ms() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -51,6 +85,18 @@ fn split_hlc(hlc: &str) -> (&str, u32) {
     ("", 0)
 }
 
+/// Advances ISO timestamp by 1 ms and resets counter to 0 when counter exceeds 9999.
+fn normalize_hlc(iso: &str, cnt: u32) -> (String, u32) {
+    if cnt > 9999 {
+        let next_iso = parse_iso_ms(iso)
+            .map(|ms| format_iso_ms(ms + 1))
+            .unwrap_or_else(|| format_iso_ms(current_epoch_ms()));
+        (next_iso, 0)
+    } else {
+        (iso.to_string(), cnt)
+    }
+}
+
 /// Generates a strictly monotonic Hybrid Logical Clock string for this node.
 pub fn next_hlc(conn: &Connection, node_id: &str) -> Result<String, String> {
     let last_hlc: String = conn
@@ -63,7 +109,7 @@ pub fn next_hlc(conn: &Connection, node_id: &str) -> Result<String, String> {
     let (iso, cnt) = if now_iso.as_str() > last_iso {
         (now_iso, 0u32)
     } else {
-        (last_iso.to_string(), (last_cnt + 1).min(9999))
+        normalize_hlc(last_iso, last_cnt.saturating_add(1))
     };
 
     let next = format!("{iso}-{cnt:04}-{node_id}");
@@ -85,17 +131,18 @@ pub fn observe_remote_hlc(conn: &Connection, remote_hlc: &str, node_id: &str) ->
     let (r_iso, r_cnt) = split_hlc(remote_hlc);
 
     let max_iso = [now_iso.as_str(), l_iso, r_iso].into_iter().max().unwrap_or(now_iso.as_str());
-    let cnt = if max_iso == l_iso && max_iso == r_iso {
-        l_cnt.max(r_cnt) + 1
+    let raw_cnt = if max_iso == l_iso && max_iso == r_iso {
+        l_cnt.max(r_cnt).saturating_add(1)
     } else if max_iso == l_iso {
-        l_cnt + 1
+        l_cnt.saturating_add(1)
     } else if max_iso == r_iso {
-        r_cnt + 1
+        r_cnt.saturating_add(1)
     } else {
         0
     };
 
-    let merged = format!("{max_iso}-{:04}-{node_id}", cnt.min(9999));
+    let (merged_iso, cnt) = normalize_hlc(max_iso, raw_cnt);
+    let merged = format!("{merged_iso}-{cnt:04}-{node_id}");
     conn.execute(
         "UPDATE chain_config SET last_hlc = ?1 WHERE id = 1",
         params![merged],
