@@ -13,6 +13,8 @@ use crate::models::LedgerEvent;
 pub struct ParsedPairing {
     pub seed_b64: String,
     pub role: String,
+    /// Parsed for old invites only; joiners now generate their own ID (T6).
+    #[allow(dead_code)]
     pub node_id: String,
     pub shop_name: String,
     pub lan_addr: Option<String>,
@@ -22,6 +24,16 @@ pub fn generate_seed() -> [u8; 16] {
     let mut seed = [0u8; 16];
     rand::rngs::OsRng.fill_bytes(&mut seed);
     seed
+}
+
+const NODE_ALPHABET: &[u8; 32] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+/// Random terminal ID: `K` + 4 base32 chars (20 bits), e.g. `K7QF2`.
+pub fn generate_node_id() -> String {
+    let mut b = [0u8; 4];
+    rand::rngs::OsRng.fill_bytes(&mut b);
+    let tail: String = b.iter().map(|x| NODE_ALPHABET[(x & 31) as usize] as char).collect();
+    format!("K{tail}")
 }
 
 pub fn encode_seed_b64(seed: &[u8; 16]) -> String {

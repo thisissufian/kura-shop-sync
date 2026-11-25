@@ -1,7 +1,7 @@
 use rusqlite::{params, Connection};
 use std::path::Path;
 
-use crate::crypto_chain::{encode_seed_b64, generate_seed};
+use crate::crypto_chain::{encode_seed_b64, generate_node_id, generate_seed};
 use crate::hlc::{new_event_id, next_hlc};
 use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
 use crate::models::LedgerEvent;
@@ -107,11 +107,14 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
         let seed_b64 = encode_seed_b64(&generate_seed());
         conn.execute(
             "INSERT INTO chain_config (id, node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked)
-             VALUES (1, 'K1', 'Kura General Store', 'Local Retail · Offline POS', '$', 'Thank you for shopping!', 'OWNER', ?1, '', 0)",
-            params![seed_b64],
+             VALUES (1, ?2, 'Kura General Store', 'Local Retail · Offline POS', '$', 'Thank you for shopping!', 'OWNER', ?1, '', 0)",
+            params![seed_b64, generate_node_id()],
         )
         .map_err(|e| format!("Seed chain_config: {e}"))?;
     }
+
+    // Legacy invites handed every joiner K2/K3; move them to a unique ID (affects future events only).
+    let _ = conn.execute("UPDATE chain_config SET node_id = ?1 WHERE id = 1 AND node_id IN ('K2', 'K3')", params![generate_node_id()]);
 
     let is_linked: i64 = conn
         .query_row("SELECT is_linked FROM chain_config WHERE id = 1", [], |r| r.get(0))
@@ -140,8 +143,11 @@ const STARTERS: &[(&str, &str, &str, &str, &str, &str, &str, i64, i64, i64, i64)
 pub const STARTER_EVENT_COUNT: usize = STARTERS.len() * 2;
 
 fn seed_starter_inventory(conn: &mut Connection) -> Result<(), String> {
+    let node: String = conn
+        .query_row("SELECT node_id FROM chain_config WHERE id = 1", [], |r| r.get(0))
+        .map_err(|e| format!("Read node_id: {e}"))?;
     for &(sku, name, bc, cat, brand, variant, warranty, sell, cost, qty, thresh) in STARTERS {
-        let hlc1 = next_hlc(conn, "K1")?;
+        let hlc1 = next_hlc(conn, &node)?;
         let upsert = ProductUpsertPayload {
             sku: sku.to_string(),
             name: name.to_string(),
@@ -157,13 +163,13 @@ fn seed_starter_inventory(conn: &mut Connection) -> Result<(), String> {
         let ev1 = LedgerEvent {
             event_id: new_event_id(&hlc1),
             hlc: hlc1,
-            node_id: "K1".to_string(),
+            node_id: node.clone(),
             event_type: "PRODUCT_UPSERT".to_string(),
             payload_json: serde_json::to_string(&upsert).map_err(|e| e.to_string())?,
             synced_lan: 0,
             synced_relay: 0,
         };
-        let hlc2 = next_hlc(conn, "K1")?;
+        let hlc2 = next_hlc(conn, &node)?;
         let adj = StockAdjustPayload {
             sku: sku.to_string(),
             delta: qty,
@@ -172,7 +178,7 @@ fn seed_starter_inventory(conn: &mut Connection) -> Result<(), String> {
         let ev2 = LedgerEvent {
             event_id: new_event_id(&hlc2),
             hlc: hlc2,
-            node_id: "K1".to_string(),
+            node_id: node.clone(),
             event_type: "STOCK_ADJUST".to_string(),
             payload_json: serde_json::to_string(&adj).map_err(|e| e.to_string())?,
             synced_lan: 0,

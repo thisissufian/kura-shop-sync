@@ -5,7 +5,7 @@ use tauri::State;
 use crate::commands::{build_sync_status, AppState};
 use crate::crypto_chain::{
     decode_seed_b64, decrypt_events, derive_chain_id_hash, encode_seed_b64, encrypt_events,
-    parse_pairing_uri,
+    generate_node_id, parse_pairing_uri,
 };
 use crate::hlc::observe_remote_hlc;
 use crate::lan_peer::sync_with_peer_ip;
@@ -54,17 +54,17 @@ pub fn apply_join_chain_db(
     force_reset: bool,
 ) -> Result<Option<String>, String> {
     let trimmed = input.trim();
-    let (seed_b64, role, node_id, shop_name, lan_addr) = if trimmed.starts_with("kura://join?") {
+    // The URI `node` param is parsed for old invites but ignored: shared IDs made bills collide.
+    let (seed_b64, role, shop_name, lan_addr) = if trimmed.starts_with("kura://join?") {
         let p = parse_pairing_uri(trimmed)?;
-        (p.seed_b64, p.role, p.node_id, p.shop_name, p.lan_addr)
+        (p.seed_b64, p.role, p.shop_name, p.lan_addr)
     } else {
         let seed = phrase_to_seed(trimmed)?;
         let role = role_override.unwrap_or("OWNER").to_uppercase();
         if role != "OWNER" && role != "CASHIER" {
             return Err("Role must be OWNER or CASHIER".to_string());
         }
-        let node = if role == "CASHIER" { "K3" } else { "K2" };
-        (encode_seed_b64(&seed), role, node.to_string(), "Kura Synced Shop".to_string(), None)
+        (encode_seed_b64(&seed), role, "Kura Synced Shop".to_string(), None)
     };
 
     let cfg = get_chain_config(conn)?;
@@ -75,6 +75,7 @@ pub fn apply_join_chain_db(
         );
     }
 
+    let node_id = generate_node_id();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     tx.execute_batch(
         "DELETE FROM ledger_events;
