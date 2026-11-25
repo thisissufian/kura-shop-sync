@@ -41,7 +41,7 @@ export function SyncAndPrintView() {
           <div class="rounded-xl kura-subtle p-3">
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-semibold kura-text-muted">
-                12-Word Master Recovery Phrase
+                {status?.is_secured ? "24-Word Owner Recovery Phrase" : "12-Word Master Recovery Phrase"}
               </span>
               <button
                 type="button"

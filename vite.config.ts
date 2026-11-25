@@ -20,8 +20,15 @@ export default defineConfig({
         }
       : undefined,
     watch: {
-      ignored: ["**/src-tauri/**"],
+      // SupportingSofts holds the Android SDK and Unity Hub (tens of thousands of files);
+      // watching it stalls the dev server. The others are build outputs.
+      ignored: ["**/src-tauri/**", "**/SupportingSofts/**", "**/dist/**", "**/dist-site/**", "**/.wrangler/**"],
     },
+  },
+  // Without this, Vite's dependency scan globs every *.html in the project,
+  // including the multi-GB src-tauri/target, and the dev server stalls.
+  optimizeDeps: {
+    entries: ["index.html"],
   },
   esbuild: {
     legalComments: "none",
