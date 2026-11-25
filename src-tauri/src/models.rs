@@ -88,6 +88,9 @@ pub struct LedgerEvent {
     pub payload_json: String,
     pub synced_lan: i64,
     pub synced_relay: i64,
+    /// Owner signature for owner-only events on secured chains (S4).
+    #[serde(default)]
+    pub sig: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -210,4 +213,6 @@ pub struct ChainConfig {
     pub last_hlc: String,
     pub is_linked: bool,
     pub utc_offset_minutes: i64,
+    pub owner_secret: String,
+    pub owner_pk: String,
 }

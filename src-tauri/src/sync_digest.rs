@@ -34,7 +34,7 @@ static CACHE: Mutex<Option<(StampKey, Vec<Bucket>)>> = Mutex::new(None);
 pub fn local_buckets(conn: &Connection) -> Result<Vec<Bucket>, String> {
     let (count, max_rowid, last_id): (i64, i64, String) = conn
         .query_row(
-            "SELECT COUNT(*), COALESCE(MAX(rowid), 0),
+            "SELECT COUNT(*) + (SELECT COUNT(*) FROM rejected_events), COALESCE(MAX(rowid), 0),
                     COALESCE((SELECT event_id FROM ledger_events ORDER BY rowid DESC LIMIT 1), '')
              FROM ledger_events",
             [],
@@ -50,7 +50,10 @@ pub fn local_buckets(conn: &Connection) -> Result<Vec<Bucket>, String> {
         }
     }
     let mut stmt = conn
-        .prepare("SELECT node_id, substr(hlc, 1, 10), event_id FROM ledger_events")
+        .prepare(
+            "SELECT node_id, substr(hlc, 1, 10), event_id FROM ledger_events
+             UNION ALL SELECT node_id, substr(hlc, 1, 10), event_id FROM rejected_events",
+        )
         .map_err(|e| format!("Prepare buckets: {e}"))?;
     let mut map: BTreeMap<(String, String), (i64, u64)> = BTreeMap::new();
     let rows = stmt
@@ -84,7 +87,7 @@ pub fn state_fingerprint(buckets: &[Bucket]) -> String {
 pub fn bucket_events(conn: &Connection, node: &str, day: &str) -> Result<Vec<LedgerEvent>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay
+            "SELECT event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay, sig
              FROM ledger_events WHERE node_id = ?1 AND hlc >= ?2 AND hlc < ?3 ORDER BY hlc",
         )
         .map_err(|e| format!("Prepare bucket events: {e}"))?;
@@ -98,6 +101,7 @@ pub fn bucket_events(conn: &Connection, node: &str, day: &str) -> Result<Vec<Led
                 payload_json: r.get(4)?,
                 synced_lan: r.get(5)?,
                 synced_relay: r.get(6)?,
+                sig: r.get(7)?,
             })
         })
         .map_err(|e| format!("Query bucket events: {e}"))?;

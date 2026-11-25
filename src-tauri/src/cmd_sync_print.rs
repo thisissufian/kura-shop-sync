@@ -12,7 +12,8 @@ use crate::lan_peer::sync_with_peer_ip;
 use crate::ledger::apply_ledger_event;
 pub use crate::ledger_queries::has_local_business_data;
 use crate::ledger_queries::{events_after_hlc, get_bill_by_no, get_chain_config};
-use crate::mnemonic::phrase_to_seed;
+use crate::mnemonic::phrase_to_secrets;
+use crate::owner_sig::{encode_secret, join_owner_fields};
 use crate::models::{PdfExportResult, RelayEnvelope, SyncChainStatus};
 use crate::printer::escpos::{format_receipt_bytes, send_tcp_print};
 use crate::printer::pdf_gen::generate_receipt_pdf;
@@ -55,17 +56,20 @@ pub fn apply_join_chain_db(
 ) -> Result<Option<String>, String> {
     let trimmed = input.trim();
     // The URI `node` param is parsed for old invites but ignored: shared IDs made bills collide.
-    let (seed_b64, role, shop_name, lan_addr) = if trimmed.starts_with("kura://join?") {
+    let (seed_b64, role, shop_name, lan_addr, osec, opk) = if trimmed.starts_with("kura://join?") {
         let p = parse_pairing_uri(trimmed)?;
-        (p.seed_b64, p.role, p.shop_name, p.lan_addr)
+        (p.seed_b64, p.role, p.shop_name, p.lan_addr, p.owner_secret, p.owner_pk)
     } else {
-        let seed = phrase_to_seed(trimmed)?;
+        let (seed, owner) = phrase_to_secrets(trimmed)?;
         let role = role_override.unwrap_or("OWNER").to_uppercase();
         if role != "OWNER" && role != "CASHIER" {
             return Err("Role must be OWNER or CASHIER".to_string());
         }
-        (encode_seed_b64(&seed), role, "Kura Synced Shop".to_string(), None)
+        (encode_seed_b64(&seed), role, "Kura Synced Shop".to_string(), None, owner.map(|o| encode_secret(&o)), None)
     };
+    // Always overwrite owner keys: keeping this device's own fresh-install key would
+    // make it verify the new chain against the wrong owner (S4).
+    let (owner_secret, owner_pk) = join_owner_fields(&role, osec.as_deref(), opk.as_deref())?;
 
     let cfg = get_chain_config(conn)?;
     if (cfg.is_linked || has_local_business_data(conn)?) && !force_reset {
@@ -84,14 +88,16 @@ pub fn apply_join_chain_db(
          DELETE FROM customers;
          DELETE FROM suppliers;
          DELETE FROM expenses;
+         DELETE FROM bill_voids;
+         DELETE FROM rejected_events;
          UPDATE chain_config SET last_hlc = '' WHERE id = 1;",
     )
     .map_err(|e| format!("Reset local ledger before join: {e}"))?;
     tx.execute(
         "UPDATE chain_config
-         SET seed_b64 = ?1, role = ?2, node_id = ?3, shop_name = ?4, is_linked = 1
+         SET seed_b64 = ?1, role = ?2, node_id = ?3, shop_name = ?4, is_linked = 1, owner_secret = ?5, owner_pk = ?6
          WHERE id = 1",
-        params![seed_b64, role, node_id, shop_name],
+        params![seed_b64, role, node_id, shop_name, owner_secret, owner_pk],
     )
     .map_err(|e| format!("Update chain_config: {e}"))?;
     tx.commit().map_err(|e| e.to_string())?;

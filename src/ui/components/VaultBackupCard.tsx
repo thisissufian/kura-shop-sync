@@ -150,7 +150,7 @@ export function VaultBackupCard() {
             <input
               value={restorePhrase}
               onInput={(e) => setRestorePhrase((e.target as HTMLInputElement).value)}
-              placeholder="12-word recovery phrase (if restoring onto a new phone)"
+              placeholder="12- or 24-word recovery phrase (if restoring onto a new phone)"
               class="w-full rounded-xl kura-input px-3 py-2 text-[12px]"
             />
             <button

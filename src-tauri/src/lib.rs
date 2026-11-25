@@ -19,9 +19,12 @@ mod ledger_expenses;
 mod ledger_init;
 mod ledger_products;
 mod ledger_rebuild;
+mod ledger_starters;
 mod ledger_queries;
 mod ledger_suppliers;
 mod mnemonic;
+mod owner_sig;
+mod pairing;
 mod models;
 mod models_analytics;
 mod models_supplier;
@@ -49,6 +52,8 @@ mod tests_t6;
 mod tests_s2_s3;
 #[cfg(test)]
 mod tests_s1;
+#[cfg(test)]
+mod tests_s4;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;

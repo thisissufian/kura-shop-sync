@@ -8,9 +8,10 @@ use crate::commands::AppState;
 use crate::crypto_chain::{decode_seed_b64, decrypt_bytes, encode_seed_b64, encrypt_bytes};
 use crate::hlc::{format_iso_ms, new_event_id, next_hlc, observe_remote_hlc};
 use crate::ledger::{apply_ledger_event, ShopSettingsPayload};
+use crate::owner_sig::{apply_local_event, encode_secret, join_owner_fields};
 use crate::ledger_analytics::compute_owner_analytics;
 use crate::ledger_queries::{all_ledger_events, get_chain_config};
-use crate::mnemonic::phrase_to_seed;
+use crate::mnemonic::phrase_to_secrets;
 use crate::models::{
     ChainConfig, LedgerEvent, OwnerAnalytics, ShopSettings, ShopSettingsInput, VaultExportResult,
 };
@@ -85,9 +86,10 @@ pub fn save_shop_settings_conn(
         payload_json: serde_json::to_string(&payload).map_err(|e| e.to_string())?,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     let tx = conn.transaction().map_err(|e| e.to_string())?;
-    apply_ledger_event(&tx, &ev)?;
+    apply_local_event(&tx, &ev)?;
     tx.commit().map_err(|e| e.to_string())?;
     Ok(to_shop_settings(get_chain_config(conn)?))
 }
@@ -160,11 +162,8 @@ pub fn restore_encrypted_vault(
     recovery_phrase: Option<&str>,
 ) -> Result<usize, String> {
     let cfg = get_chain_config(conn)?;
-    let recovery_seed = recovery_phrase
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .map(phrase_to_seed)
-        .transpose()?;
+    let recovered = recovery_phrase.map(str::trim).filter(|s| !s.is_empty()).map(phrase_to_secrets).transpose()?;
+    let recovery_seed = recovered.map(|(s, _)| s);
     let seed = match recovery_seed {
         Some(s) => s,
         None => decode_seed_b64(&cfg.seed_b64)?,
@@ -179,13 +178,18 @@ pub fn restore_encrypted_vault(
         Some(s) => (s, "OWNER", 1i64),
         None => (cfg.seed_b64.as_str(), cfg.role.as_str(), i64::from(cfg.is_linked)),
     };
+    // A phrase restore replaces the seed, so owner keys must follow it (S4).
+    let (owner_secret, owner_pk) = match recovered {
+        Some((_, owner)) => join_owner_fields("OWNER", owner.map(|o| encode_secret(&o)).as_deref(), None)?,
+        None => (cfg.owner_secret.clone(), cfg.owner_pk.clone()),
+    };
 
     let mut applied = 0usize;
     let mut max_hlc = String::new();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     tx.execute(
-        "UPDATE chain_config SET seed_b64 = ?1, role = ?2, is_linked = ?3, shop_name = ?4, shop_subtitle = ?5, currency_symbol = ?6, receipt_footer = ?7, utc_offset_minutes = ?8 WHERE id = 1",
-        params![next_seed, next_role, next_linked, snapshot.shop_name, snapshot.shop_subtitle, snapshot.currency_symbol, snapshot.receipt_footer, snapshot.utc_offset_minutes],
+        "UPDATE chain_config SET seed_b64 = ?1, role = ?2, is_linked = ?3, shop_name = ?4, shop_subtitle = ?5, currency_symbol = ?6, receipt_footer = ?7, utc_offset_minutes = ?8, owner_secret = ?9, owner_pk = ?10 WHERE id = 1",
+        params![next_seed, next_role, next_linked, snapshot.shop_name, snapshot.shop_subtitle, snapshot.currency_symbol, snapshot.receipt_footer, snapshot.utc_offset_minutes, owner_secret, owner_pk],
     )
     .map_err(|e| format!("Restore shop profile: {e}"))?;
 

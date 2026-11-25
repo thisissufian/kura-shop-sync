@@ -5,7 +5,7 @@ use crate::models::{BillReceipt, ChainConfig, LedgerEvent, Product};
 
 pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
     conn.query_row(
-        "SELECT node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked, utc_offset_minutes
+        "SELECT node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked, utc_offset_minutes, owner_secret, owner_pk
          FROM chain_config WHERE id = 1",
         [],
         |r| {
@@ -21,6 +21,8 @@ pub fn get_chain_config(conn: &Connection) -> Result<ChainConfig, String> {
                 last_hlc: r.get(7)?,
                 is_linked: linked_int != 0,
                 utc_offset_minutes: r.get(9)?,
+                owner_secret: r.get(10)?,
+                owner_pk: r.get(11)?,
             })
         },
     )
@@ -171,7 +173,7 @@ fn events_after_hlc_limit(
 ) -> Result<Vec<LedgerEvent>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay
+            "SELECT event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay, sig
              FROM ledger_events
              WHERE hlc > ?1
              ORDER BY hlc ASC
@@ -188,6 +190,7 @@ fn events_after_hlc_limit(
                 payload_json: r.get(4)?,
                 synced_lan: r.get(5)?,
                 synced_relay: r.get(6)?,
+                sig: r.get(7)?,
             })
         })
         .map_err(|e| format!("Query events_after_hlc: {e}"))?;

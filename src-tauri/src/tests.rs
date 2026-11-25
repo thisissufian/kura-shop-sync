@@ -9,7 +9,8 @@ use crate::hlc::{new_event_id, next_hlc, observe_remote_hlc};
 use crate::ledger::{apply_ledger_event, BillVoidPayload, ProductUpsertPayload, StockAdjustPayload};
 use crate::ledger_customers::{get_customer_by_id, CustomerPaymentPayload, CustomerUpsertPayload};
 use crate::ledger_expenses::{build_cash_drawer_summary, ExpenseLoggedPayload};
-use crate::ledger_init::init_db;
+// These tests inject unsigned owner events from simulated remote devices (pre-S4 chain).
+use crate::tests_s4::init_unsecured_db as init_db;
 use crate::mnemonic::{phrase_to_seed, seed_to_phrase};
 use crate::models::{BillItem, BillReceipt, LedgerEvent};
 
@@ -26,6 +27,7 @@ fn ev(hlc: &str, node: &str, kind: &str, payload_json: String) -> LedgerEvent {
         payload_json,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     }
 }
 

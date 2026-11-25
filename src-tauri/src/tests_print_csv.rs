@@ -23,6 +23,7 @@ fn make_ev(hlc: &str, node: &str, ev_type: &str, payload: String) -> LedgerEvent
         payload_json: payload,
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     }
 }
 

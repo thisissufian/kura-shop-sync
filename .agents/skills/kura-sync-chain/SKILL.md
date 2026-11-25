@@ -19,3 +19,10 @@ Generate QR codes encoding:
 ## 3. Dual Zero-Cost Transport
 - **Local Shop LAN (Zero Internet)**: Run a background Tokio task in Rust listening on TCP port `42850` and broadcasting a lightweight UDP discovery beacon on port `42851` every 3 seconds containing `{ chain_id_hash, node_id, latest_hlc, tcp_port }`. When two phones on the same Wi-Fi or mobile hotspot detect a matching `chain_id_hash` with a different `latest_hlc`, they connect over TCP and exchange missing encrypted `ledger_events` in under 50ms.
 - **Remote Live Relay (Owner at Home)**: Provide a configurable WebSocket relay client that publishes and subscribes to AES-256-GCM encrypted event envelopes keyed by `chain_id_hash` so the Owner phone receives live sales updates remotely at $0 server cost.
+
+## Owner Signatures on Secured Chains (S4)
+- Fresh installs create an owner secret (`chain_config.owner_secret`) and public key (`owner_pk`); `src-tauri/src/owner_sig.rs`.
+- Owner-only types (`OWNER_ONLY`): PRODUCT_UPSERT, BILL_VOIDED, STOCK_PURCHASED, SUPPLIER_PAYMENT, SHOP_SETTINGS_UPDATED. `apply_ledger_event` rejects them unless `sig` verifies against `owner_pk`. Rejected events go to `rejected_events` and still count in sync digests.
+- **Events created on this device**: call `apply_local_event` (it signs). **Synced or backup events**: call `apply_ledger_event`; never sign them.
+- Invites: `with_owner_params` (`pairing.rs`). Every invite gets `opk`; only owner invites get `osec`. Owner recovery phrase is 24 words (`mnemonic::owner_phrase`). Join and restore always overwrite both owner fields.
+- `owner_pk = ''` means a legacy chain: unsigned events are accepted, the old behaviour. Tests that inject hand-made owner events use `tests_s4::init_unsecured_db`.

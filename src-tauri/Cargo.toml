@@ -22,6 +22,7 @@ sha2 = "0.10"
 hkdf = "0.12"
 rand = "0.8"
 base64 = "0.22"
+k256 = { version = "0.13", default-features = false, features = ["schnorr", "std"] }
 tokio = { version = "1", features = ["net", "sync", "time", "rt-multi-thread", "macros"] }
 
 [profile.release]

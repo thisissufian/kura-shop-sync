@@ -2,10 +2,10 @@ use rusqlite::{params, Connection};
 use std::path::Path;
 
 use crate::crypto_chain::{encode_seed_b64, generate_node_id, generate_seed};
-use crate::hlc::{new_event_id, next_hlc};
-use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
+use crate::ledger_starters::seed_starter_inventory;
+pub use crate::ledger_starters::STARTER_EVENT_COUNT;
+use crate::owner_sig::{encode_secret, generate_owner_secret, owner_pk_hex};
 use crate::ledger_rebuild::migrate_projections;
-use crate::models::LedgerEvent;
 
 pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     if let Some(parent) = db_path.parent() {
@@ -28,7 +28,9 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            last_hlc TEXT NOT NULL,
            is_linked INTEGER NOT NULL DEFAULT 0,
            utc_offset_minutes INTEGER NOT NULL DEFAULT 360,
-           settings_hlc TEXT NOT NULL DEFAULT ''
+           settings_hlc TEXT NOT NULL DEFAULT '',
+           owner_secret TEXT NOT NULL DEFAULT '',
+           owner_pk TEXT NOT NULL DEFAULT ''
          );
          CREATE TABLE IF NOT EXISTS ledger_events (
            event_id TEXT PRIMARY KEY,
@@ -37,7 +39,16 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            event_type TEXT NOT NULL,
            payload_json TEXT NOT NULL,
            synced_lan INTEGER NOT NULL DEFAULT 0,
-           synced_relay INTEGER NOT NULL DEFAULT 0
+           synced_relay INTEGER NOT NULL DEFAULT 0,
+           sig TEXT NOT NULL DEFAULT ''
+         );
+         CREATE TABLE IF NOT EXISTS rejected_events (
+           event_id TEXT PRIMARY KEY,
+           hlc TEXT NOT NULL,
+           node_id TEXT NOT NULL,
+           event_type TEXT NOT NULL,
+           payload_json TEXT NOT NULL,
+           sig TEXT NOT NULL DEFAULT ''
          );
          CREATE INDEX IF NOT EXISTS idx_ledger_hlc ON ledger_events(hlc);
          CREATE INDEX IF NOT EXISTS idx_ledger_node_hlc ON ledger_events(node_id, hlc);
@@ -109,16 +120,21 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN utc_offset_minutes INTEGER NOT NULL DEFAULT 360", []);
     let _ = conn.execute("ALTER TABLE chain_config ADD COLUMN settings_hlc TEXT NOT NULL DEFAULT ''", []);
     let _ = conn.execute("ALTER TABLE products ADD COLUMN cost_hlc TEXT NOT NULL DEFAULT ''", []);
+    for col in ["chain_config ADD COLUMN owner_secret", "chain_config ADD COLUMN owner_pk", "ledger_events ADD COLUMN sig"] {
+        let _ = conn.execute(&format!("ALTER TABLE {col} TEXT NOT NULL DEFAULT ''"), []);
+    }
 
     let cfg_count: i64 = conn
         .query_row("SELECT COUNT(*) FROM chain_config", [], |r| r.get(0))
         .unwrap_or(0);
     if cfg_count == 0 {
         let seed_b64 = encode_seed_b64(&generate_seed());
+        // New chains are secured from birth (S4).
+        let owner = generate_owner_secret();
         conn.execute(
-            "INSERT INTO chain_config (id, node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked)
-             VALUES (1, ?2, 'Kura General Store', 'Local Retail · Offline POS', '$', 'Thank you for shopping!', 'OWNER', ?1, '', 0)",
-            params![seed_b64, generate_node_id()],
+            "INSERT INTO chain_config (id, node_id, shop_name, shop_subtitle, currency_symbol, receipt_footer, role, seed_b64, last_hlc, is_linked, owner_secret, owner_pk)
+             VALUES (1, ?2, 'Kura General Store', 'Local Retail · Offline POS', '$', 'Thank you for shopping!', 'OWNER', ?1, '', 0, ?3, ?4)",
+            params![seed_b64, generate_node_id(), encode_secret(&owner), owner_pk_hex(&owner)?],
         )
         .map_err(|e| format!("Seed chain_config: {e}"))?;
     }
@@ -140,65 +156,4 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
         seed_starter_inventory(&mut conn)?;
     }
     Ok(conn)
-}
-
-const STARTERS: &[(&str, &str, &str, &str, &str, &str, &str, i64, i64, i64, i64)] = &[
-    ("SKU-101", "Artisan Cold Brew 250ml", "890101001010", "Beverages", "Kura Brew", "250ml Bottle", "No Warranty (ওয়ারেন্টি নেই)", 35000, 18000, 24, 6),
-    ("SKU-102", "Organic Whole Milk 1L", "890101001027", "Dairy", "FarmFresh", "1 Liter Tetra", "No Warranty (ওয়ারেন্টি নেই)", 29500, 21000, 18, 5),
-    ("SKU-103", "Sourdough Country Loaf", "890101001034", "Bakery", "Artisan Oven", "Rustic Round", "No Warranty (ওয়ারেন্টি নেই)", 55000, 29000, 9, 4),
-    ("SKU-104", "Sea Salt Kettle Chips", "890101001041", "Snacks", "Kettle Co", "Classic Salty", "No Warranty (ওয়ারেন্টি নেই)", 12000, 6500, 14, 5),
-    ("SKU-105", "HOCO Rapid Charger 65W", "890101001058", "Electronics", "HOCO", "White · GaN", "6 Months Warranty", 149000, 89000, 12, 3),
-];
-
-/// Each starter product emits 2 ledger events: `PRODUCT_UPSERT` + `STOCK_ADJUST`.
-pub const STARTER_EVENT_COUNT: usize = STARTERS.len() * 2;
-
-fn seed_starter_inventory(conn: &mut Connection) -> Result<(), String> {
-    let node: String = conn
-        .query_row("SELECT node_id FROM chain_config WHERE id = 1", [], |r| r.get(0))
-        .map_err(|e| format!("Read node_id: {e}"))?;
-    for &(sku, name, bc, cat, brand, variant, warranty, sell, cost, qty, thresh) in STARTERS {
-        let hlc1 = next_hlc(conn, &node)?;
-        let upsert = ProductUpsertPayload {
-            sku: sku.to_string(),
-            name: name.to_string(),
-            barcode: Some(bc.to_string()),
-            category: cat.to_string(),
-            brand: brand.to_string(),
-            variant: variant.to_string(),
-            warranty_label: warranty.to_string(),
-            sell_price_minor: sell,
-            cost_price_minor: cost,
-            low_stock_threshold: thresh,
-        };
-        let ev1 = LedgerEvent {
-            event_id: new_event_id(&hlc1),
-            hlc: hlc1,
-            node_id: node.clone(),
-            event_type: "PRODUCT_UPSERT".to_string(),
-            payload_json: serde_json::to_string(&upsert).map_err(|e| e.to_string())?,
-            synced_lan: 0,
-            synced_relay: 0,
-        };
-        let hlc2 = next_hlc(conn, &node)?;
-        let adj = StockAdjustPayload {
-            sku: sku.to_string(),
-            delta: qty,
-            reason: "Initial Stock".to_string(),
-        };
-        let ev2 = LedgerEvent {
-            event_id: new_event_id(&hlc2),
-            hlc: hlc2,
-            node_id: node.clone(),
-            event_type: "STOCK_ADJUST".to_string(),
-            payload_json: serde_json::to_string(&adj).map_err(|e| e.to_string())?,
-            synced_lan: 0,
-            synced_relay: 0,
-        };
-        let tx = conn.transaction().map_err(|e| e.to_string())?;
-        apply_ledger_event(&tx, &ev1)?;
-        apply_ledger_event(&tx, &ev2)?;
-        tx.commit().map_err(|e| e.to_string())?;
-    }
-    Ok(())
 }

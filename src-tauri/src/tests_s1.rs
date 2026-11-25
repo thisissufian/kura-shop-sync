@@ -26,6 +26,7 @@ fn adj(day: &str, t: u32, node: &str) -> LedgerEvent {
         payload_json: json!({"sku": "SKU-101", "delta": 1, "reason": "count"}).to_string(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     }
 }
 

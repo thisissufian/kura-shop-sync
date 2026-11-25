@@ -5,7 +5,8 @@ use serde_json::json;
 
 use crate::hlc::new_event_id;
 use crate::ledger::apply_ledger_event;
-use crate::ledger_init::init_db;
+// These tests inject unsigned owner events from simulated remote devices (pre-S4 chain).
+use crate::tests_s4::init_unsecured_db as init_db;
 use crate::models::LedgerEvent;
 
 fn temp_db(name: &str) -> PathBuf {
@@ -24,6 +25,7 @@ fn ev(t: u32, node: &str, kind: &str, payload: serde_json::Value) -> LedgerEvent
         payload_json: payload.to_string(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     }
 }
 

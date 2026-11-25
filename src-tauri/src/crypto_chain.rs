@@ -8,17 +8,7 @@ use rand::RngCore;
 use sha2::{Digest, Sha256};
 
 use crate::models::LedgerEvent;
-
-#[derive(Debug, Clone)]
-pub struct ParsedPairing {
-    pub seed_b64: String,
-    pub role: String,
-    /// Parsed for old invites only; joiners now generate their own ID (T6).
-    #[allow(dead_code)]
-    pub node_id: String,
-    pub shop_name: String,
-    pub lan_addr: Option<String>,
-}
+pub use crate::pairing::{build_pairing_uri, parse_pairing_uri};
 
 pub fn generate_seed() -> [u8; 16] {
     let mut seed = [0u8; 16];
@@ -107,7 +97,7 @@ pub fn decrypt_events(seed: &[u8; 16], packet: &[u8]) -> Result<Vec<LedgerEvent>
     serde_json::from_slice(&plaintext).map_err(|e| format!("Invalid decrypted payload: {e}"))
 }
 
-fn url_encode(s: &str) -> String {
+pub(crate) fn url_encode(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for b in s.bytes() {
         if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'~') {
@@ -141,73 +131,4 @@ pub fn url_decode(s: &str) -> String {
         i += 1;
     }
     String::from_utf8_lossy(&out).into_owned()
-}
-
-pub fn build_pairing_uri(
-    seed: &[u8; 16],
-    seed_b64: &str,
-    role: &str,
-    node_id: &str,
-    shop_name: &str,
-    lan_addr: &str,
-) -> String {
-    let base = format!(
-        "kura://join?seed={}&role={}&node={}&shop={}&lan={}",
-        url_encode(seed_b64),
-        url_encode(role),
-        url_encode(node_id),
-        url_encode(shop_name),
-        url_encode(lan_addr)
-    );
-    if role == "OWNER" {
-        format!("{base}&auth={}", derive_owner_token_hex(seed))
-    } else {
-        base
-    }
-}
-
-pub fn parse_pairing_uri(uri: &str) -> Result<ParsedPairing, String> {
-    let query = uri
-        .trim()
-        .strip_prefix("kura://join?")
-        .ok_or_else(|| "URI must start with kura://join?".to_string())?;
-    let mut seed_b64 = String::new();
-    let mut role = "CASHIER".to_string();
-    let mut node_id = "K2".to_string();
-    let mut shop_name = "Kura Shop".to_string();
-    let mut lan_addr = None;
-    let mut auth_hex: Option<String> = None;
-
-    for pair in query.split('&') {
-        if let Some((k, v)) = pair.split_once('=') {
-            let val = url_decode(v);
-            match k {
-                "seed" => seed_b64 = val,
-                "role" => role = val.to_ascii_uppercase(),
-                "node" if !val.trim().is_empty() => node_id = val.trim().to_ascii_uppercase(),
-                "shop" if !val.trim().is_empty() => shop_name = val,
-                "lan" if !val.trim().is_empty() => lan_addr = Some(val),
-                "auth" if !val.trim().is_empty() => auth_hex = Some(val),
-                _ => {}
-            }
-        }
-    }
-    if role != "OWNER" && role != "CASHIER" {
-        return Err("Role must be OWNER or CASHIER".to_string());
-    }
-    let seed = decode_seed_b64(&seed_b64)?;
-    if role == "OWNER" {
-        if let Some(ref provided) = auth_hex {
-            if provided != &derive_owner_token_hex(&seed) {
-                return Err("Owner authorization token verification failed".to_string());
-            }
-        }
-    }
-    Ok(ParsedPairing {
-        seed_b64,
-        role,
-        node_id,
-        shop_name,
-        lan_addr,
-    })
 }

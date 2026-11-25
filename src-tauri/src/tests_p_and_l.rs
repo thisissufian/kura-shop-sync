@@ -1,6 +1,7 @@
 use crate::ledger::{apply_ledger_event, ProductUpsertPayload};
 use crate::ledger_analytics::compute_owner_analytics;
-use crate::ledger_init::init_db;
+// These tests inject unsigned owner events from simulated remote devices (pre-S4 chain).
+use crate::tests_s4::init_unsecured_db as init_db;
 use crate::ledger_suppliers::list_suppliers;
 use crate::models::{BillItem, BillReceipt, LedgerEvent, ShopExpense};
 
@@ -32,6 +33,7 @@ fn test_p_and_l_valuation_and_operating_profit() {
         payload_json: serde_json::to_string(&p).unwrap(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     apply_ledger_event(&tx, &ev_p).unwrap();
 
@@ -43,6 +45,7 @@ fn test_p_and_l_valuation_and_operating_profit() {
         payload_json: r#"{"sku":"TEST-01","delta":10,"reason":"Opening"}"#.to_string(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     apply_ledger_event(&tx, &ev_stock).unwrap();
 
@@ -81,6 +84,7 @@ fn test_p_and_l_valuation_and_operating_profit() {
         payload_json: serde_json::to_string(&bill).unwrap(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     apply_ledger_event(&tx, &ev_bill).unwrap();
 
@@ -100,6 +104,7 @@ fn test_p_and_l_valuation_and_operating_profit() {
         payload_json: serde_json::to_string(&exp).unwrap(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     apply_ledger_event(&tx, &ev_exp).unwrap();
 
@@ -146,6 +151,7 @@ fn test_supplier_payables_and_stock_purchased_flow() {
         }"#.to_string(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     apply_ledger_event(&tx, &ev_po).unwrap();
 
@@ -164,6 +170,7 @@ fn test_supplier_payables_and_stock_purchased_flow() {
         }"#.to_string(),
         synced_lan: 0,
         synced_relay: 0,
+        sig: String::new(),
     };
     apply_ledger_event(&tx, &ev_pay).unwrap();
     tx.commit().unwrap();

@@ -63,6 +63,7 @@ fn test_shop_local_day_boundary_dhaka_rollover() {
             payload_json: serde_json::to_string(&bill).unwrap(),
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         },
     )
     .unwrap();
@@ -76,6 +77,7 @@ fn test_shop_local_day_boundary_dhaka_rollover() {
             payload_json: serde_json::to_string(&exp).unwrap(),
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         },
     )
     .unwrap();
@@ -148,6 +150,7 @@ fn test_old_db_migration_and_negative_offset_settings() {
             payload_json: r#"{"shop_name":"Old Shop 2","shop_subtitle":"","currency_symbol":"৳","receipt_footer":"Hi"}"#.into(),
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         },
     )
     .unwrap();

@@ -6,6 +6,7 @@ use crate::ledger_expenses::apply_expense_event;
 use crate::ledger_products::{add_stock, apply_product_event};
 use crate::ledger_suppliers::apply_supplier_event;
 use crate::models::{BillItem, BillReceipt, LedgerEvent};
+use crate::owner_sig::{owner_sig_ok, record_rejected};
 
 fn def_warranty() -> String {
     "No Warranty (ওয়ারেন্টি নেই)".to_string()
@@ -55,11 +56,23 @@ pub struct ShopSettingsPayload {
 }
 
 pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, String> {
+    // Already held: nothing to do. Checked before the signature gate because older
+    // app versions re-send our signed events without `sig`.
+    let known: bool = tx
+        .query_row("SELECT EXISTS(SELECT 1 FROM ledger_events WHERE event_id = ?1)", params![ev.event_id], |r| r.get(0))
+        .map_err(|e| format!("Lookup ledger_event: {e}"))?;
+    if known {
+        return Ok(false);
+    }
+    if !owner_sig_ok(tx, ev)? {
+        record_rejected(tx, ev)?;
+        return Ok(false);
+    }
     tx.execute(
         "INSERT OR IGNORE INTO ledger_events
-         (event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        params![ev.event_id, ev.hlc, ev.node_id, ev.event_type, ev.payload_json, ev.synced_lan, ev.synced_relay],
+         (event_id, hlc, node_id, event_type, payload_json, synced_lan, synced_relay, sig)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        params![ev.event_id, ev.hlc, ev.node_id, ev.event_type, ev.payload_json, ev.synced_lan, ev.synced_relay, ev.sig],
     )
     .map_err(|e| format!("Insert ledger_event: {e}"))?;
 

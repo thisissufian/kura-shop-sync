@@ -4,7 +4,8 @@ use tauri::State;
 
 use crate::commands::AppState;
 use crate::hlc::{format_iso_ms, new_event_id, next_hlc};
-use crate::ledger::{apply_ledger_event, ProductUpsertPayload, StockAdjustPayload};
+use crate::owner_sig::apply_local_event;
+use crate::ledger::{ProductUpsertPayload, StockAdjustPayload};
 use crate::ledger_queries::{get_chain_config, list_products};
 use crate::models::{LedgerEvent, PdfExportResult, Product};
 use crate::printer::barcode_pdf::generate_barcode_labels_pdf;
@@ -182,6 +183,7 @@ pub fn import_catalog_csv(csv_content: String, state: State<'_, AppState>) -> Re
             payload_json: serde_json::to_string(&upsert).map_err(|e| e.to_string())?,
             synced_lan: 0,
             synced_relay: 0,
+            sig: String::new(),
         });
         let target_stock: i64 = cols.get(6).and_then(|s| s.parse().ok()).unwrap_or(0);
         let delta = target_stock - existing_stock;
@@ -196,6 +198,7 @@ pub fn import_catalog_csv(csv_content: String, state: State<'_, AppState>) -> Re
                 payload_json: serde_json::to_string(&adj).map_err(|e| e.to_string())?,
                 synced_lan: 0,
                 synced_relay: 0,
+                sig: String::new(),
             });
         }
         count += 1;
@@ -203,7 +206,7 @@ pub fn import_catalog_csv(csv_content: String, state: State<'_, AppState>) -> Re
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     for ev in &pending_events {
-        apply_ledger_event(&tx, ev)?;
+        apply_local_event(&tx, ev)?;
     }
     tx.commit().map_err(|e| e.to_string())?;
     Ok(count)
