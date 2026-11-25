@@ -78,3 +78,13 @@ export function StockStatus({ p }: { p: Product }) {
     </span>
   );
 }
+
+/** iOS switch (51×31), green when on. */
+export function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={onChange}
+      class={`relative shrink-0 w-[51px] h-[31px] rounded-full transition-colors duration-200 ${on ? "bg-positive-fill" : "bg-[rgba(120,120,128,0.32)]"}`}>
+      <span class={`absolute top-[2px] left-[2px] w-[27px] h-[27px] rounded-full bg-white shadow-[0_3px_8px_rgba(0,0,0,0.15),0_3px_1px_rgba(0,0,0,0.06)] transition-transform duration-200 ${on ? "translate-x-5" : ""}`} />
+    </button>
+  );
+}

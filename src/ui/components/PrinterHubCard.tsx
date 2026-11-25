@@ -7,6 +7,8 @@ import {
   showToast,
   updatePrinterSettings,
 } from "../../state/kuraStore";
+import { FieldRow, Section } from "../primitives/Group";
+import { SegmentedControl } from "../primitives/SegmentedControl";
 
 export function PrinterHubCard() {
   const cfg = printerSettings.value;
@@ -27,7 +29,7 @@ export function PrinterHubCard() {
   const handleTestPrint = async () => {
     saveCfg();
     if (!latestBill) {
-      showToast("Issue at least one bill in Counter to test print", "err");
+      showToast("Make a sale first, then print it here", "err");
       return;
     }
     setBusy(true);
@@ -37,7 +39,7 @@ export function PrinterHubCard() {
 
   const handleExportLatestPdf = async () => {
     if (!latestBill) {
-      showToast("Issue at least one bill in Counter to export PDF", "err");
+      showToast("Make a sale first, then save it as PDF", "err");
       return;
     }
     setBusy(true);
@@ -46,79 +48,30 @@ export function PrinterHubCard() {
   };
 
   return (
-    <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-4 shadow-xs space-y-3">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-[15px] font-semibold kura-text-main">
-            Wireless Thermal &amp; PDF Hub
-          </h3>
-          <p class="text-[12px] kura-text-muted">
-            Raw ESC/POS over TCP port 9100 &amp; pure vector PDF
-          </p>
-        </div>
+    <Section header="Receipt printer" footer="Network thermal printers over raw ESC/POS on TCP. PDFs work without a printer.">
+      <div class="kura-row">
+        <span class="text-body text-label flex-1">Paper width</span>
+        <SegmentedControl
+          class="!w-auto"
+          options={[{ id: "58", label: "58 mm" }, { id: "80", label: "80 mm" }]}
+          value={String(cfg.widthMm) as "58" | "80"}
+          onChange={(w) => saveCfg(w === "58" ? 58 : 80)}
+        />
       </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        {([58, 80] as const).map((w) => {
-          const active = cfg.widthMm === w;
-          return (
-            <button
-              key={w}
-              type="button"
-              onClick={() => saveCfg(w)}
-              class={`rounded-xl border px-3 py-2 text-[13px] font-semibold transition ${
-                active
-                  ? "border-[#007AFF] bg-[#007AFF]/10 text-[#007AFF]"
-                  : "border-black/[0.08] dark:border-white/[0.08] kura-subtle kura-text-muted"
-              }`}
-            >
-              {w}mm ({w === 58 ? "32 cols" : "48 cols"})
-            </button>
-          );
-        })}
-      </div>
-
-      <div class="grid grid-cols-[1fr_92px] gap-2">
-        <label class="block">
-          <span class="text-[11px] font-medium kura-text-muted">Printer IP</span>
-          <input
-            value={ip}
-            onInput={(e) => setIp((e.target as HTMLInputElement).value)}
-            onBlur={() => saveCfg()}
-            placeholder="192.168.1.100"
-            class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px] tabular-nums"
-          />
-        </label>
-        <label class="block">
-          <span class="text-[11px] font-medium kura-text-muted">Port</span>
-          <input
-            type="number"
-            value={port}
-            onInput={(e) => setPort((e.target as HTMLInputElement).value)}
-            onBlur={() => saveCfg()}
-            class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px] tabular-nums"
-          />
-        </label>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={handleTestPrint}
-          class="rounded-xl bg-[#007AFF] py-2.5 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-50 transition"
-        >
-          Test Thermal Print
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={handleExportLatestPdf}
-          class="rounded-xl border border-black/[0.08] dark:border-white/[0.08] kura-subtle py-2.5 text-[13px] font-semibold kura-text-main active:scale-95 disabled:opacity-50 transition"
-        >
-          Export Latest PDF
-        </button>
-      </div>
-    </div>
+      <FieldRow label="Printer IP">
+        <input value={ip} onInput={(e) => setIp((e.target as HTMLInputElement).value)} onBlur={() => saveCfg()}
+          placeholder="192.168.1.100" class="kura-field tabular-nums" />
+      </FieldRow>
+      <FieldRow label="Port">
+        <input type="number" value={port} onInput={(e) => setPort((e.target as HTMLInputElement).value)} onBlur={() => saveCfg()}
+          class="kura-field tabular-nums" />
+      </FieldRow>
+      <button type="button" disabled={busy} onClick={handleTestPrint} class="kura-row text-body text-tint disabled:opacity-40">
+        Print the latest bill
+      </button>
+      <button type="button" disabled={busy} onClick={handleExportLatestPdf} class="kura-row text-body text-tint disabled:opacity-40">
+        Save the latest bill as PDF
+      </button>
+    </Section>
   );
 }

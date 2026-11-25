@@ -14,6 +14,8 @@ import {
   importEncryptedVaultBackup,
 } from "../../state/vaultConfigActions";
 import type { VaultExportResult } from "../../types/kura";
+import { Toggle } from "../primitives/Controls";
+import { FieldRow, Section } from "../primitives/Group";
 
 export function VaultBackupCard() {
   const owner = isOwner.value;
@@ -29,7 +31,7 @@ export function VaultBackupCard() {
   const toggleRelay = async () => {
     if (enabled) {
       disconnectRemoteRelay(true);
-      showToast("Remote Live Relay disconnected");
+      showToast("Live relay turned off");
     } else {
       await connectRemoteRelay(relayUrl);
     }
@@ -54,114 +56,56 @@ export function VaultBackupCard() {
     setBusy(false);
   };
 
-  return (
-    <div class="space-y-4">
-      <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-4 shadow-xs space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-[15px] font-semibold kura-text-main">
-                Remote Live Relay
-              </h3>
-              <span
-                class={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  connected
-                    ? "bg-[#34C759]/14 text-[#1E8E3E]"
-                    : enabled
-                      ? "bg-[#FF9500]/14 text-[#B25E00]"
-                      : "bg-black/[0.06] dark:bg-white/[0.08] kura-text-muted"
-                }`}
-              >
-                {connected ? "LIVE" : enabled ? "CONNECTING" : "OFF"}
-              </span>
-            </div>
-            <p class="text-[12px] kura-text-muted">
-              AES-256-GCM encrypted WebSocket broadcast beyond shop Wi-Fi
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={toggleRelay}
-            class={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition active:scale-95 ${
-              enabled
-                ? "bg-[#FF3B30]/12 text-[#FF3B30]"
-                : "bg-[#34C759] text-white"
-            }`}
-          >
-            {enabled ? "Disable" : "Enable"}
-          </button>
-        </div>
+  const relayState = connected ? "Live" : enabled ? "Connecting…" : "Off";
 
-        <input
-          value={relayUrl}
-          onInput={(e) => setRelayUrl((e.target as HTMLInputElement).value)}
-          placeholder="wss://relay.damus.io"
-          class="w-full rounded-xl kura-input px-3 py-2 text-[12px]"
-        />
-      </div>
+  return (
+    <div class="space-y-6">
+      <Section header="Live relay" footer="Sends encrypted (AES-256-GCM) changes over the internet, so phones sync beyond the shop Wi-Fi.">
+        <div class="kura-row">
+          <div class="min-w-0 flex-1">
+            <div class="text-body text-label">Sync over the internet</div>
+            <div class={`text-footnote flex items-center gap-1.5 ${connected ? "text-positive" : "text-label-2"}`}>
+              {connected && <span class="kura-dot" />}
+              {relayState}
+            </div>
+          </div>
+          <Toggle on={enabled} onChange={() => void toggleRelay()} label="Sync over the internet" />
+        </div>
+        <FieldRow label="Relay">
+          <input value={relayUrl} onInput={(e) => setRelayUrl((e.target as HTMLInputElement).value)}
+            placeholder="wss://relay.damus.io" class="kura-field text-subhead" />
+        </FieldRow>
+      </Section>
 
       {owner && (
-        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-4 shadow-xs space-y-3">
-          <div>
-            <h3 class="text-[15px] font-semibold kura-text-main">
-              Encrypted .kura Vault Backup
-            </h3>
-            <p class="text-[12px] kura-text-muted">
-              Zero-plaintext snapshot encrypted with your Sync Chain key
-            </p>
-          </div>
-
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleExport}
-            class="w-full rounded-xl bg-[#007AFF] py-2.5 text-[13px] font-semibold text-white active:scale-[0.99] disabled:opacity-50 transition"
-          >
-            Export .kura Snapshot
+        <Section header="Encrypted backup" footer="A .kura file is encrypted with your sync chain key. Restoring on a new phone also needs the recovery phrase.">
+          <button type="button" disabled={busy} onClick={handleExport} class="kura-row text-body text-tint disabled:opacity-40">
+            Export .kura backup
           </button>
-
           {exportRes && (
-            <div class="rounded-xl bg-[#34C759]/10 border border-[#34C759]/25 p-3 text-[11px] space-y-1.5">
-              <div class="font-semibold text-[#1E8E3E]">
-                Saved {exportRes.events_count} events ({(exportRes.size_bytes / 1024).toFixed(1)} KB)
+            <div class="kura-row">
+              <div class="min-w-0 flex-1">
+                <div class="text-body text-label tabular-nums">
+                  Saved {exportRes.events_count} events · {(exportRes.size_bytes / 1024).toFixed(1)} KB
+                </div>
+                <div class="text-footnote text-label-2 break-all">{exportRes.file_path}</div>
               </div>
-              <div class="break-all kura-text-muted">{exportRes.file_path}</div>
-              <button
-                type="button"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(exportRes.payload_b64);
-                  showToast("Copied .kura payload");
-                }}
-                class="rounded-lg bg-[#34C759] px-2.5 py-1 font-semibold text-white"
-              >
-                Copy Encrypted Payload
+              <button type="button" class="kura-btn kura-btn-tinted kura-btn-sm"
+                onClick={async () => { await navigator.clipboard.writeText(exportRes.payload_b64); showToast("Copied backup"); }}>
+                Copy
               </button>
             </div>
           )}
-
-          <form onSubmit={handleImport} class="space-y-2 pt-1 border-t border-black/[0.06] dark:border-white/[0.08]">
-            <textarea
-              rows={2}
-              value={restoreB64}
-              onInput={(e) => setRestoreB64((e.target as HTMLTextAreaElement).value)}
-              placeholder="Paste .kura encrypted vault payload to restore…"
-              class="w-full rounded-xl kura-input px-3 py-2 text-[12px] font-mono"
-            />
-            <input
-              value={restorePhrase}
-              onInput={(e) => setRestorePhrase((e.target as HTMLInputElement).value)}
-              placeholder="12- or 24-word recovery phrase (if restoring onto a new phone)"
-              class="w-full rounded-xl kura-input px-3 py-2 text-[12px]"
-            />
-            <button
-              type="submit"
-              disabled={busy}
-              class="w-full rounded-xl border border-black/[0.08] dark:border-white/[0.08] kura-subtle py-2 text-[13px] font-semibold text-[#007AFF] active:scale-[0.99] disabled:opacity-50"
-            >
-              Restore from .kura Vault
+          <form onSubmit={handleImport} class="kura-row !block space-y-2.5 !py-3">
+            <textarea rows={2} value={restoreB64} onInput={(e) => setRestoreB64((e.target as HTMLTextAreaElement).value)}
+              placeholder="Paste a .kura backup to restore" class="kura-input w-full p-3 text-footnote font-mono" />
+            <input value={restorePhrase} onInput={(e) => setRestorePhrase((e.target as HTMLInputElement).value)}
+              placeholder="Recovery phrase (new phone only)" class="kura-input w-full h-10 px-3 text-subhead" />
+            <button type="submit" disabled={busy || !restoreB64.trim()} class="kura-btn kura-btn-gray w-full">
+              Restore from backup
             </button>
           </form>
-        </div>
+        </Section>
       )}
     </div>
   );
