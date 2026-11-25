@@ -61,6 +61,7 @@ fn test_p_and_l_valuation_and_operating_profit() {
             name: "Wireless ANC Headphones".to_string(),
             qty: 2,
             unit_price_minor: 2500,
+            unit_cost_minor: None,
             line_total_minor: 5000,
             warranty_label: "1 Year Official Warranty".to_string(),
         }],

@@ -18,8 +18,9 @@ export function calcMockAnalytics(period = "ALL"): OwnerAnalytics {
     cur.revenue_minor += b.total_minor;
     perNode.set(b.node_id, cur);
     for (const it of b.items) {
-      const p = mockProducts.find((x) => x.sku === it.sku);
-      cogs += (p?.cost_price_minor ?? 0) * it.qty;
+      const unitCost =
+        it.unit_cost_minor ?? mockProducts.find((x) => x.sku === it.sku)?.cost_price_minor ?? 0;
+      cogs += unitCost * it.qty;
     }
   }
 

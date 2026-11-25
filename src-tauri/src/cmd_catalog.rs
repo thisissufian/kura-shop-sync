@@ -15,7 +15,7 @@ pub fn get_bootstrap_state(state: State<'_, AppState>) -> Result<BootstrapState,
     let redact = cfg.role != "OWNER";
     Ok(BootstrapState {
         products: list_products(&conn, redact)?,
-        recent_bills: list_recent_bills(&conn, 50)?,
+        recent_bills: list_recent_bills(&conn, 50, redact)?,
         customers: list_customers(&conn)?,
         sync_status: build_sync_status(&conn, &state.lan)?,
     })

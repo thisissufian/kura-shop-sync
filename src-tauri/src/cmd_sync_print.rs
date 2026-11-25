@@ -91,7 +91,7 @@ pub async fn print_bill_thermal(
 ) -> Result<String, String> {
     let (cfg, bill) = {
         let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-        (get_chain_config(&conn)?, get_bill_by_no(&conn, &bill_no)?)
+        (get_chain_config(&conn)?, get_bill_by_no(&conn, &bill_no, false)?)
     };
     let bytes = format_receipt_bytes(
         &cfg.shop_name,
@@ -113,7 +113,7 @@ pub fn export_bill_pdf(
 ) -> Result<PdfExportResult, String> {
     let (cfg, bill) = {
         let conn = state.db.lock().map_err(|_| "DB lock failed".to_string())?;
-        (get_chain_config(&conn)?, get_bill_by_no(&conn, &bill_no)?)
+        (get_chain_config(&conn)?, get_bill_by_no(&conn, &bill_no, false)?)
     };
     generate_receipt_pdf(
         &state.receipts_dir,
