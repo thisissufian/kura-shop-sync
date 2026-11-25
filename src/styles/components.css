@@ -170,10 +170,8 @@ select.kura-field option { direction: ltr; color: initial; }
 }
 .kura-subtle { background-color: var(--kura-bg-subtle); color: var(--kura-text-primary); }
 .kura-text-main { color: var(--kura-text-primary); }
-.kura-text-sub { color: var(--kura-text-secondary); }
 .kura-text-muted { color: var(--kura-text-secondary); }
 .kura-chart-idle { background-color: var(--kura-chart-empty); }
-.kura-icon-squircle { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 .kura-btn-press { transition: transform 0.14s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.14s ease; }
 .kura-btn-press:active { opacity: 0.7; }
