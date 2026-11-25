@@ -71,6 +71,7 @@ export interface SyncChainStatus {
   shop_subtitle: string;
   currency_symbol: string;
   receipt_footer: string;
+  utc_offset_minutes: number;
   peer_count: number;
   pending_events: number;
   lan_ip: string;
@@ -84,6 +85,7 @@ export interface ShopSettings {
   shop_subtitle: string;
   currency_symbol: string;
   receipt_footer: string;
+  utc_offset_minutes: number;
   node_id: string;
   role: string;
 }
@@ -93,6 +95,7 @@ export interface ShopSettingsInput {
   shop_subtitle: string;
   currency_symbol: string;
   receipt_footer: string;
+  utc_offset_minutes: number;
 }
 
 export interface TerminalSalesSummary {

@@ -39,7 +39,7 @@ fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
     era * 146_097 + doe - 719_468
 }
 
-fn parse_iso_ms(iso: &str) -> Option<u128> {
+pub fn parse_iso_ms(iso: &str) -> Option<u128> {
     let b = iso.as_bytes();
     if b.len() != 24 || b[4] != b'-' || b[7] != b'-' || b[10] != b'T'
         || b[13] != b':' || b[16] != b':' || b[19] != b'.' || b[23] != b'Z'
@@ -151,11 +151,45 @@ pub fn observe_remote_hlc(conn: &Connection, remote_hlc: &str, node_id: &str) ->
     Ok(merged)
 }
 
+/// Returns `(year, month, day)` in the shop's local timezone for a UTC epoch-ms timestamp.
+pub fn local_civil_date(epoch_ms: u128, offset_minutes: i64) -> (i64, i64, i64) {
+    let shifted_ms = (epoch_ms as i128) + (offset_minutes as i128) * 60_000;
+    let days = shifted_ms.div_euclid(86_400_000) as i64;
+    civil_from_days(days)
+}
+
+/// Formats `YYYY-MM-DD` in the shop's local timezone for a UTC epoch-ms timestamp.
+pub fn local_date_str(epoch_ms: u128, offset_minutes: i64) -> String {
+    let (y, m, d) = local_civil_date(epoch_ms, offset_minutes);
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
+/// Converts a UTC HLC or ISO-Z prefix into a shop-local `YYYY-MM-DD` date.
+pub fn hlc_local_date(hlc: &str, offset_minutes: i64) -> Option<String> {
+    if let Some(ms) = hlc.get(..24).and_then(parse_iso_ms) {
+        return Some(local_date_str(ms, offset_minutes));
+    }
+    let iso20 = hlc.get(..20)?;
+    if iso20.ends_with('Z') {
+        let with_ms = format!("{}.000Z", &iso20[..19]);
+        if let Some(ms) = parse_iso_ms(&with_ms) {
+            return Some(local_date_str(ms, offset_minutes));
+        }
+    }
+    None
+}
+
 /// Generates a collision-free invoice number: `{node_id}-{YYMMDD}-{4DigitDailySeq}`.
 pub fn next_invoice_number(conn: &Connection, node_id: &str) -> Result<String, String> {
-    let days = (current_epoch_ms() / 1000 / 86_400) as i64;
-    let (y, m, d) = civil_from_days(days);
-    let prefix = format!("{node_id}-{:02}{m:02}{d:02}-", y % 100);
+    next_invoice_number_at(conn, node_id, current_epoch_ms())
+}
+
+pub fn next_invoice_number_at(conn: &Connection, node_id: &str, now_ms: u128) -> Result<String, String> {
+    let offset_minutes: i64 = conn
+        .query_row("SELECT utc_offset_minutes FROM chain_config WHERE id = 1", [], |r| r.get(0))
+        .unwrap_or(360);
+    let (y, m, d) = local_civil_date(now_ms, offset_minutes);
+    let prefix = format!("{node_id}-{:02}{m:02}{d:02}-", y.rem_euclid(100));
     let pattern = format!("{prefix}%");
     let count: i64 = conn
         .query_row(

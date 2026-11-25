@@ -36,6 +36,8 @@ mod tests_receipt_warranty;
 mod tests_t1;
 #[cfg(test)]
 mod tests_t3;
+#[cfg(test)]
+mod tests_t4;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;

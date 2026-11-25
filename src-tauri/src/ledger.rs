@@ -10,6 +10,10 @@ fn def_warranty() -> String {
     "No Warranty (ওয়ারেন্টি নেই)".to_string()
 }
 
+fn def_utc_offset() -> i64 {
+    360
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProductUpsertPayload {
     pub sku: String,
@@ -45,6 +49,8 @@ pub struct ShopSettingsPayload {
     pub shop_subtitle: String,
     pub currency_symbol: String,
     pub receipt_footer: String,
+    #[serde(default = "def_utc_offset")]
+    pub utc_offset_minutes: i64,
 }
 
 pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, String> {
@@ -143,8 +149,8 @@ pub fn apply_ledger_event(tx: &Transaction, ev: &LedgerEvent) -> Result<bool, St
         "SHOP_SETTINGS_UPDATED" => {
             let s: ShopSettingsPayload = serde_json::from_str(&ev.payload_json).map_err(|e| format!("SHOP_SETTINGS_UPDATED: {e}"))?;
             tx.execute(
-                "UPDATE chain_config SET shop_name = ?1, shop_subtitle = ?2, currency_symbol = ?3, receipt_footer = ?4 WHERE id = 1",
-                params![s.shop_name, s.shop_subtitle, s.currency_symbol, s.receipt_footer],
+                "UPDATE chain_config SET shop_name = ?1, shop_subtitle = ?2, currency_symbol = ?3, receipt_footer = ?4, utc_offset_minutes = ?5 WHERE id = 1",
+                params![s.shop_name, s.shop_subtitle, s.currency_symbol, s.receipt_footer, s.utc_offset_minutes],
             ).map_err(|e| format!("Project SHOP_SETTINGS_UPDATED: {e}"))?;
         }
         _ => {}

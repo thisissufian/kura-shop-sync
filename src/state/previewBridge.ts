@@ -128,16 +128,18 @@ export async function previewInvoke<T>(cmd: string, args?: Record<string, unknow
       shop_subtitle: mockSync.shop_subtitle,
       currency_symbol: mockSync.currency_symbol,
       receipt_footer: mockSync.receipt_footer,
+      utc_offset_minutes: mockSync.utc_offset_minutes,
       node_id: mockSync.node_id,
       role: mockSync.role,
     } as T;
   }
   if (cmd === "update_shop_settings") {
-    const input = args?.input as { shop_name: string; shop_subtitle: string; currency_symbol: string; receipt_footer: string };
+    const input = args?.input as { shop_name: string; shop_subtitle: string; currency_symbol: string; receipt_footer: string; utc_offset_minutes?: number };
     mockSync.shop_name = input.shop_name;
     mockSync.shop_subtitle = input.shop_subtitle;
     mockSync.currency_symbol = input.currency_symbol;
     mockSync.receipt_footer = input.receipt_footer;
+    mockSync.utc_offset_minutes = input.utc_offset_minutes ?? mockSync.utc_offset_minutes;
     return { ...mockSync } as T;
   }
   if (cmd === "export_barcode_labels_pdf") {

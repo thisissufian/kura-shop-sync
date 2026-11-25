@@ -1,5 +1,5 @@
 import type { DailySalesPoint, OwnerAnalytics } from "../types/kura";
-import { mockBills, mockCustomers, mockExpenses, mockProducts, mockSuppliers } from "./previewFixtures";
+import { mockBills, mockCustomers, mockExpenses, mockProducts, mockSuppliers, mockSync } from "./previewFixtures";
 
 export function calcMockAnalytics(period = "ALL"): OwnerAnalytics {
   let gross = 0;
@@ -45,8 +45,8 @@ export function calcMockAnalytics(period = "ALL"): OwnerAnalytics {
   const daily_trend: DailySalesPoint[] = [];
   const now = new Date();
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 86_400_000);
-    const label = `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+    const d = new Date(now.getTime() + mockSync.utc_offset_minutes * 60_000 - i * 86_400_000);
+    const label = `${String(d.getUTCMonth() + 1).padStart(2, "0")}/${String(d.getUTCDate()).padStart(2, "0")}`;
     const dayRev = i === 0 ? gross : Math.round(180000 + (6 - i) * 16000);
     const dayProfit = Math.round(dayRev * 0.45);
     daily_trend.push({

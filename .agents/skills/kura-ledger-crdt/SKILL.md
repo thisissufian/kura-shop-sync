@@ -21,3 +21,8 @@ Maintain three core tables in `kura.db`:
 3. `products`: Materialized view table (`sku TEXT PRIMARY KEY`, `name TEXT NOT NULL`, `barcode TEXT`, `category TEXT`, `sell_price_minor INTEGER NOT NULL`, `cost_price_minor INTEGER NOT NULL`, `stock_qty INTEGER NOT NULL DEFAULT 0`, `low_stock_threshold INTEGER NOT NULL DEFAULT 5`, `updated_hlc TEXT NOT NULL`).
 
 Whenever a `PRODUCT_UPSERT`, `STOCK_ADJUST`, `BILL_ISSUED`, or `BILL_VOIDED` event is inserted into `ledger_events` (either locally or via Sync Chain merge), atomically apply its delta to `products` inside the same SQLite transaction (`INSERT OR IGNORE INTO ledger_events...` -> only apply delta if `changes() > 0`). This guarantees 100% idempotency when two phones sync duplicate packets.
+
+## 4. Backward-Compatible Schema & Event Evolution
+Existing user `.db` files and historical `ledger_events` JSON payloads must always continue to open and replay:
+- **SQLite columns** (`src-tauri/src/ledger_init.rs`): add new columns both to `CREATE TABLE IF NOT EXISTS` and as an idempotent `let _ = conn.execute("ALTER TABLE <table> ADD COLUMN <col> <type> NOT NULL DEFAULT <val>", []);` migration, then update `get_chain_config` / queries in `src-tauri/src/ledger_queries.rs`.
+- **Event & DTO fields** (`src-tauri/src/models.rs`, `src-tauri/src/ledger.rs`): annotate every newly added serde field with `#[serde(default)]` or `#[serde(default = "def_fn")]` so legacy `payload_json` records lacking the field deserialize cleanly.

@@ -13,6 +13,26 @@ const CURRENCIES = [
   { symbol: "¥", label: "¥ JPY" },
 ];
 
+const TIMEZONE_OPTIONS: { offset: number; label: string }[] = [
+  { offset: -480, label: "UTC−08:00 · Pacific" },
+  { offset: -360, label: "UTC−06:00 · Central" },
+  { offset: -300, label: "UTC−05:00 · Eastern" },
+  { offset: 0, label: "UTC+00:00 · London / UTC" },
+  { offset: 60, label: "UTC+01:00 · Berlin / Lagos" },
+  { offset: 180, label: "UTC+03:00 · Riyadh / Nairobi" },
+  { offset: 240, label: "UTC+04:00 · Dubai" },
+  { offset: 300, label: "UTC+05:00 · Karachi" },
+  { offset: 330, label: "UTC+05:30 · India / Colombo" },
+  { offset: 345, label: "UTC+05:45 · Kathmandu" },
+  { offset: 360, label: "UTC+06:00 · Dhaka (Bangladesh)" },
+  { offset: 390, label: "UTC+06:30 · Yangon" },
+  { offset: 420, label: "UTC+07:00 · Bangkok / Jakarta" },
+  { offset: 480, label: "UTC+08:00 · Singapore / KL" },
+  { offset: 540, label: "UTC+09:00 · Tokyo / Seoul" },
+  { offset: 600, label: "UTC+10:00 · Sydney" },
+  { offset: 720, label: "UTC+12:00 · Auckland" },
+];
+
 export function ShopSettingsSheet() {
   const open = shopSettingsSheetOpen.value;
   const status = syncStatus.value;
@@ -21,6 +41,7 @@ export function ShopSettingsSheet() {
   const [subtitle, setSubtitle] = useState("");
   const [currency, setCurrency] = useState("$");
   const [footer, setFooter] = useState("");
+  const [utcOffset, setUtcOffset] = useState(360);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -29,6 +50,7 @@ export function ShopSettingsSheet() {
     setSubtitle(status.shop_subtitle ?? "");
     setCurrency(status.currency_symbol || "$");
     setFooter(status.receipt_footer || "Thank you for shopping!");
+    setUtcOffset(status.utc_offset_minutes ?? 360);
   }, [open, status]);
 
   const close = () => {
@@ -43,6 +65,7 @@ export function ShopSettingsSheet() {
       shop_subtitle: subtitle.trim(),
       currency_symbol: currency,
       receipt_footer: footer.trim() || "Thank you for shopping!",
+      utc_offset_minutes: utcOffset,
     });
     setSaving(false);
     if (ok) close();
@@ -110,6 +133,30 @@ export function ShopSettingsSheet() {
               onInput={(e) => setFooter((e.target as HTMLInputElement).value)}
               class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px]"
             />
+          </label>
+
+          <label class="block">
+            <span class="text-[11px] font-medium kura-text-muted">
+              Shop Timezone (Day Rollover)
+            </span>
+            <select
+              value={utcOffset}
+              onChange={(e) => setUtcOffset(Number((e.target as HTMLSelectElement).value))}
+              class="mt-1 w-full rounded-xl kura-input px-3 py-2 text-[13px] tabular-nums"
+            >
+              {!TIMEZONE_OPTIONS.some((o) => o.offset === utcOffset) && (
+                <option value={utcOffset}>
+                  UTC{utcOffset >= 0 ? "+" : "−"}
+                  {String(Math.floor(Math.abs(utcOffset) / 60)).padStart(2, "0")}:
+                  {String(Math.abs(utcOffset) % 60).padStart(2, "0")}
+                </option>
+              )}
+              {TIMEZONE_OPTIONS.map((o) => (
+                <option key={o.offset} value={o.offset}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
           </label>
 
           <div>

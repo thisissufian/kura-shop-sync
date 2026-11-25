@@ -47,6 +47,7 @@ pub fn build_sync_status(conn: &Connection, lan: &LanSyncState) -> Result<SyncCh
         shop_subtitle: cfg.shop_subtitle,
         currency_symbol: cfg.currency_symbol,
         receipt_footer: cfg.receipt_footer,
+        utc_offset_minutes: cfg.utc_offset_minutes,
         peer_count: lan.active_peer_count(),
         pending_events: pending,
         lan_ip: lan_addr,
