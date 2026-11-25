@@ -32,6 +32,8 @@ mod tests_print_csv;
 mod tests_p_and_l;
 #[cfg(test)]
 mod tests_receipt_warranty;
+#[cfg(test)]
+mod tests_t1;
 
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
