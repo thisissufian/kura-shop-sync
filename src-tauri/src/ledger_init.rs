@@ -42,6 +42,10 @@ pub fn init_db(db_path: &Path) -> Result<Connection, String> {
            synced_relay INTEGER NOT NULL DEFAULT 0,
            sig TEXT NOT NULL DEFAULT ''
          );
+         CREATE TABLE IF NOT EXISTS relay_published (
+           d TEXT PRIMARY KEY,
+           digest TEXT NOT NULL
+         );
          CREATE TABLE IF NOT EXISTS rejected_events (
            event_id TEXT PRIMARY KEY,
            hlc TEXT NOT NULL,

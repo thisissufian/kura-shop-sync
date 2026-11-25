@@ -137,12 +137,6 @@ export interface VaultExportResult {
   size_bytes: number;
 }
 
-export interface RelayEnvelope {
-  chain_id_hash: string;
-  latest_hlc: string;
-  cipher_b64: string;
-}
-
 export interface BootstrapState {
   products: Product[];
   recent_bills: BillReceipt[];

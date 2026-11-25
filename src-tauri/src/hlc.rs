@@ -63,7 +63,7 @@ pub fn parse_iso_ms(iso: &str) -> Option<u128> {
     Some(((days * 86_400 + hh * 3600 + mm * 60 + ss) as u128) * 1000 + ms)
 }
 
-fn current_epoch_ms() -> u128 {
+pub(crate) fn current_epoch_ms() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis())

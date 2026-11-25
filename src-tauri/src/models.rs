@@ -174,13 +174,6 @@ pub struct VaultExportResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RelayEnvelope {
-    pub chain_id_hash: String,
-    pub latest_hlc: String,
-    pub cipher_b64: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShopSettings {
     pub shop_name: String,
     pub shop_subtitle: String,
