@@ -155,7 +155,7 @@ export function QrPairingCard() {
       {pendingChainJoin.value && (
         <div class="rounded-xl border border-[#FF9500]/30 bg-[#FF9500]/10 p-3 space-y-2">
           <p class="text-[11px] font-medium kura-text-main">
-            This device is already linked. Joining a new chain clears local stock, bills & ledger before syncing.
+            All local sales and stock on this device will be erased before joining the new Sync Chain. Continue?
           </p>
           <div class="flex justify-end gap-2">
             <button

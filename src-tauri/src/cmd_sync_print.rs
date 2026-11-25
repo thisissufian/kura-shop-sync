@@ -10,6 +10,7 @@ use crate::crypto_chain::{
 use crate::hlc::observe_remote_hlc;
 use crate::lan_peer::sync_with_peer_ip;
 use crate::ledger::apply_ledger_event;
+pub use crate::ledger_queries::has_local_business_data;
 use crate::ledger_queries::{events_after_hlc, get_bill_by_no, get_chain_config};
 use crate::mnemonic::phrase_to_seed;
 use crate::models::{PdfExportResult, RelayEnvelope, SyncChainStatus};
@@ -67,9 +68,9 @@ pub fn apply_join_chain_db(
     };
 
     let cfg = get_chain_config(conn)?;
-    if cfg.is_linked && !force_reset {
+    if (cfg.is_linked || has_local_business_data(conn)?) && !force_reset {
         return Err(
-            "CONFIRM_RESET: This device is already linked. Confirm reset to clear local ledger and join the new chain."
+            "CONFIRM_RESET: Local sales and stock will be erased before joining the new chain."
                 .to_string(),
         );
     }
