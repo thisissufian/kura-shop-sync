@@ -1,6 +1,7 @@
 import { useMemo, useState } from "preact/hooks";
 import {
   cart,
+  cartCount,
   currencySymbol,
   formatMoney,
   products,
@@ -11,7 +12,8 @@ import { tryOpenBillByScan } from "../../state/parkedCarts";
 import { scannerMode } from "../../state/uiSignals";
 import { CheckoutPanel } from "../components/CheckoutPanel";
 import { ParkedCartsBar } from "../components/ParkedCartsBar";
-import { IconBarcodeScan, IconSearch } from "../primitives/KuraIcons";
+import { ChipRow, QtyStepper, SearchField, StockStatus } from "../primitives/Controls";
+import { PageHeader } from "../primitives/Group";
 
 export function CounterView() {
   const [query, setQuery] = useState("");
@@ -19,6 +21,7 @@ export function CounterView() {
   const list = products.value;
   const sym = currencySymbol.value;
   const cartMap = cart.value;
+  const count = cartCount.value;
 
   const categories = useMemo(() => {
     const set = new Set<string>(["All"]);
@@ -63,137 +66,59 @@ export function CounterView() {
   };
 
   return (
-    <div class="lg:grid lg:grid-cols-[1fr_360px] lg:gap-5 lg:items-start pb-44 lg:pb-6">
-      <div class="space-y-3">
+    <div class="lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:items-start pb-64 lg:pb-6">
+      <div class="space-y-4">
+        <PageHeader title="Register" subtitle={count > 0 ? `${count} ${count === 1 ? "item" : "items"} in this sale` : "Search, scan or tap to add"} />
         <ParkedCartsBar />
 
-        {/* Counter Search with inline Cam Scan button */}
-        <form onSubmit={handleScanEnter} class="relative flex items-center">
-          <IconSearch class="absolute left-3.5 w-4 h-4 kura-text-muted pointer-events-none" />
-          <input
+        <form onSubmit={handleScanEnter}>
+          <SearchField
             id="kura-counter-search"
-            type="search"
             value={query}
-            onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-            placeholder="Search item, SKU, brand, or scan barcode (Enter)…"
-            class="w-full rounded-[14px] kura-input pl-10 pr-12 py-2.5 text-[14px] kura-text-main placeholder-[#AEAEB2] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30"
+            onInput={setQuery}
+            placeholder="Search or scan a barcode"
+            onScan={() => { scannerMode.value = "BARCODE_CART"; }}
           />
-          <button
-            type="button"
-            onClick={() => { scannerMode.value = "BARCODE_CART"; }}
-            title="Open camera barcode scanner"
-            class="absolute right-2 p-1.5 rounded-lg kura-subtle text-[#007AFF] hover:bg-[#007AFF]/15 kura-btn-press"
-          >
-            <IconBarcodeScan class="w-4 h-4" />
-          </button>
         </form>
 
-        {/* Category Filter Pills */}
-        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-          {categories.map((cat) => {
-            const active = cat === category;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategory(cat)}
-                class={`shrink-0 rounded-full px-3.5 py-1 text-[12px] font-semibold transition kura-btn-press ${
-                  active
-                    ? "bg-[#007AFF] text-white shadow-xs"
-                    : "kura-subtle kura-text-muted hover:kura-text-main"
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
+        <ChipRow items={categories} value={category} onChange={setCategory} />
 
-        {/* Product Cards Grid with in-cart highlight */}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div class="kura-group">
           {filtered.map((p) => {
-            const inCart = (cartMap[p.sku] ?? 0);
+            const inCart = cartMap[p.sku] ?? 0;
             const isOut = p.stock_qty <= 0;
-            const isLow = !isOut && p.stock_qty <= p.low_stock_threshold;
-            const stockTone = isOut
-              ? "bg-[#FF3B30]/12 text-[#FF3B30]"
-              : isLow
-                ? "bg-[#FF9500]/14 text-[#B25E00] dark:text-[#FF9500]"
-                : "bg-[#34C759]/12 text-[#1E8E3E] dark:text-[#34C759]";
-
             return (
-              <div
-                key={p.sku}
-                class={`kura-card p-3.5 transition ${
-                  inCart > 0
-                    ? "border-[#007AFF] ring-1 ring-[#007AFF]/30 shadow-md"
-                    : ""
-                }`}
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-1.5 text-[11px] font-semibold text-[#007AFF]">
-                      {p.brand && <span>{p.brand} ·</span>}
-                      <span class="kura-text-muted">{p.category}</span>
-                    </div>
-                    <div class="truncate text-[15px] font-semibold kura-text-main mt-0.5">
-                      {p.name}
-                    </div>
-                    <div class="text-[10px] font-mono kura-text-muted tabular-nums mt-0.5">
-                      {p.sku} {p.variant ? `· ${p.variant}` : ""}
-                    </div>
-                  </div>
-
-                  <div class="flex flex-col items-end gap-1 shrink-0">
-                    {inCart > 0 && (
-                      <span class="rounded-full bg-[#007AFF] text-white px-2 py-0.5 text-[10px] font-bold tabular-nums shadow-xs">
-                        {inCart} in cart
-                      </span>
-                    )}
-                    <span class={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${stockTone}`}>
-                      {isOut ? "Out" : `${p.stock_qty} left`}
-                    </span>
+              <div key={p.sku} class="kura-row !py-2.5">
+                <div class="min-w-0 flex-1">
+                  <div class="text-body text-label truncate">{p.name}</div>
+                  <div class="flex items-center gap-1.5 text-footnote text-label-2 min-w-0">
+                    <span class="sm:hidden font-semibold text-label tabular-nums shrink-0">{formatMoney(p.sell_price_minor, sym)}</span>
+                    <span class="hidden sm:inline truncate">{[p.brand, p.variant].filter(Boolean).join(" · ") || p.category}</span>
+                    <span class="shrink-0">·</span>
+                    <span class="shrink-0"><StockStatus p={p} /></span>
                   </div>
                 </div>
-
-                <div class="mt-3 pt-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between">
-                  <span class="text-[17px] font-bold kura-text-main tabular-nums">
-                    {formatMoney(p.sell_price_minor, sym)}
-                  </span>
-
-                  <div class="flex items-center gap-1.5">
-                    {inCart > 0 && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setCartQty(p.sku, inCart - 1)}
-                          class="h-8 w-8 rounded-full kura-subtle text-[16px] font-bold kura-text-main flex items-center justify-center kura-btn-press"
-                        >
-                          −
-                        </button>
-                        <span class="w-6 text-center text-[13px] font-bold kura-text-main tabular-nums">
-                          {inCart}
-                        </span>
-                      </>
-                    )}
-                    <button
-                      type="button"
-                      disabled={isOut}
-                      onClick={() => setCartQty(p.sku, inCart + 1)}
-                      class="h-8 rounded-full bg-[#007AFF] hover:bg-[#0062CC] px-3.5 text-[13px] font-bold text-white disabled:opacity-40 shadow-xs flex items-center justify-center kura-btn-press"
-                    >
-                      + Add
-                    </button>
-                  </div>
+                <div class="hidden sm:block text-body font-semibold tabular-nums text-label shrink-0">
+                  {formatMoney(p.sell_price_minor, sym)}
                 </div>
+                {inCart > 0 ? (
+                  <QtyStepper qty={inCart} onChange={(q) => setCartQty(p.sku, q)} canAdd={!isOut} />
+                ) : (
+                  <button type="button" disabled={isOut} onClick={() => setCartQty(p.sku, 1)}
+                    class="kura-btn kura-btn-gray kura-btn-sm w-[86px] shrink-0 !font-semibold">
+                    Add
+                  </button>
+                )}
               </div>
             );
           })}
+          {filtered.length === 0 && (
+            <div class="kura-row justify-center text-subhead text-label-2 py-8">No products match “{query}”.</div>
+          )}
         </div>
       </div>
 
-      {/* Floating / Sticky Checkout Panel */}
-      <div class="fixed inset-x-0 bottom-16 z-30 px-3 pb-2 pt-1 lg:static lg:p-0 lg:sticky lg:top-24">
+      <div class="fixed inset-x-0 z-30 px-2 bottom-[calc(50px+max(0.75rem,env(safe-area-inset-bottom)))] lg:sticky lg:bottom-auto lg:inset-x-auto lg:px-0 lg:top-[68px] lg:pt-[58px]">
         <CheckoutPanel />
       </div>
     </div>

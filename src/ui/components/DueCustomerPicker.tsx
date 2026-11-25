@@ -2,6 +2,7 @@ import { useState } from "preact/hooks";
 import { saveCustomer } from "../../state/customerActions";
 import { currencySymbol, customers, formatMoney, selectedCustomerId } from "../../state/kuraStore";
 
+/** Who owes this sale. A customer select, or an inline new-customer form. */
 export function DueCustomerPicker() {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -20,63 +21,35 @@ export function DueCustomerPicker() {
     }
   };
 
-  return (
-    <div class="rounded-[11px] bg-[#FF9500]/10 border border-[#FF9500]/20 p-2 space-y-2">
-      {!adding ? (
-        <div class="flex gap-1.5">
-          <select
-            value={selectedCustomerId.value}
-            onChange={(e) => {
-              selectedCustomerId.value = (e.target as HTMLSelectElement).value;
-            }}
-            class="flex-1 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-card kura-text-main px-2.5 py-1.5 text-[12px]"
-          >
-            <option value="">Select customer for due…</option>
-            {custList.map((c) => (
-              <option key={c.customer_id} value={c.customer_id}>
-                {c.name} ({c.phone}) · Due {formatMoney(c.balance_due_minor, sym)}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            class="rounded-lg bg-[#007AFF] px-2.5 py-1.5 text-[11px] font-semibold text-white"
-          >
-            + New
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleQuickAdd} class="flex gap-1.5">
-          <input
-            required
-            placeholder="Name"
-            value={name}
-            onInput={(e) => setName((e.target as HTMLInputElement).value)}
-            class="w-24 flex-1 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-card kura-text-main px-2 py-1 text-[12px]"
-          />
-          <input
-            required
-            placeholder="Phone"
-            value={phone}
-            onInput={(e) => setPhone((e.target as HTMLInputElement).value)}
-            class="w-24 flex-1 rounded-lg border border-black/[0.08] dark:border-white/[0.1] kura-card kura-text-main px-2 py-1 text-[12px] tabular-nums"
-          />
-          <button
-            type="submit"
-            class="rounded-lg bg-[#007AFF] px-2.5 py-1 text-[11px] font-semibold text-white"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => setAdding(false)}
-            class="px-1.5 text-[11px] kura-text-muted"
-          >
-            ✕
-          </button>
-        </form>
-      )}
+  const fieldCls = "kura-input h-9 px-3 text-subhead min-w-0";
+
+  return !adding ? (
+    <div class="flex gap-2">
+      <select
+        value={selectedCustomerId.value}
+        onChange={(e) => { selectedCustomerId.value = (e.target as HTMLSelectElement).value; }}
+        class={`${fieldCls} flex-1`}
+        aria-label="Customer who owes this sale"
+      >
+        <option value="">Choose a customer…</option>
+        {custList.map((c) => (
+          <option key={c.customer_id} value={c.customer_id}>
+            {c.name} · owes {formatMoney(c.balance_due_minor, sym)}
+          </option>
+        ))}
+      </select>
+      <button type="button" onClick={() => setAdding(true)} class="kura-btn kura-btn-gray kura-btn-sm !rounded-[10px] h-9">
+        New
+      </button>
     </div>
+  ) : (
+    <form onSubmit={handleQuickAdd} class="flex gap-2">
+      <input required placeholder="Name" value={name}
+        onInput={(e) => setName((e.target as HTMLInputElement).value)} class={`${fieldCls} flex-1`} />
+      <input required placeholder="Phone" inputMode="tel" value={phone}
+        onInput={(e) => setPhone((e.target as HTMLInputElement).value)} class={`${fieldCls} w-28 tabular-nums`} />
+      <button type="submit" class="kura-btn kura-btn-filled kura-btn-sm !rounded-[10px] h-9">Save</button>
+      <button type="button" onClick={() => setAdding(false)} class="text-subhead text-tint px-1">Cancel</button>
+    </form>
   );
 }

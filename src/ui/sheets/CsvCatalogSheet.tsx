@@ -7,6 +7,7 @@ import {
 import { isOwner, products } from "../../state/kuraStore";
 import { csvSheetOpen } from "../../state/uiSignals";
 import type { PdfExportResult } from "../../types/kura";
+import { FieldRow, Section } from "../primitives/Group";
 import { SpringSheet } from "../primitives/SpringSheet";
 
 export function CsvCatalogSheet() {
@@ -62,105 +63,56 @@ export function CsvCatalogSheet() {
   return (
     <SpringSheet
       open={open}
-      title="Stickers PDF & CSV Catalog"
-      subtitle="Pure vector Code-39 stickers & bulk inventory sync"
+      title="Labels & CSV"
+      subtitle="Barcode stickers and bulk catalog"
       onClose={() => {
         csvSheetOpen.value = false;
       }}
     >
-      <div class="space-y-4">
-        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-3">
-          <div class="text-[13px] font-semibold kura-text-main">
-            Printable Barcode Sticker Sheet PDF
-          </div>
-          <div class="grid grid-cols-[1fr_80px] gap-2">
-            <select
-              value={selectedSku}
-              onChange={(e) => setSelectedSku((e.target as HTMLSelectElement).value)}
-              class="rounded-xl kura-input px-2.5 py-2 text-[12px]"
-            >
-              <option value="">All Products ({list.length})</option>
+      <div class="space-y-6">
+        <Section header="Barcode labels" footer="A4 sheet of vector Code-39 stickers.">
+          <FieldRow label="Products">
+            <select value={selectedSku} onChange={(e) => setSelectedSku((e.target as HTMLSelectElement).value)} class="kura-field">
+              <option value="">All ({list.length})</option>
               {list.map((p) => (
-                <option key={p.sku} value={p.sku}>
-                  {p.name} ({p.sku})
-                </option>
+                <option key={p.sku} value={p.sku}>{p.name}</option>
               ))}
             </select>
-            <input
-              type="number"
-              min={1}
-              max={48}
-              value={copies}
-              onInput={(e) => setCopies((e.target as HTMLInputElement).value)}
-              title="Copies per SKU"
-              class="rounded-xl kura-input px-2.5 py-2 text-center text-[12px] tabular-nums"
-            />
-          </div>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleLabels}
-            class="w-full rounded-xl bg-[#007AFF] py-2.5 text-[13px] font-semibold text-white active:scale-[0.99] disabled:opacity-50"
-          >
-            Generate Barcode Stickers PDF
+          </FieldRow>
+          <FieldRow label="Copies of each">
+            <input type="number" min={1} max={48} value={copies}
+              onInput={(e) => setCopies((e.target as HTMLInputElement).value)} class="kura-field tabular-nums" />
+          </FieldRow>
+          <button type="button" disabled={busy} onClick={handleLabels} class="kura-row text-body text-tint disabled:opacity-40">
+            Make label sheet
           </button>
           {pdfRes && (
-            <div class="rounded-xl bg-[#34C759]/10 p-2.5 text-[11px] space-y-1">
-              <div class="font-semibold text-[#1E8E3E]">
-                A4 Vector PDF Ready ({(pdfRes.size_bytes / 1024).toFixed(1)} KB)
+            <div class="kura-row">
+              <div class="min-w-0 flex-1">
+                <div class="text-body text-label">PDF ready</div>
+                <div class="text-footnote text-label-2 tabular-nums">{(pdfRes.size_bytes / 1024).toFixed(1)} KB</div>
               </div>
-              <div class="break-all kura-text-muted">{pdfRes.file_path}</div>
-              <a
-                href={pdfRes.data_url}
-                download="kura-labels.pdf"
-                class="inline-block rounded-lg bg-[#34C759] px-2.5 py-1 font-semibold text-white"
-              >
-                Download Sticker PDF
-              </a>
+              <a href={pdfRes.data_url} download="kura-labels.pdf" class="kura-btn kura-btn-tinted kura-btn-sm">Download</a>
             </div>
           )}
-        </div>
+        </Section>
 
-        <div class="rounded-2xl border border-black/[0.06] dark:border-white/[0.08] kura-card p-3.5 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-[13px] font-semibold kura-text-main">
-              1-Click CSV Catalog
-            </span>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleExportCsv}
-              class="rounded-full kura-subtle px-3 py-1 text-[11px] font-semibold kura-text-main"
-            >
-              Export CSV
-            </button>
-          </div>
-
+        <Section header="Catalog" footer={owner ? "Columns: sku, name, barcode, category, sell_price, cost_price, stock_qty, low_stock_threshold." : undefined}>
+          <button type="button" disabled={busy} onClick={handleExportCsv} class="kura-row text-body text-tint disabled:opacity-40">
+            Export catalog as CSV
+          </button>
           {owner && (
-            <form onSubmit={handleImport} class="space-y-2">
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={handleFilePick}
-                class="block w-full text-[11px] kura-text-muted file:mr-2 file:rounded-full file:border-0 file:bg-[#007AFF]/10 file:px-3 file:py-1 file:text-[11px] file:font-semibold file:text-[#007AFF]"
-              />
-              <textarea
-                rows={4}
-                value={csvText}
-                onInput={(e) => setCsvText((e.target as HTMLTextAreaElement).value)}
-                placeholder="sku,name,barcode,category,sell_price,cost_price,stock_qty,low_stock_threshold"
-                class="w-full rounded-xl kura-input p-2.5 text-[11px] font-mono"
-              />
-              <button
-                type="submit"
-                disabled={busy || !csvText.trim()}
-                class="w-full rounded-xl bg-[#007AFF] py-2.5 text-[13px] font-semibold text-white disabled:opacity-40"
-              >
-                Import CSV into Ledger
+            <form onSubmit={handleImport} class="kura-row !block space-y-3 !py-3">
+              <input type="file" accept=".csv,text/csv" onChange={handleFilePick}
+                class="block w-full text-footnote text-label-2 file:mr-3 file:rounded-full file:border-0 file:bg-fill file:px-3.5 file:py-1.5 file:text-subhead file:font-medium file:text-tint" />
+              <textarea rows={4} value={csvText} onInput={(e) => setCsvText((e.target as HTMLTextAreaElement).value)}
+                placeholder="…or paste CSV rows here" class="kura-input w-full p-3 text-footnote font-mono" />
+              <button type="submit" disabled={busy || !csvText.trim()} class="kura-btn kura-btn-filled w-full">
+                Import into catalog
               </button>
             </form>
           )}
-        </div>
+        </Section>
       </div>
     </SpringSheet>
   );

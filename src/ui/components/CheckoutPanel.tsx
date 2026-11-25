@@ -14,14 +14,18 @@ import {
   setCartQty,
 } from "../../state/kuraStore";
 import { holdCurrentCart } from "../../state/parkedCarts";
+import { QtyStepper } from "../primitives/Controls";
+import { IconChevronDown } from "../primitives/KuraIcons";
+import { SegmentedControl } from "../primitives/SegmentedControl";
 import { DueCustomerPicker } from "./DueCustomerPicker";
 
 const MODES = [
   { id: "CASH" as const, label: "Cash" },
   { id: "WALLET" as const, label: "Wallet / QR" },
-  { id: "DUE" as const, label: "Customer Due" },
+  { id: "DUE" as const, label: "Due" },
 ];
 
+/** Current sale. A material bar above the tab bar on phones, a grouped panel on desktop. */
 export function CheckoutPanel() {
   const [discInput, setDiscInput] = useState("");
   const [issuing, setIssuing] = useState(false);
@@ -43,121 +47,77 @@ export function CheckoutPanel() {
   };
 
   return (
-    <div class="rounded-2xl border border-black/[0.08] dark:border-white/[0.1] kura-glass-bar p-3.5 shadow-xl space-y-2.5">
-      {/* Collapsible Item Drawer */}
+    <div class="rounded-[18px] kura-glass-bar shadow-[0_8px_40px_rgba(0,0,0,0.14)] ring-[0.5px] ring-sep p-3 space-y-3 lg:bg-surface lg:shadow-none lg:ring-0 lg:p-4 lg:backdrop-blur-none">
+      <div class="hidden lg:flex items-baseline justify-between">
+        <h2 class="text-title3 font-semibold text-label">Current sale</h2>
+        {count > 0 && (
+          <button type="button" onClick={() => { clearCart(); setDiscInput(""); }} class="text-subhead text-danger">
+            Clear
+          </button>
+        )}
+      </div>
+
       {lines.length > 0 && (
-        <div class={`${expanded ? "block" : "hidden lg:block"} max-h-48 overflow-y-auto space-y-2 border-b border-black/[0.06] dark:border-white/[0.08] pb-2.5`}>
-          {lines.map(({ product, qty, lineTotal }) => (
-            <div key={product.sku} class="flex items-center justify-between gap-2 text-[13px]">
+        <div class={`${expanded ? "block" : "hidden lg:block"} max-h-56 lg:max-h-[42vh] overflow-y-auto -mx-1 px-1`}>
+          {lines.map(({ product, qty, lineTotal }, i) => (
+            <div key={product.sku} class={`flex items-center gap-3 py-2 ${i > 0 ? "kura-hairline-t" : ""}`}>
               <div class="min-w-0 flex-1">
-                <div class="truncate font-semibold kura-text-main">{product.name}</div>
-                <div class="text-[11px] kura-text-muted tabular-nums">
+                <div class="text-subhead text-label truncate">{product.name}</div>
+                <div class="text-footnote text-label-2 tabular-nums">
                   {qty} × {formatMoney(product.sell_price_minor, sym)}
                 </div>
               </div>
-              <div class="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCartQty(product.sku, qty - 1)}
-                  class="h-6 w-6 rounded-full kura-subtle text-[13px] font-bold kura-btn-press"
-                >
-                  −
-                </button>
-                <span class="tabular-nums font-bold kura-text-main min-w-14 text-right">
-                  {formatMoney(lineTotal, sym)}
-                </span>
-              </div>
+              <span class="text-subhead font-semibold tabular-nums text-label">{formatMoney(lineTotal, sym)}</span>
+              <QtyStepper qty={qty} onChange={(q) => setCartQty(product.sku, q)} canAdd={product.stock_qty > qty} />
             </div>
           ))}
         </div>
       )}
 
-      {/* Payment Modes & Discount */}
-      <div class="flex items-center justify-between gap-2">
-        <div class="inline-flex rounded-xl kura-subtle p-0.5">
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => { paymentMode.value = m.id; }}
-              class={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition kura-btn-press ${
-                paymentMode.value === m.id
-                  ? m.id === "DUE"
-                    ? "bg-[#FF9500] text-white shadow-xs"
-                    : "kura-card kura-text-main shadow-xs"
-                  : "kura-text-muted"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        <div class="flex items-center gap-1.5">
-          <span class="text-[11px] kura-text-muted font-medium">Disc:</span>
-          <input
-            inputMode="decimal"
-            placeholder="0.00"
-            value={discInput}
-            onInput={(e) => {
-              const v = (e.target as HTMLInputElement).value;
-              setDiscInput(v);
-              discountMinor.value = parseMoneyInput(v);
-            }}
-            class="w-16 rounded-lg kura-input px-2 py-1 text-right text-[12px] tabular-nums"
-          />
-          {count > 0 && (
-            <button
-              type="button"
-              onClick={() => { clearCart(); setDiscInput(""); }}
-              class="text-[11px] font-semibold text-[#FF3B30] px-1 hover:underline kura-btn-press"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
+      <SegmentedControl options={MODES} value={paymentMode.value} onChange={(m) => { paymentMode.value = m; }} />
 
       {paymentMode.value === "DUE" && <DueCustomerPicker />}
 
-      {/* Cart Summary & Action Buttons */}
-      <div class="flex items-center justify-between gap-2">
-        <div
-          class="min-w-0 cursor-pointer"
-          onClick={() => setExpanded(!expanded)}
-          title="Tap to toggle item list"
-        >
-          <div class="text-[11px] font-medium kura-text-muted tabular-nums flex items-center gap-1">
-            <span>{count} {count === 1 ? "item" : "items"}</span>
-            <span class="lg:hidden text-[10px] text-[#007AFF] font-bold">{expanded ? "▲ Hide" : "▼ Review"}</span>
-            {discountMinor.value > 0 && (
-              <span>· Sub {formatMoney(cartSubtotalMinor.value, sym)}</span>
-            )}
-          </div>
-          <div class="text-[22px] font-bold tracking-tight kura-text-main tabular-nums leading-tight">
-            {formatMoney(cartTotalMinor.value, sym)}
-          </div>
+      <div class="flex items-center justify-between gap-3">
+        <button type="button" onClick={() => setExpanded(!expanded)} disabled={count === 0}
+          class="flex items-center gap-1 text-subhead text-label-2 tabular-nums lg:pointer-events-none" aria-expanded={expanded}>
+          <span>{count} {count === 1 ? "item" : "items"}</span>
+          {discountMinor.value > 0 && <span>· subtotal {formatMoney(cartSubtotalMinor.value, sym)}</span>}
+          {count > 0 && <IconChevronDown class={`w-4 h-4 text-tint lg:hidden transition-transform ${expanded ? "rotate-180" : ""}`} />}
+        </button>
+        <div class="flex items-center gap-2">
+          {count > 0 && (
+            <button type="button" onClick={() => { clearCart(); setDiscInput(""); }} class="text-subhead text-danger lg:hidden">
+              Clear
+            </button>
+          )}
+          <label class="flex items-center gap-1.5 text-subhead text-label-2">
+            Discount
+            <input
+              inputMode="decimal"
+              placeholder="0.00"
+              value={discInput}
+              onInput={(e) => {
+                const v = (e.target as HTMLInputElement).value;
+                setDiscInput(v);
+                discountMinor.value = parseMoneyInput(v);
+              }}
+              class="kura-input w-20 h-8 px-2 text-right text-subhead tabular-nums"
+            />
+          </label>
         </div>
+      </div>
 
-        <div class="flex items-center gap-1.5">
-          <button
-            type="button"
-            disabled={count === 0 || issuing}
-            onClick={handleHold}
-            title="Hold / Park Cart (F6)"
-            class="rounded-xl border border-[#FF9500]/30 bg-[#FF9500]/12 px-3 py-2.5 text-[12px] font-bold text-[#B25E00] dark:text-[#FF9500] hover:bg-[#FF9500]/20 disabled:opacity-35 transition kura-btn-press"
-          >
-            Hold
-          </button>
-          <button
-            type="button"
-            disabled={count === 0 || issuing}
-            onClick={handleCharge}
-            class="rounded-xl bg-[#34C759] hover:bg-[#2EB84E] px-4 py-2.5 text-[14px] font-bold text-white shadow-sm disabled:opacity-40 transition kura-btn-press"
-          >
-            {issuing ? "Issuing…" : "Charge & Print"}
-          </button>
-        </div>
+      <div class="flex gap-2">
+        <button type="button" disabled={count === 0 || issuing} onClick={handleHold} title="Hold this sale (F6)"
+          class="kura-btn kura-btn-gray kura-btn-lg px-5">
+          Hold
+        </button>
+        <button type="button" disabled={count === 0 || issuing} onClick={handleCharge}
+          class="kura-btn kura-btn-filled kura-btn-lg flex-1 justify-between px-5">
+          <span>{issuing ? "Charging…" : "Charge"}</span>
+          <span class="tabular-nums">{formatMoney(cartTotalMinor.value, sym)}</span>
+        </button>
       </div>
     </div>
   );
