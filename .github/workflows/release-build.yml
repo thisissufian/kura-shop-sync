@@ -197,7 +197,7 @@ jobs:
           if [ -z "$tag" ]; then tag="${GITHUB_REF_NAME}"; fi
           case "$tag" in v*) ;; *) tag="v1.0.0" ;; esac
           for f in *.apk; do
-            case "$f" in kura-v*) ;; *) cp "$f" "kura-$tag-$f" ;; esac
+            case "$f" in kura-v*) ;; *) mv "$f" "kura-$tag-$f" ;; esac
           done
           ls -lah .
 
