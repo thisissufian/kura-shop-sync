@@ -55,19 +55,46 @@ console.log(
   `[android:prep] Patched ${manifestPath} (+${added} permissions, usesCleartextTraffic="true").`
 );
 
+// `tauri android init` writes Tauri's default launcher icon; replace it with Kura's set.
+const iconSrc = path.resolve("src-tauri", "icons", "android");
+const resDir = path.resolve("src-tauri", "gen", "android", "app", "src", "main", "res");
+if (fs.existsSync(iconSrc)) {
+  for (const stale of ["drawable/ic_launcher_background.xml", "drawable-v24/ic_launcher_foreground.xml"]) {
+    fs.rmSync(path.join(resDir, stale), { force: true });
+  }
+  fs.cpSync(iconSrc, resDir, { recursive: true });
+  console.log(`[android:prep] Copied Kura launcher icons into ${resDir}.`);
+}
+
 const gradlePath = path.resolve("src-tauri", "gen", "android", "app", "build.gradle.kts");
 if (fs.existsSync(gradlePath)) {
   let gradle = fs.readFileSync(gradlePath, "utf8");
-  if (!gradle.includes('signingConfig = signingConfigs.getByName("debug")')) {
+  // Sign with one stable key (KURA_KEYSTORE_* env vars) so every release installs over the last.
+  // Without it, fall back to the debug key, which CI regenerates on every run.
+  const releaseSigning =
+    'signingConfig = if (System.getenv("KURA_KEYSTORE_PATH") != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")';
+  gradle = gradle.replace('signingConfig = signingConfigs.getByName("debug")', releaseSigning);
+  if (!gradle.includes(releaseSigning)) {
+    gradle = gradle.replace('getByName("release") {', `getByName("release") {\n            ${releaseSigning}`);
+  }
+  if (!gradle.includes('create("release")')) {
     gradle = gradle.replace(
-      'getByName("release") {',
-      'getByName("release") {\n            signingConfig = signingConfigs.getByName("debug")'
+      "    buildTypes {",
+      `    signingConfigs {
+        create("release") {
+            System.getenv("KURA_KEYSTORE_PATH")?.let { storeFile = file(it) }
+            storePassword = System.getenv("KURA_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KURA_KEY_ALIAS")
+            keyPassword = System.getenv("KURA_KEY_PASSWORD")
+        }
+    }
+    buildTypes {`
     );
   }
   gradle = gradle.replace(/compileSdk\s*=\s*\d+/, "compileSdk = 36");
   gradle = gradle.replace(/targetSdk\s*=\s*\d+/, "targetSdk = 36");
   fs.writeFileSync(gradlePath, gradle, "utf8");
-  console.log(`[android:prep] Patched ${gradlePath} (debug signing for release APK, compileSdk=36).`);
+  console.log(`[android:prep] Patched ${gradlePath} (release signing, compileSdk=36).`);
 }
 
 const buildSrcPath = path.resolve("src-tauri", "gen", "android", "buildSrc", "build.gradle.kts");
