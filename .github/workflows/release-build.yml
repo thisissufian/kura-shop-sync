@@ -170,12 +170,23 @@ jobs:
           workspaces: src-tauri
 
       - name: Initialize Tauri Android, patch manifest & build APK
+        env:
+          KURA_KEYSTORE_B64: ${{ secrets.KURA_KEYSTORE_B64 }}
+          KURA_KEYSTORE_PASSWORD: ${{ secrets.KURA_KEYSTORE_PASSWORD }}
+          KURA_KEY_ALIAS: ${{ secrets.KURA_KEY_ALIAS }}
+          KURA_KEY_PASSWORD: ${{ secrets.KURA_KEY_PASSWORD }}
         run: |
+          if [ -n "$KURA_KEYSTORE_B64" ]; then
+            echo "$KURA_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/kura-release.jks"
+            export KURA_KEYSTORE_PATH="$RUNNER_TEMP/kura-release.jks"
+          else
+            echo "::warning::KURA_KEYSTORE_B64 not set: APK is signed with a throwaway debug key and will not install over earlier builds."
+          fi
           npm ci
           npm run build
           npx tauri android init
           node scripts/configure-android.mjs
-          npx tauri android build --apk --target aarch64
+          npx tauri android build --apk --target aarch64 --target armv7
 
       - name: Stage APKs for distribution
         run: |
